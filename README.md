@@ -82,7 +82,7 @@ sudo apt-get install clang cmake pkg-config libgtk-3-dev
 ## 🔗 Related Repositories
 
 - [**bibliogenius**](https://github.com/bibliogenius/bibliogenius): The embedded Rust backend.
-- [**bibliogenius-docker**](https://github.com/bibliogenius/bibliogenius-docker): Backend development env.
+- [**bibliogenius-env**](https://github.com/bibliogenius/bibliogenius-env): Development environment orchestrator — clones repos, configures AI tools, and sets up Docker services via `make setup P=<profile>`.
 
 ## 📄 License
 
