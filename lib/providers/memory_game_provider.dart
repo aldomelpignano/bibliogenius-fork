@@ -39,6 +39,11 @@ class MemoryGameProvider extends ChangeNotifier {
   // --- Score ---
   MemoryGameScore? _lastScore;
   List<MemoryGameScore> _topScores = [];
+  List<MemoryLeaderboardEntry> _networkScores = [];
+
+  // --- Rank info (computed after game finish) ---
+  int? _personalRank;
+  bool _isNewPersonalBest = false;
 
   // --- Getters ---
   List<String> get availableDifficulties => _availableDifficulties;
@@ -53,7 +58,10 @@ class MemoryGameProvider extends ChangeNotifier {
   double get elapsedSeconds => _elapsedSeconds;
   MemoryGameScore? get lastScore => _lastScore;
   List<MemoryGameScore> get topScores => _topScores;
+  List<MemoryLeaderboardEntry> get networkScores => _networkScores;
   bool get isMatchChecking => _phase == GamePhase.matchCheck;
+  int? get personalRank => _personalRank;
+  bool get isNewPersonalBest => _isNewPersonalBest;
 
   /// Formatted elapsed time as mm:ss
   String get formattedTime {
@@ -225,9 +233,47 @@ class MemoryGameProvider extends ChangeNotifier {
         newAchievements: frbScore.newAchievements,
       );
       notifyListeners();
+
+      // Load top scores to compute rank
+      await loadTopScores();
+      _computeRank();
+      notifyListeners();
     } catch (e) {
       debugPrint('MemoryGameProvider: finishGame error: $e');
     }
+  }
+
+  /// Compute rank of the last score among top scores.
+  void _computeRank() {
+    if (_lastScore == null || _topScores.isEmpty) {
+      _personalRank = null;
+      _isNewPersonalBest = false;
+      return;
+    }
+
+    // Top scores are sorted by normalized_score DESC — find position
+    final scoreId = _lastScore!.id;
+    if (scoreId != null) {
+      final idx = _topScores.indexWhere((s) => s.id == scoreId);
+      if (idx >= 0) {
+        _personalRank = idx + 1; // 1-based
+        _isNewPersonalBest = _personalRank == 1;
+        return;
+      }
+    }
+
+    // Fallback: compare by score value
+    final newScore = _lastScore!.normalizedScore;
+    int rank = 1;
+    for (final s in _topScores) {
+      if (s.normalizedScore > newScore) {
+        rank++;
+      } else {
+        break;
+      }
+    }
+    _personalRank = rank;
+    _isNewPersonalBest = rank == 1;
   }
 
   /// Load top scores from the backend via FFI.
@@ -251,6 +297,26 @@ class MemoryGameProvider extends ChangeNotifier {
     }
   }
 
+  /// Load network leaderboard (peer best scores) via FFI.
+  Future<void> loadNetworkLeaderboard() async {
+    try {
+      final frbEntries = await _ffi.getMemoryLeaderboard();
+      _networkScores = frbEntries
+          .map((e) => MemoryLeaderboardEntry(
+                peerId: e.peerId,
+                libraryName: e.libraryName,
+                bestScore: e.bestScore,
+                difficulty: e.difficulty,
+                playedAt: e.playedAt,
+                isSelf: e.isSelf,
+              ))
+          .toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('MemoryGameProvider: loadNetworkLeaderboard error: $e');
+    }
+  }
+
   /// Reset to setup phase for a new game.
   void resetToSetup() {
     _stopwatch.stop();
@@ -266,6 +332,8 @@ class MemoryGameProvider extends ChangeNotifier {
     _elapsedSeconds = 0;
     _lastScore = null;
     _error = null;
+    _personalRank = null;
+    _isNewPersonalBest = false;
     notifyListeners();
   }
 
@@ -280,6 +348,8 @@ class MemoryGameProvider extends ChangeNotifier {
     _elapsedSeconds = 0;
     _lastScore = null;
     _error = null;
+    _personalRank = null;
+    _isNewPersonalBest = false;
     notifyListeners();
     await startGame();
   }

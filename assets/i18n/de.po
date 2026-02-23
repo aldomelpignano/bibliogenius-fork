@@ -2920,6 +2920,10 @@ msgstr "Meiste Bücher in der Sammlung"
 msgid "leaderboard_empty"
 msgstr "Noch keine Rangliste"
 
+#. No peers at this level
+msgid "leaderboard_empty_filter"
+msgstr "Keine Peers auf diesem Level"
+
 #. Lender
 msgid "leaderboard_lender"
 msgstr "Verleiher"
@@ -5670,6 +5674,47 @@ msgstr "Schwierigkeit"
 msgid "memory_game_congratulations"
 msgstr "Herzlichen Glückwunsch!"
 
+#. Memory Game - Varied congrats messages (generic)
+msgid "memory_congrats_0"
+msgstr "Gut gespielt!"
+
+msgid "memory_congrats_1"
+msgstr "Exzellentes Gedächtnis!"
+
+msgid "memory_congrats_2"
+msgstr "Geschafft!"
+
+msgid "memory_congrats_3"
+msgstr "Was für ein Gehirn!"
+
+msgid "memory_congrats_4"
+msgstr "Beeindruckende Erinnerung!"
+
+msgid "memory_congrats_5"
+msgstr "Alle Paare gefunden!"
+
+msgid "memory_congrats_6"
+msgstr "Scharfer Verstand!"
+
+msgid "memory_congrats_7"
+msgstr "Gut gemacht!"
+
+msgid "memory_congrats_8"
+msgstr "Bravo!"
+
+msgid "memory_congrats_9"
+msgstr "Spiel abgeschlossen!"
+
+#. Memory Game - Contextual congrats
+msgid "memory_congrats_perfect"
+msgstr "Makellos!"
+
+msgid "memory_congrats_master"
+msgstr "Master-Level bezwungen!"
+
+msgid "memory_congrats_expert"
+msgstr "Expert-Level gemeistert!"
+
 #. Memory Game - Play again
 msgid "memory_game_play_again"
 msgstr "Nochmal spielen"
@@ -5681,4 +5726,36 @@ msgstr "Schwierigkeit ändern"
 #. Memory Game - Dashboard subtitle
 msgid "memory_game_dashboard_subtitle"
 msgstr "Finde deine Buchcover!"
+
+#. Memory Game - Leaderboard
+msgid "memory_leaderboard_title"
+msgstr "Bestenliste"
+
+#. Memory Game - My Scores tab
+msgid "memory_my_scores_tab"
+msgstr "Meine Ergebnisse"
+
+#. Memory Game - Network tab
+msgid "memory_network_tab"
+msgstr "Netzwerk"
+
+#. Memory Game - No scores yet
+msgid "memory_no_scores_yet"
+msgstr "Noch keine Ergebnisse. Spiele eine Runde!"
+
+#. Memory Game - No network scores
+msgid "memory_no_network_scores"
+msgstr "Keine Netzwerk-Ergebnisse verfügbar"
+
+#. Memory Game - New personal best
+msgid "memory_rank_new_best"
+msgstr "Neuer persönlicher Rekord!"
+
+#. Memory Game - Rank position
+msgid "memory_rank_position"
+msgstr "#%s in deinen Top-Ergebnissen"
+
+#. Memory Game - Rank column header
+msgid "memory_rank_header"
+msgstr "Rang"
 

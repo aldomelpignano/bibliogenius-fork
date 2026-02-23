@@ -78,13 +78,14 @@ class MemoryGameScore {
   String get formattedScore => normalizedScore.round().toString();
 }
 
-/// A leaderboard entry for the memory game (peer scores).
+/// A leaderboard entry for the memory game (peer scores + local user).
 class MemoryLeaderboardEntry {
   final int peerId;
   final String libraryName;
   final double bestScore;
   final String difficulty;
   final String playedAt;
+  final bool isSelf;
 
   const MemoryLeaderboardEntry({
     required this.peerId,
@@ -92,6 +93,7 @@ class MemoryLeaderboardEntry {
     required this.bestScore,
     required this.difficulty,
     required this.playedAt,
+    this.isSelf = false,
   });
 
   factory MemoryLeaderboardEntry.fromJson(Map<String, dynamic> json) {
@@ -101,6 +103,7 @@ class MemoryLeaderboardEntry {
       bestScore: (json['best_score'] as num?)?.toDouble() ?? 0.0,
       difficulty: json['difficulty'] as String? ?? 'easy',
       playedAt: json['played_at'] as String? ?? '',
+      isSelf: json['is_self'] as bool? ?? false,
     );
   }
 

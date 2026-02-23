@@ -23,6 +23,7 @@ class _NetworkLeaderboardCardState extends State<NetworkLeaderboardCard>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isRefreshing = false;
+  int _minLevel = 0; // 0 = show all
 
   static const _domains = ['collector', 'reader', 'lender', 'cataloguer'];
   static const _domainIcons = [
@@ -177,6 +178,18 @@ class _NetworkLeaderboardCardState extends State<NetworkLeaderboardCard>
               ),
               const SizedBox(height: 8),
 
+              // Level filter
+              if (_hasMultipleLevels())
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: _buildLevelFilters(),
+                    ),
+                  ),
+                ),
+
               // Tab content
               SizedBox(
                 height: _calculateTabHeight(),
@@ -184,13 +197,17 @@ class _NetworkLeaderboardCardState extends State<NetworkLeaderboardCard>
                   controller: _tabController,
                   children: List.generate(_domains.length, (i) {
                     final domain = _domains[i];
-                    final entries = widget.leaderboard[domain] ?? [];
+                    final entries = _filteredEntries(
+                      widget.leaderboard[domain] ?? [],
+                    );
                     if (entries.isEmpty) {
                       return Center(
                         child: Text(
                           TranslationService.translate(
                             context,
-                            'leaderboard_empty',
+                            _minLevel > 0
+                                ? 'leaderboard_empty_filter'
+                                : 'leaderboard_empty',
                           ),
                           style: Theme.of(context).textTheme.bodySmall,
                           textAlign: TextAlign.center,
@@ -206,6 +223,69 @@ class _NetworkLeaderboardCardState extends State<NetworkLeaderboardCard>
         ),
       ),
     );
+  }
+
+  /// Check if there are entries with more than one distinct level across all domains
+  bool _hasMultipleLevels() {
+    final levels = <int>{};
+    for (final domain in _domains) {
+      for (final entry in widget.leaderboard[domain] ?? <LeaderboardEntry>[]) {
+        levels.add(entry.level);
+        if (levels.length > 1) return true;
+      }
+    }
+    return false;
+  }
+
+  /// Filter entries by minimum level
+  List<LeaderboardEntry> _filteredEntries(List<LeaderboardEntry> entries) {
+    if (_minLevel == 0) return entries;
+    return entries.where((e) => e.level >= _minLevel).toList();
+  }
+
+  /// Build filter chips for each level present in the data
+  List<Widget> _buildLevelFilters() {
+    // Collect all distinct levels across all domains
+    final levels = <int>{};
+    for (final domain in _domains) {
+      for (final entry in widget.leaderboard[domain] ?? <LeaderboardEntry>[]) {
+        levels.add(entry.level);
+      }
+    }
+    final sortedLevels = levels.toList()..sort();
+
+    return [
+      Padding(
+        padding: const EdgeInsets.only(right: 4),
+        child: FilterChip(
+          label: Text(
+            TranslationService.translate(context, 'filter_all'),
+            style: const TextStyle(fontSize: 11),
+          ),
+          selected: _minLevel == 0,
+          onSelected: (_) => setState(() => _minLevel = 0),
+          visualDensity: VisualDensity.compact,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+      ),
+      for (final level in sortedLevels)
+        if (level > 0)
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: FilterChip(
+              label: Text(
+                '${_levelName(level)}+',
+                style: TextStyle(fontSize: 11, color: _levelColor(level)),
+              ),
+              selected: _minLevel == level,
+              onSelected: (_) => setState(() {
+                _minLevel = _minLevel == level ? 0 : level;
+              }),
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+    ];
   }
 
   String _formatStaleness(String isoDate) {

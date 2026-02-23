@@ -2197,14 +2197,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return FrbMemoryLeaderboardEntry(
       peerId: dco_decode_i_32(arr[0]),
       libraryName: dco_decode_String(arr[1]),
       bestScore: dco_decode_f_64(arr[2]),
       difficulty: dco_decode_String(arr[3]),
       playedAt: dco_decode_String(arr[4]),
+      isSelf: dco_decode_bool(arr[5]),
     );
   }
 
@@ -2767,12 +2768,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_bestScore = sse_decode_f_64(deserializer);
     var var_difficulty = sse_decode_String(deserializer);
     var var_playedAt = sse_decode_String(deserializer);
+    var var_isSelf = sse_decode_bool(deserializer);
     return FrbMemoryLeaderboardEntry(
       peerId: var_peerId,
       libraryName: var_libraryName,
       bestScore: var_bestScore,
       difficulty: var_difficulty,
       playedAt: var_playedAt,
+      isSelf: var_isSelf,
     );
   }
 
@@ -3348,6 +3351,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_f_64(self.bestScore, serializer);
     sse_encode_String(self.difficulty, serializer);
     sse_encode_String(self.playedAt, serializer);
+    sse_encode_bool(self.isSelf, serializer);
   }
 
   @protected

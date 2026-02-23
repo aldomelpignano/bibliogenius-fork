@@ -307,7 +307,7 @@ Future<FrbMemoryScore> memoryGameFinish({
 Future<List<FrbMemoryScore>> memoryGameTopScores() =>
     RustLib.instance.api.crateApiFrbMemoryGameTopScores();
 
-/// Get leaderboard (peer scores)
+/// Get leaderboard (peer scores + local user's best)
 Future<List<FrbMemoryLeaderboardEntry>> memoryGameLeaderboard() =>
     RustLib.instance.api.crateApiFrbMemoryGameLeaderboard();
 
@@ -649,12 +649,16 @@ class FrbMemoryLeaderboardEntry {
   final String difficulty;
   final String playedAt;
 
+  /// True if this entry is the local user (not a peer)
+  final bool isSelf;
+
   const FrbMemoryLeaderboardEntry({
     required this.peerId,
     required this.libraryName,
     required this.bestScore,
     required this.difficulty,
     required this.playedAt,
+    required this.isSelf,
   });
 
   @override
@@ -663,7 +667,8 @@ class FrbMemoryLeaderboardEntry {
       libraryName.hashCode ^
       bestScore.hashCode ^
       difficulty.hashCode ^
-      playedAt.hashCode;
+      playedAt.hashCode ^
+      isSelf.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -674,7 +679,8 @@ class FrbMemoryLeaderboardEntry {
           libraryName == other.libraryName &&
           bestScore == other.bestScore &&
           difficulty == other.difficulty &&
-          playedAt == other.playedAt;
+          playedAt == other.playedAt &&
+          isSelf == other.isSelf;
 }
 
 /// A saved memory game score (FFI-safe)
