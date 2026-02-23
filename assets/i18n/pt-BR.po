@@ -1984,7 +1984,7 @@ msgstr "Bibliotecas"
 
 #. Owned
 msgid "filter_owned"
-msgstr "Próprio"
+msgstr "Possui"
 
 #. Finished on
 msgid "finished_on"
@@ -2172,7 +2172,7 @@ msgstr "Ir para Perfil"
 
 #. Manage Shelves
 msgid "help_cta_manage_shelves"
-msgstr "Gerenciar Estantes"
+msgstr "Gerenciar Prateleiras"
 
 #. Go to Migration
 msgid "help_cta_migrate"
@@ -2376,7 +2376,7 @@ msgstr "Toque + para adicionar uma nova prateleira"
 
 #. Shelves Help
 msgid "help_ctx_shelves_title"
-msgstr "Ajuda das Estantes"
+msgstr "Ajuda das Prateleiras"
 
 #. Breakdown of genres in your library. A higher diversity score means broader reading interests.
 msgid "help_ctx_stats_genre_diversity"
@@ -2412,7 +2412,7 @@ msgstr "Dicas divertidas sobre sua velocidade de leitura e preferências."
 
 #. Go to \"My Library\" and tap the \"+\" button. You can scan a barcode or search by title/ISBN.
 msgid "help_desc_add_book"
-msgstr "Acesse \"Minha Biblioteca\" e toque no botão \"+\". Você pode escanear um código de barras ou procurar pelo título/ISBN."
+msgstr "Acesse \"Biblioteca\" e toque no botão \"+\". Você pode escanear um código de barras ou procurar pelo título/ISBN."
 
 #. The Audio module lets you manage audiobooks and track listening progress. Enable it in your profile settings, then add audiobook versions to any book in your library.
 msgid "help_desc_audio"
@@ -3194,7 +3194,7 @@ msgstr "Gerencie suas credenciais de login"
 
 #. Manage Shelves
 msgid "manage_shelves"
-msgstr "Gerenciar Estantes"
+msgstr "Gerenciar Prateleiras"
 
 #. Rename, delete or reorganize shelves
 msgid "manage_shelves_desc"
@@ -3202,7 +3202,7 @@ msgstr "Renomeie, exclua ou reorganize as prateleiras"
 
 #. Manage Shelves
 msgid "manage_tags"
-msgstr "Gerenciar Estantes"
+msgstr "Gerenciar Prateleiras"
 
 #. Manual Connection
 msgid "manual_connection_btn"
@@ -4158,7 +4158,7 @@ msgstr "Emprestado"
 
 #. Owned
 msgid "reading_status_owned"
-msgstr "Próprio"
+msgstr "Possui"
 
 #. Read
 msgid "reading_status_read"
@@ -4815,7 +4815,7 @@ msgstr "Ordem da prateleira salva!"
 
 #. Shelves
 msgid "shelf_statistics"
-msgstr "Estantes"
+msgstr "Prateleiras"
 
 #. Shelf updated
 msgid "shelf_updated"
@@ -4823,7 +4823,7 @@ msgstr "Prateleira atualizada"
 
 #. Shelves
 msgid "shelves"
-msgstr "Estantes"
+msgstr "Prateleiras"
 
 #. Show borrowed books
 msgid "show_borrowed_books"
@@ -5027,7 +5027,7 @@ msgstr "Em Ordem de Compra"
 
 #. Owned
 msgid "status_owned"
-msgstr "Próprio"
+msgstr "Possui"
 
 #. PENDING
 msgid "status_pending"
@@ -5239,7 +5239,7 @@ msgstr "Nome da prateleira"
 
 #. Shelves
 msgid "tags"
-msgstr "Estantes"
+msgstr "Prateleiras"
 
 msgid "tags_label"
 msgstr "Prateleiras"
@@ -5346,7 +5346,7 @@ msgstr "Receita Total"
 
 #. Shelves
 msgid "total_shelves"
-msgstr "Estantes"
+msgstr "Prateleiras"
 
 #. Cataloguer
 msgid "track_cataloguer"
