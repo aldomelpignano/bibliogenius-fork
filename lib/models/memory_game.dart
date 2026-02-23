@@ -42,6 +42,7 @@ class MemoryGameScore {
   final int errors;
   final double normalizedScore;
   final String playedAt;
+  final List<String> newAchievements;
 
   const MemoryGameScore({
     this.id,
@@ -51,6 +52,7 @@ class MemoryGameScore {
     required this.errors,
     required this.normalizedScore,
     required this.playedAt,
+    this.newAchievements = const [],
   });
 
   factory MemoryGameScore.fromJson(Map<String, dynamic> json) {

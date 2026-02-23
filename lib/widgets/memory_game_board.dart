@@ -18,17 +18,26 @@ class MemoryGameBoard extends StatelessWidget {
   });
 
   /// Determine column count based on total cards and available width.
+  ///
+  /// Adapts to available space: on wide screens, uses more columns
+  /// to fill the space. Always ensures cards divide evenly when possible.
   int _columnCount(double availableWidth) {
     final totalCards = cards.length;
 
-    // Match the grid dimensions from the Rust difficulty config
-    if (totalCards <= 6) return 3; // Easy: 3x2
-    if (totalCards <= 12) return 3; // Medium: 3x4
-    if (totalCards <= 16) return 4; // Hard: 4x4
-    if (totalCards <= 20) return 5; // Expert: 5x4
-    return 5; // Master: 5x6
+    // Minimum columns based on card count
+    final minCols =
+        totalCards <= 6 ? 3 : totalCards <= 12 ? 3 : totalCards <= 16 ? 4 : 5;
 
-    // On very small screens, reduce columns
+    // Target card width for good visual (~100-120px)
+    const targetCardWidth = 110.0;
+    final maxCols =
+        (availableWidth / targetCardWidth).floor().clamp(minCols, 10);
+
+    // Find the best column count that divides evenly (prefer larger)
+    for (int cols = maxCols; cols >= minCols; cols--) {
+      if (totalCards % cols == 0) return cols;
+    }
+    return maxCols;
   }
 
   @override
@@ -42,8 +51,6 @@ class MemoryGameBoard extends StatelessWidget {
         final cardHeight = cardWidth * 1.4; // ~2:3 book cover ratio
 
         return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.all(spacing),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,

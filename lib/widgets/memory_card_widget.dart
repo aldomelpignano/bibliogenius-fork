@@ -96,13 +96,15 @@ class _MemoryCardWidgetState extends State<MemoryCardWidget>
   }
 
   Widget _buildFront(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
             color: widget.card.isMatched
-                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.4)
+                ? colorScheme.primary.withValues(alpha: 0.4)
                 : Colors.black26,
             blurRadius: 4,
             offset: const Offset(0, 2),
@@ -118,6 +120,17 @@ class _MemoryCardWidgetState extends State<MemoryCardWidget>
               imageUrl: widget.card.coverUrl,
               fit: BoxFit.cover,
               borderRadius: BorderRadius.circular(8),
+              errorWidget: Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.book,
+                  size: 32,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
             ),
             if (widget.card.isMatched)
               Container(

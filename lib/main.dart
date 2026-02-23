@@ -448,10 +448,6 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
           builder: (context, state) => const LoginScreen(),
         ),
         GoRoute(
-          path: '/memory-game',
-          builder: (context, state) => const MemoryGameScreen(),
-        ),
-        GoRoute(
           path: '/shelves-management',
           builder: (context, state) => const ShelfManagementScreen(),
         ),
@@ -463,6 +459,10 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
             GoRoute(
               path: '/dashboard',
               builder: (context, state) => const DashboardScreen(),
+            ),
+            GoRoute(
+              path: '/memory-game',
+              builder: (context, state) => const MemoryGameScreen(),
             ),
             GoRoute(
               path: '/books',

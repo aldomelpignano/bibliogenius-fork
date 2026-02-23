@@ -222,6 +222,7 @@ class MemoryGameProvider extends ChangeNotifier {
         errors: frbScore.errors,
         normalizedScore: frbScore.normalizedScore,
         playedAt: frbScore.playedAt,
+        newAchievements: frbScore.newAchievements,
       );
       notifyListeners();
     } catch (e) {

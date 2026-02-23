@@ -558,6 +558,44 @@ class FfiService {
     }
   }
 
+  // ============ Gamification (FFI direct) ============
+
+  /// Get full gamification status (tracks, streak, achievements, config)
+  Future<frb.FrbGamificationStatus> getGamificationStatus() async {
+    return await frb.gamificationGetStatus();
+  }
+
+  /// Get gamification leaderboard
+  Future<frb.FrbLeaderboardResponse> getGamificationLeaderboard() async {
+    return await frb.gamificationGetLeaderboard();
+  }
+
+  /// Refresh gamification leaderboard
+  Future<frb.FrbLeaderboardResponse> refreshGamificationLeaderboard() async {
+    return await frb.gamificationRefreshLeaderboard();
+  }
+
+  /// Update gamification config
+  Future<void> updateGamificationConfig({
+    int? readingGoalYearly,
+    String? achievementsStyle,
+  }) async {
+    await frb.gamificationUpdateConfig(
+      readingGoalYearly: readingGoalYearly,
+      achievementsStyle: achievementsStyle,
+    );
+  }
+
+  /// Check and unlock eligible achievements
+  Future<List<String>> checkAchievements() async {
+    return await frb.gamificationCheckAchievements();
+  }
+
+  /// Update daily streak
+  Future<frb.FrbStreakInfo> updateStreak() async {
+    return await frb.gamificationUpdateStreak();
+  }
+
   // ============ mDNS Local Discovery (Modular) ============
 
   /// Check if mDNS discovery service is available

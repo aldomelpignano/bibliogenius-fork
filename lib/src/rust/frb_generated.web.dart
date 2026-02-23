@@ -45,6 +45,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int dco_decode_box_autoadd_i_32(dynamic raw);
 
   @protected
+  double dco_decode_f_32(dynamic raw);
+
+  @protected
   double dco_decode_f_64(dynamic raw);
 
   @protected
@@ -63,6 +66,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FrbDiscoveredPeer dco_decode_frb_discovered_peer(dynamic raw);
 
   @protected
+  FrbGamificationConfig dco_decode_frb_gamification_config(dynamic raw);
+
+  @protected
+  FrbGamificationStatus dco_decode_frb_gamification_status(dynamic raw);
+
+  @protected
+  FrbLeaderboardEntry dco_decode_frb_leaderboard_entry(dynamic raw);
+
+  @protected
+  FrbLeaderboardResponse dco_decode_frb_leaderboard_response(dynamic raw);
+
+  @protected
   FrbLoan dco_decode_frb_loan(dynamic raw);
 
   @protected
@@ -77,7 +92,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FrbMemoryScore dco_decode_frb_memory_score(dynamic raw);
 
   @protected
+  FrbStreakInfo dco_decode_frb_streak_info(dynamic raw);
+
+  @protected
   FrbTag dco_decode_frb_tag(dynamic raw);
+
+  @protected
+  FrbTrackProgress dco_decode_frb_track_progress(dynamic raw);
 
   @protected
   int dco_decode_i_32(dynamic raw);
@@ -99,6 +120,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<FrbDiscoveredPeer> dco_decode_list_frb_discovered_peer(dynamic raw);
+
+  @protected
+  List<FrbLeaderboardEntry> dco_decode_list_frb_leaderboard_entry(dynamic raw);
 
   @protected
   List<FrbLoan> dco_decode_list_frb_loan(dynamic raw);
@@ -180,6 +204,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int sse_decode_box_autoadd_i_32(SseDeserializer deserializer);
 
   @protected
+  double sse_decode_f_32(SseDeserializer deserializer);
+
+  @protected
   double sse_decode_f_64(SseDeserializer deserializer);
 
   @protected
@@ -202,6 +229,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  FrbGamificationConfig sse_decode_frb_gamification_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbGamificationStatus sse_decode_frb_gamification_status(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbLeaderboardEntry sse_decode_frb_leaderboard_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbLeaderboardResponse sse_decode_frb_leaderboard_response(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   FrbLoan sse_decode_frb_loan(SseDeserializer deserializer);
 
   @protected
@@ -216,7 +263,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FrbMemoryScore sse_decode_frb_memory_score(SseDeserializer deserializer);
 
   @protected
+  FrbStreakInfo sse_decode_frb_streak_info(SseDeserializer deserializer);
+
+  @protected
   FrbTag sse_decode_frb_tag(SseDeserializer deserializer);
+
+  @protected
+  FrbTrackProgress sse_decode_frb_track_progress(SseDeserializer deserializer);
 
   @protected
   int sse_decode_i_32(SseDeserializer deserializer);
@@ -240,6 +293,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<FrbDiscoveredPeer> sse_decode_list_frb_discovered_peer(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbLeaderboardEntry> sse_decode_list_frb_leaderboard_entry(
     SseDeserializer deserializer,
   );
 
@@ -333,6 +391,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer);
 
   @protected
+  void sse_encode_f_32(double self, SseSerializer serializer);
+
+  @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
 
   @protected
@@ -360,6 +421,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_frb_gamification_config(
+    FrbGamificationConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_gamification_status(
+    FrbGamificationStatus self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_leaderboard_entry(
+    FrbLeaderboardEntry self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_leaderboard_response(
+    FrbLeaderboardResponse self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_frb_loan(FrbLoan self, SseSerializer serializer);
 
   @protected
@@ -378,7 +463,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_frb_streak_info(FrbStreakInfo self, SseSerializer serializer);
+
+  @protected
   void sse_encode_frb_tag(FrbTag self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_frb_track_progress(
+    FrbTrackProgress self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
@@ -407,6 +501,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_frb_discovered_peer(
     List<FrbDiscoveredPeer> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_leaderboard_entry(
+    List<FrbLeaderboardEntry> self,
     SseSerializer serializer,
   );
 

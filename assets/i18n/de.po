@@ -7,6 +7,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#. 100 Books Collected
+msgid "achievement_collector_100"
+msgstr "Zenturio"
+
+#. 10 Books Collected
+msgid "achievement_collector_10"
+msgstr "Wachsende Sammlung"
+
 #. Collector Bronze
 msgid "achievement_collector_bronze"
 msgstr "Sammler Bronze"
@@ -19,17 +27,37 @@ msgstr "Sammler Silber"
 msgid "achievement_first_book"
 msgstr "Erstes Buch"
 
-#. Generous
+#. First Loan
 msgid "achievement_first_loan"
 msgstr "Großzügig"
+
+#. First Book Read
+msgid "achievement_first_read"
+msgstr "Erste Lektüre"
 
 #. Scanner Pro
 msgid "achievement_first_scan"
 msgstr "Scanner Pro"
 
+#. First Memory Game
+msgid "achievement_memory_first_game"
+msgstr "Memory-Neuling"
+
+#. Master Difficulty
+msgid "achievement_memory_master"
+msgstr "Memory-Großmeister"
+
+#. Perfect Game
+msgid "achievement_memory_perfect"
+msgstr "Perfektes Gedächtnis"
+
 #. Avid Reader
 msgid "achievement_reader_bronze"
 msgstr "Eifriger Leser"
+
+#. 10 Books Read
+msgid "achievement_reader_10"
+msgstr "Bücherwurm"
 
 #. Regular
 msgid "achievement_streak_3"
@@ -38,6 +66,10 @@ msgstr "Regelmäßig"
 #. Perfect Week
 msgid "achievement_streak_7"
 msgstr "Perfekte Woche"
+
+#. 30 Day Streak
+msgid "achievement_streak_30"
+msgstr "Monatschampion"
 
 #. 🏆 Achievement Unlocked!
 msgid "achievement_unlocked"
@@ -5577,4 +5609,76 @@ msgstr "Dein aktuelles Level"
 #. Your Progress
 msgid "your_progress"
 msgstr "Dein Fortschritt"
+
+#. Memory Game
+msgid "memory_game_title"
+msgstr "Memory-Spiel"
+
+#. Memory Game - Choose difficulty
+msgid "memory_game_choose_difficulty"
+msgstr "Wähle einen Schwierigkeitsgrad"
+
+#. Memory Game - Play button
+msgid "memory_game_play"
+msgstr "Spielen"
+
+#. Memory Game - Not enough books
+msgid "memory_game_not_enough_books"
+msgstr "Du brauchst mindestens 3 Bücher mit Cover zum Spielen. Füge mehr Bücher zu deiner Bibliothek hinzu!"
+
+#. Memory Game - Easy difficulty
+msgid "memory_game_easy"
+msgstr "Leicht"
+
+#. Memory Game - Medium difficulty
+msgid "memory_game_medium"
+msgstr "Mittel"
+
+#. Memory Game - Hard difficulty
+msgid "memory_game_hard"
+msgstr "Schwer"
+
+#. Memory Game - Expert difficulty
+msgid "memory_game_expert"
+msgstr "Experte"
+
+#. Memory Game - Master difficulty
+msgid "memory_game_master"
+msgstr "Meister"
+
+#. Memory Game - Time label
+msgid "memory_game_time"
+msgstr "Zeit"
+
+#. Memory Game - Pairs label
+msgid "memory_game_pairs"
+msgstr "Paare"
+
+#. Memory Game - Errors label
+msgid "memory_game_errors"
+msgstr "Fehler"
+
+#. Memory Game - Score label
+msgid "memory_game_score"
+msgstr "Punktzahl"
+
+#. Memory Game - Difficulty label
+msgid "memory_game_difficulty_label"
+msgstr "Schwierigkeit"
+
+#. Memory Game - Congratulations
+msgid "memory_game_congratulations"
+msgstr "Herzlichen Glückwunsch!"
+
+#. Memory Game - Play again
+msgid "memory_game_play_again"
+msgstr "Nochmal spielen"
+
+#. Memory Game - Change difficulty
+msgid "memory_game_change_difficulty"
+msgstr "Schwierigkeit ändern"
+
+#. Memory Game - Dashboard subtitle
+msgid "memory_game_dashboard_subtitle"
+msgstr "Finde deine Buchcover!"
 

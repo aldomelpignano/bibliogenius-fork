@@ -8,7 +8,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'frb.freezed.dart';
 
-// These functions are ignored because they are not marked as `pub`: `db`, `install_panic_hook`, `load_google_books_api_key`, `runtime`
+// These functions are ignored because they are not marked as `pub`: `db`, `entries_to_frb`, `install_panic_hook`, `load_google_books_api_key`, `runtime`, `track_to_frb`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Initialize the FFI backend with database at the given path
@@ -311,6 +311,36 @@ Future<List<FrbMemoryScore>> memoryGameTopScores() =>
 Future<List<FrbMemoryLeaderboardEntry>> memoryGameLeaderboard() =>
     RustLib.instance.api.crateApiFrbMemoryGameLeaderboard();
 
+/// Get full gamification status via FFI (replaces HTTP getUserStatus)
+Future<FrbGamificationStatus> gamificationGetStatus() =>
+    RustLib.instance.api.crateApiFrbGamificationGetStatus();
+
+/// Get leaderboard via FFI (replaces HTTP getLeaderboard)
+Future<FrbLeaderboardResponse> gamificationGetLeaderboard() =>
+    RustLib.instance.api.crateApiFrbGamificationGetLeaderboard();
+
+/// Refresh leaderboard (returns current state) via FFI.
+/// Peer sync happens via the HTTP endpoint — this just returns current data.
+Future<FrbLeaderboardResponse> gamificationRefreshLeaderboard() =>
+    RustLib.instance.api.crateApiFrbGamificationRefreshLeaderboard();
+
+/// Update gamification config via FFI
+Future<void> gamificationUpdateConfig({
+  int? readingGoalYearly,
+  String? achievementsStyle,
+}) => RustLib.instance.api.crateApiFrbGamificationUpdateConfig(
+  readingGoalYearly: readingGoalYearly,
+  achievementsStyle: achievementsStyle,
+);
+
+/// Check and unlock eligible achievements via FFI
+Future<List<String>> gamificationCheckAchievements() =>
+    RustLib.instance.api.crateApiFrbGamificationCheckAchievements();
+
+/// Update daily streak via FFI
+Future<FrbStreakInfo> gamificationUpdateStreak() =>
+    RustLib.instance.api.crateApiFrbGamificationUpdateStreak();
+
 /// Simplified book structure for FFI
 @freezed
 sealed class FrbBook with _$FrbBook {
@@ -398,6 +428,174 @@ sealed class FrbDiscoveredPeer with _$FrbDiscoveredPeer {
     String? x25519PublicKey,
     required String discoveredAt,
   }) = _FrbDiscoveredPeer;
+}
+
+/// Gamification config (FFI-safe)
+class FrbGamificationConfig {
+  final String achievementsStyle;
+  final int readingGoalYearly;
+  final int readingGoalProgress;
+  final int totalBooksRead;
+
+  const FrbGamificationConfig({
+    required this.achievementsStyle,
+    required this.readingGoalYearly,
+    required this.readingGoalProgress,
+    required this.totalBooksRead,
+  });
+
+  @override
+  int get hashCode =>
+      achievementsStyle.hashCode ^
+      readingGoalYearly.hashCode ^
+      readingGoalProgress.hashCode ^
+      totalBooksRead.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbGamificationConfig &&
+          runtimeType == other.runtimeType &&
+          achievementsStyle == other.achievementsStyle &&
+          readingGoalYearly == other.readingGoalYearly &&
+          readingGoalProgress == other.readingGoalProgress &&
+          totalBooksRead == other.totalBooksRead;
+}
+
+/// Full gamification status (FFI-safe)
+class FrbGamificationStatus {
+  final FrbTrackProgress collector;
+  final FrbTrackProgress reader;
+  final FrbTrackProgress lender;
+  final FrbTrackProgress cataloguer;
+  final FrbStreakInfo streak;
+  final List<String> recentAchievements;
+  final FrbGamificationConfig config;
+  final String level;
+  final PlatformInt64 loansCount;
+  final PlatformInt64 editsCount;
+  final double nextLevelProgress;
+  final String badgeUrl;
+
+  const FrbGamificationStatus({
+    required this.collector,
+    required this.reader,
+    required this.lender,
+    required this.cataloguer,
+    required this.streak,
+    required this.recentAchievements,
+    required this.config,
+    required this.level,
+    required this.loansCount,
+    required this.editsCount,
+    required this.nextLevelProgress,
+    required this.badgeUrl,
+  });
+
+  @override
+  int get hashCode =>
+      collector.hashCode ^
+      reader.hashCode ^
+      lender.hashCode ^
+      cataloguer.hashCode ^
+      streak.hashCode ^
+      recentAchievements.hashCode ^
+      config.hashCode ^
+      level.hashCode ^
+      loansCount.hashCode ^
+      editsCount.hashCode ^
+      nextLevelProgress.hashCode ^
+      badgeUrl.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbGamificationStatus &&
+          runtimeType == other.runtimeType &&
+          collector == other.collector &&
+          reader == other.reader &&
+          lender == other.lender &&
+          cataloguer == other.cataloguer &&
+          streak == other.streak &&
+          recentAchievements == other.recentAchievements &&
+          config == other.config &&
+          level == other.level &&
+          loansCount == other.loansCount &&
+          editsCount == other.editsCount &&
+          nextLevelProgress == other.nextLevelProgress &&
+          badgeUrl == other.badgeUrl;
+}
+
+/// Leaderboard entry (FFI-safe)
+class FrbLeaderboardEntry {
+  final String libraryName;
+  final int level;
+  final PlatformInt64 current;
+  final bool isSelf;
+  final int? peerId;
+
+  const FrbLeaderboardEntry({
+    required this.libraryName,
+    required this.level,
+    required this.current,
+    required this.isSelf,
+    this.peerId,
+  });
+
+  @override
+  int get hashCode =>
+      libraryName.hashCode ^
+      level.hashCode ^
+      current.hashCode ^
+      isSelf.hashCode ^
+      peerId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbLeaderboardEntry &&
+          runtimeType == other.runtimeType &&
+          libraryName == other.libraryName &&
+          level == other.level &&
+          current == other.current &&
+          isSelf == other.isSelf &&
+          peerId == other.peerId;
+}
+
+/// Full leaderboard response (FFI-safe)
+class FrbLeaderboardResponse {
+  final List<FrbLeaderboardEntry> collector;
+  final List<FrbLeaderboardEntry> reader;
+  final List<FrbLeaderboardEntry> lender;
+  final List<FrbLeaderboardEntry> cataloguer;
+  final String? lastRefreshed;
+
+  const FrbLeaderboardResponse({
+    required this.collector,
+    required this.reader,
+    required this.lender,
+    required this.cataloguer,
+    this.lastRefreshed,
+  });
+
+  @override
+  int get hashCode =>
+      collector.hashCode ^
+      reader.hashCode ^
+      lender.hashCode ^
+      cataloguer.hashCode ^
+      lastRefreshed.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbLeaderboardResponse &&
+          runtimeType == other.runtimeType &&
+          collector == other.collector &&
+          reader == other.reader &&
+          lender == other.lender &&
+          cataloguer == other.cataloguer &&
+          lastRefreshed == other.lastRefreshed;
 }
 
 /// Simplified loan structure for FFI
@@ -489,6 +687,9 @@ class FrbMemoryScore {
   final double normalizedScore;
   final String playedAt;
 
+  /// Achievements unlocked after this game (empty if none)
+  final List<String> newAchievements;
+
   const FrbMemoryScore({
     this.id,
     required this.difficulty,
@@ -497,6 +698,7 @@ class FrbMemoryScore {
     required this.errors,
     required this.normalizedScore,
     required this.playedAt,
+    required this.newAchievements,
   });
 
   @override
@@ -507,7 +709,8 @@ class FrbMemoryScore {
       elapsedSeconds.hashCode ^
       errors.hashCode ^
       normalizedScore.hashCode ^
-      playedAt.hashCode;
+      playedAt.hashCode ^
+      newAchievements.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -520,7 +723,27 @@ class FrbMemoryScore {
           elapsedSeconds == other.elapsedSeconds &&
           errors == other.errors &&
           normalizedScore == other.normalizedScore &&
-          playedAt == other.playedAt;
+          playedAt == other.playedAt &&
+          newAchievements == other.newAchievements;
+}
+
+/// Streak info (FFI-safe)
+class FrbStreakInfo {
+  final int current;
+  final int longest;
+
+  const FrbStreakInfo({required this.current, required this.longest});
+
+  @override
+  int get hashCode => current.hashCode ^ longest.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbStreakInfo &&
+          runtimeType == other.runtimeType &&
+          current == other.current &&
+          longest == other.longest;
 }
 
 /// Simplified tag structure for FFI
@@ -532,4 +755,36 @@ sealed class FrbTag with _$FrbTag {
     int? parentId,
     required PlatformInt64 count,
   }) = _FrbTag;
+}
+
+/// Track progress (FFI-safe)
+class FrbTrackProgress {
+  final int level;
+  final double progress;
+  final PlatformInt64 current;
+  final int nextThreshold;
+
+  const FrbTrackProgress({
+    required this.level,
+    required this.progress,
+    required this.current,
+    required this.nextThreshold,
+  });
+
+  @override
+  int get hashCode =>
+      level.hashCode ^
+      progress.hashCode ^
+      current.hashCode ^
+      nextThreshold.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbTrackProgress &&
+          runtimeType == other.runtimeType &&
+          level == other.level &&
+          progress == other.progress &&
+          current == other.current &&
+          nextThreshold == other.nextThreshold;
 }

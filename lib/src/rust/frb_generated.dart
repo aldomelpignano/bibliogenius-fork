@@ -64,7 +64,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 128243172;
+  int get rustContentHash => 1952719176;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -103,6 +103,21 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateApiFrbDeleteTag({required int id});
 
   Future<int> crateApiFrbEnrichMissingCovers();
+
+  Future<List<String>> crateApiFrbGamificationCheckAchievements();
+
+  Future<FrbLeaderboardResponse> crateApiFrbGamificationGetLeaderboard();
+
+  Future<FrbGamificationStatus> crateApiFrbGamificationGetStatus();
+
+  Future<FrbLeaderboardResponse> crateApiFrbGamificationRefreshLeaderboard();
+
+  Future<void> crateApiFrbGamificationUpdateConfig({
+    int? readingGoalYearly,
+    String? achievementsStyle,
+  });
+
+  Future<FrbStreakInfo> crateApiFrbGamificationUpdateStreak();
 
   Future<String> crateApiFrbGenerateInviteLinkFfi({
     required String libraryName,
@@ -570,6 +585,188 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "enrich_missing_covers", argNames: []);
 
   @override
+  Future<List<String>> crateApiFrbGamificationCheckAchievements() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 12,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_String,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiFrbGamificationCheckAchievementsConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFrbGamificationCheckAchievementsConstMeta =>
+      const TaskConstMeta(
+        debugName: "gamification_check_achievements",
+        argNames: [],
+      );
+
+  @override
+  Future<FrbLeaderboardResponse> crateApiFrbGamificationGetLeaderboard() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 13,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_frb_leaderboard_response,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiFrbGamificationGetLeaderboardConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFrbGamificationGetLeaderboardConstMeta =>
+      const TaskConstMeta(
+        debugName: "gamification_get_leaderboard",
+        argNames: [],
+      );
+
+  @override
+  Future<FrbGamificationStatus> crateApiFrbGamificationGetStatus() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 14,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_frb_gamification_status,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiFrbGamificationGetStatusConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFrbGamificationGetStatusConstMeta =>
+      const TaskConstMeta(debugName: "gamification_get_status", argNames: []);
+
+  @override
+  Future<FrbLeaderboardResponse> crateApiFrbGamificationRefreshLeaderboard() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 15,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_frb_leaderboard_response,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiFrbGamificationRefreshLeaderboardConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFrbGamificationRefreshLeaderboardConstMeta =>
+      const TaskConstMeta(
+        debugName: "gamification_refresh_leaderboard",
+        argNames: [],
+      );
+
+  @override
+  Future<void> crateApiFrbGamificationUpdateConfig({
+    int? readingGoalYearly,
+    String? achievementsStyle,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_opt_box_autoadd_i_32(readingGoalYearly, serializer);
+          sse_encode_opt_String(achievementsStyle, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 16,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiFrbGamificationUpdateConfigConstMeta,
+        argValues: [readingGoalYearly, achievementsStyle],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFrbGamificationUpdateConfigConstMeta =>
+      const TaskConstMeta(
+        debugName: "gamification_update_config",
+        argNames: ["readingGoalYearly", "achievementsStyle"],
+      );
+
+  @override
+  Future<FrbStreakInfo> crateApiFrbGamificationUpdateStreak() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 17,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_frb_streak_info,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiFrbGamificationUpdateStreakConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFrbGamificationUpdateStreakConstMeta =>
+      const TaskConstMeta(
+        debugName: "gamification_update_streak",
+        argNames: [],
+      );
+
+  @override
   Future<String> crateApiFrbGenerateInviteLinkFfi({
     required String libraryName,
     required String url,
@@ -585,7 +782,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 18,
             port: port_,
           );
         },
@@ -622,7 +819,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 13,
+            funcId: 19,
             port: port_,
           );
         },
@@ -659,7 +856,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 14,
+            funcId: 20,
             port: port_,
           );
         },
@@ -693,7 +890,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 21,
             port: port_,
           );
         },
@@ -729,7 +926,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 16,
+            funcId: 22,
             port: port_,
           );
         },
@@ -758,7 +955,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 17,
+            funcId: 23,
             port: port_,
           );
         },
@@ -786,7 +983,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 18,
+            funcId: 24,
             port: port_,
           );
         },
@@ -814,7 +1011,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 19,
+            funcId: 25,
             port: port_,
           );
         },
@@ -841,7 +1038,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 20,
+            funcId: 26,
             port: port_,
           );
         },
@@ -865,7 +1062,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 21)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 27)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -890,7 +1087,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 22,
+            funcId: 28,
             port: port_,
           );
         },
@@ -914,7 +1111,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 23)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 29)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -937,7 +1134,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(name, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 24)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 30)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -959,7 +1156,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 25)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 31)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -985,7 +1182,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 26,
+            funcId: 32,
             port: port_,
           );
         },
@@ -1013,7 +1210,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 27,
+            funcId: 33,
             port: port_,
           );
         },
@@ -1053,7 +1250,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 28,
+            funcId: 34,
             port: port_,
           );
         },
@@ -1091,7 +1288,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 29)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 35)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_bool,
@@ -1121,7 +1318,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 30,
+            funcId: 36,
             port: port_,
           );
         },
@@ -1151,7 +1348,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 31,
+            funcId: 37,
             port: port_,
           );
         },
@@ -1190,7 +1387,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 32,
+            funcId: 38,
             port: port_,
           );
         },
@@ -1220,7 +1417,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 33,
+            funcId: 39,
             port: port_,
           );
         },
@@ -1250,7 +1447,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 34,
+            funcId: 40,
             port: port_,
           );
         },
@@ -1279,7 +1476,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 35,
+            funcId: 41,
             port: port_,
           );
         },
@@ -1307,7 +1504,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 36,
+            funcId: 42,
             port: port_,
           );
         },
@@ -1338,7 +1535,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 37,
+            funcId: 43,
             port: port_,
           );
         },
@@ -1369,7 +1566,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 38,
+            funcId: 44,
             port: port_,
           );
         },
@@ -1396,7 +1593,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 39,
+            funcId: 45,
             port: port_,
           );
         },
@@ -1424,7 +1621,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 40,
+            funcId: 46,
             port: port_,
           );
         },
@@ -1458,7 +1655,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 41,
+            funcId: 47,
             port: port_,
           );
         },
@@ -1491,7 +1688,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 42,
+            funcId: 48,
             port: port_,
           );
         },
@@ -1528,7 +1725,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 43,
+            funcId: 49,
             port: port_,
           );
         },
@@ -1559,7 +1756,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 44,
+            funcId: 50,
             port: port_,
           );
         },
@@ -1590,7 +1787,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 45,
+            funcId: 51,
             port: port_,
           );
         },
@@ -1617,7 +1814,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 46,
+            funcId: 52,
             port: port_,
           );
         },
@@ -1649,7 +1846,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 47,
+            funcId: 53,
             port: port_,
           );
         },
@@ -1677,7 +1874,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 48,
+            funcId: 54,
             port: port_,
           );
         },
@@ -1711,7 +1908,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 49,
+            funcId: 55,
             port: port_,
           );
         },
@@ -1777,6 +1974,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int dco_decode_box_autoadd_i_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
+  }
+
+  @protected
+  double dco_decode_f_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as double;
   }
 
   @protected
@@ -1889,6 +2092,72 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FrbGamificationConfig dco_decode_frb_gamification_config(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return FrbGamificationConfig(
+      achievementsStyle: dco_decode_String(arr[0]),
+      readingGoalYearly: dco_decode_i_32(arr[1]),
+      readingGoalProgress: dco_decode_i_32(arr[2]),
+      totalBooksRead: dco_decode_i_32(arr[3]),
+    );
+  }
+
+  @protected
+  FrbGamificationStatus dco_decode_frb_gamification_status(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 12)
+      throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
+    return FrbGamificationStatus(
+      collector: dco_decode_frb_track_progress(arr[0]),
+      reader: dco_decode_frb_track_progress(arr[1]),
+      lender: dco_decode_frb_track_progress(arr[2]),
+      cataloguer: dco_decode_frb_track_progress(arr[3]),
+      streak: dco_decode_frb_streak_info(arr[4]),
+      recentAchievements: dco_decode_list_String(arr[5]),
+      config: dco_decode_frb_gamification_config(arr[6]),
+      level: dco_decode_String(arr[7]),
+      loansCount: dco_decode_i_64(arr[8]),
+      editsCount: dco_decode_i_64(arr[9]),
+      nextLevelProgress: dco_decode_f_32(arr[10]),
+      badgeUrl: dco_decode_String(arr[11]),
+    );
+  }
+
+  @protected
+  FrbLeaderboardEntry dco_decode_frb_leaderboard_entry(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return FrbLeaderboardEntry(
+      libraryName: dco_decode_String(arr[0]),
+      level: dco_decode_i_32(arr[1]),
+      current: dco_decode_i_64(arr[2]),
+      isSelf: dco_decode_bool(arr[3]),
+      peerId: dco_decode_opt_box_autoadd_i_32(arr[4]),
+    );
+  }
+
+  @protected
+  FrbLeaderboardResponse dco_decode_frb_leaderboard_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return FrbLeaderboardResponse(
+      collector: dco_decode_list_frb_leaderboard_entry(arr[0]),
+      reader: dco_decode_list_frb_leaderboard_entry(arr[1]),
+      lender: dco_decode_list_frb_leaderboard_entry(arr[2]),
+      cataloguer: dco_decode_list_frb_leaderboard_entry(arr[3]),
+      lastRefreshed: dco_decode_opt_String(arr[4]),
+    );
+  }
+
+  @protected
   FrbLoan dco_decode_frb_loan(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1943,8 +2212,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   FrbMemoryScore dco_decode_frb_memory_score(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 7)
-      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
     return FrbMemoryScore(
       id: dco_decode_opt_box_autoadd_i_32(arr[0]),
       difficulty: dco_decode_String(arr[1]),
@@ -1953,6 +2222,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       errors: dco_decode_i_32(arr[4]),
       normalizedScore: dco_decode_f_64(arr[5]),
       playedAt: dco_decode_String(arr[6]),
+      newAchievements: dco_decode_list_String(arr[7]),
+    );
+  }
+
+  @protected
+  FrbStreakInfo dco_decode_frb_streak_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FrbStreakInfo(
+      current: dco_decode_i_32(arr[0]),
+      longest: dco_decode_i_32(arr[1]),
     );
   }
 
@@ -1967,6 +2249,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       name: dco_decode_String(arr[1]),
       parentId: dco_decode_opt_box_autoadd_i_32(arr[2]),
       count: dco_decode_i_64(arr[3]),
+    );
+  }
+
+  @protected
+  FrbTrackProgress dco_decode_frb_track_progress(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return FrbTrackProgress(
+      level: dco_decode_i_32(arr[0]),
+      progress: dco_decode_f_32(arr[1]),
+      current: dco_decode_i_64(arr[2]),
+      nextThreshold: dco_decode_i_32(arr[3]),
     );
   }
 
@@ -2010,6 +2306,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<FrbDiscoveredPeer> dco_decode_list_frb_discovered_peer(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_frb_discovered_peer).toList();
+  }
+
+  @protected
+  List<FrbLeaderboardEntry> dco_decode_list_frb_leaderboard_entry(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_frb_leaderboard_entry)
+        .toList();
   }
 
   @protected
@@ -2170,6 +2474,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  double sse_decode_f_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getFloat32();
+  }
+
+  @protected
   double sse_decode_f_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getFloat64();
@@ -2318,6 +2628,94 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FrbGamificationConfig sse_decode_frb_gamification_config(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_achievementsStyle = sse_decode_String(deserializer);
+    var var_readingGoalYearly = sse_decode_i_32(deserializer);
+    var var_readingGoalProgress = sse_decode_i_32(deserializer);
+    var var_totalBooksRead = sse_decode_i_32(deserializer);
+    return FrbGamificationConfig(
+      achievementsStyle: var_achievementsStyle,
+      readingGoalYearly: var_readingGoalYearly,
+      readingGoalProgress: var_readingGoalProgress,
+      totalBooksRead: var_totalBooksRead,
+    );
+  }
+
+  @protected
+  FrbGamificationStatus sse_decode_frb_gamification_status(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_collector = sse_decode_frb_track_progress(deserializer);
+    var var_reader = sse_decode_frb_track_progress(deserializer);
+    var var_lender = sse_decode_frb_track_progress(deserializer);
+    var var_cataloguer = sse_decode_frb_track_progress(deserializer);
+    var var_streak = sse_decode_frb_streak_info(deserializer);
+    var var_recentAchievements = sse_decode_list_String(deserializer);
+    var var_config = sse_decode_frb_gamification_config(deserializer);
+    var var_level = sse_decode_String(deserializer);
+    var var_loansCount = sse_decode_i_64(deserializer);
+    var var_editsCount = sse_decode_i_64(deserializer);
+    var var_nextLevelProgress = sse_decode_f_32(deserializer);
+    var var_badgeUrl = sse_decode_String(deserializer);
+    return FrbGamificationStatus(
+      collector: var_collector,
+      reader: var_reader,
+      lender: var_lender,
+      cataloguer: var_cataloguer,
+      streak: var_streak,
+      recentAchievements: var_recentAchievements,
+      config: var_config,
+      level: var_level,
+      loansCount: var_loansCount,
+      editsCount: var_editsCount,
+      nextLevelProgress: var_nextLevelProgress,
+      badgeUrl: var_badgeUrl,
+    );
+  }
+
+  @protected
+  FrbLeaderboardEntry sse_decode_frb_leaderboard_entry(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_libraryName = sse_decode_String(deserializer);
+    var var_level = sse_decode_i_32(deserializer);
+    var var_current = sse_decode_i_64(deserializer);
+    var var_isSelf = sse_decode_bool(deserializer);
+    var var_peerId = sse_decode_opt_box_autoadd_i_32(deserializer);
+    return FrbLeaderboardEntry(
+      libraryName: var_libraryName,
+      level: var_level,
+      current: var_current,
+      isSelf: var_isSelf,
+      peerId: var_peerId,
+    );
+  }
+
+  @protected
+  FrbLeaderboardResponse sse_decode_frb_leaderboard_response(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_collector = sse_decode_list_frb_leaderboard_entry(deserializer);
+    var var_reader = sse_decode_list_frb_leaderboard_entry(deserializer);
+    var var_lender = sse_decode_list_frb_leaderboard_entry(deserializer);
+    var var_cataloguer = sse_decode_list_frb_leaderboard_entry(deserializer);
+    var var_lastRefreshed = sse_decode_opt_String(deserializer);
+    return FrbLeaderboardResponse(
+      collector: var_collector,
+      reader: var_reader,
+      lender: var_lender,
+      cataloguer: var_cataloguer,
+      lastRefreshed: var_lastRefreshed,
+    );
+  }
+
+  @protected
   FrbLoan sse_decode_frb_loan(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_id = sse_decode_i_32(deserializer);
@@ -2388,6 +2786,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_errors = sse_decode_i_32(deserializer);
     var var_normalizedScore = sse_decode_f_64(deserializer);
     var var_playedAt = sse_decode_String(deserializer);
+    var var_newAchievements = sse_decode_list_String(deserializer);
     return FrbMemoryScore(
       id: var_id,
       difficulty: var_difficulty,
@@ -2396,7 +2795,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       errors: var_errors,
       normalizedScore: var_normalizedScore,
       playedAt: var_playedAt,
+      newAchievements: var_newAchievements,
     );
+  }
+
+  @protected
+  FrbStreakInfo sse_decode_frb_streak_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_current = sse_decode_i_32(deserializer);
+    var var_longest = sse_decode_i_32(deserializer);
+    return FrbStreakInfo(current: var_current, longest: var_longest);
   }
 
   @protected
@@ -2411,6 +2819,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       name: var_name,
       parentId: var_parentId,
       count: var_count,
+    );
+  }
+
+  @protected
+  FrbTrackProgress sse_decode_frb_track_progress(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_level = sse_decode_i_32(deserializer);
+    var var_progress = sse_decode_f_32(deserializer);
+    var var_current = sse_decode_i_64(deserializer);
+    var var_nextThreshold = sse_decode_i_32(deserializer);
+    return FrbTrackProgress(
+      level: var_level,
+      progress: var_progress,
+      current: var_current,
+      nextThreshold: var_nextThreshold,
     );
   }
 
@@ -2486,6 +2909,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <FrbDiscoveredPeer>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_frb_discovered_peer(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FrbLeaderboardEntry> sse_decode_list_frb_leaderboard_entry(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbLeaderboardEntry>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_leaderboard_entry(deserializer));
     }
     return ans_;
   }
@@ -2717,6 +3154,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_f_32(double self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putFloat32(self);
+  }
+
+  @protected
   void sse_encode_f_64(double self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putFloat64(self);
@@ -2810,6 +3253,64 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_frb_gamification_config(
+    FrbGamificationConfig self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.achievementsStyle, serializer);
+    sse_encode_i_32(self.readingGoalYearly, serializer);
+    sse_encode_i_32(self.readingGoalProgress, serializer);
+    sse_encode_i_32(self.totalBooksRead, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_gamification_status(
+    FrbGamificationStatus self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_track_progress(self.collector, serializer);
+    sse_encode_frb_track_progress(self.reader, serializer);
+    sse_encode_frb_track_progress(self.lender, serializer);
+    sse_encode_frb_track_progress(self.cataloguer, serializer);
+    sse_encode_frb_streak_info(self.streak, serializer);
+    sse_encode_list_String(self.recentAchievements, serializer);
+    sse_encode_frb_gamification_config(self.config, serializer);
+    sse_encode_String(self.level, serializer);
+    sse_encode_i_64(self.loansCount, serializer);
+    sse_encode_i_64(self.editsCount, serializer);
+    sse_encode_f_32(self.nextLevelProgress, serializer);
+    sse_encode_String(self.badgeUrl, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_leaderboard_entry(
+    FrbLeaderboardEntry self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.libraryName, serializer);
+    sse_encode_i_32(self.level, serializer);
+    sse_encode_i_64(self.current, serializer);
+    sse_encode_bool(self.isSelf, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.peerId, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_leaderboard_response(
+    FrbLeaderboardResponse self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_frb_leaderboard_entry(self.collector, serializer);
+    sse_encode_list_frb_leaderboard_entry(self.reader, serializer);
+    sse_encode_list_frb_leaderboard_entry(self.lender, serializer);
+    sse_encode_list_frb_leaderboard_entry(self.cataloguer, serializer);
+    sse_encode_opt_String(self.lastRefreshed, serializer);
+  }
+
+  @protected
   void sse_encode_frb_loan(FrbLoan self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.id, serializer);
@@ -2862,6 +3363,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.errors, serializer);
     sse_encode_f_64(self.normalizedScore, serializer);
     sse_encode_String(self.playedAt, serializer);
+    sse_encode_list_String(self.newAchievements, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_streak_info(
+    FrbStreakInfo self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.current, serializer);
+    sse_encode_i_32(self.longest, serializer);
   }
 
   @protected
@@ -2871,6 +3383,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.name, serializer);
     sse_encode_opt_box_autoadd_i_32(self.parentId, serializer);
     sse_encode_i_64(self.count, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_track_progress(
+    FrbTrackProgress self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.level, serializer);
+    sse_encode_f_32(self.progress, serializer);
+    sse_encode_i_64(self.current, serializer);
+    sse_encode_i_32(self.nextThreshold, serializer);
   }
 
   @protected
@@ -2936,6 +3460,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_frb_discovered_peer(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_frb_leaderboard_entry(
+    List<FrbLeaderboardEntry> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_leaderboard_entry(item, serializer);
     }
   }
 

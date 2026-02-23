@@ -7,6 +7,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#. 10 Books Collected
+msgid "achievement_collector_10"
+msgstr "Collection naissante"
+
+#. 100 Books Collected
+msgid "achievement_collector_100"
+msgstr "Centurion"
+
 #. Collector Bronze
 msgid "achievement_collector_bronze"
 msgstr "Collectionneur Bronze"
@@ -19,17 +27,37 @@ msgstr "Collectionneur Argent"
 msgid "achievement_first_book"
 msgstr "Premier Livre"
 
-#. Generous
+#. First Loan
 msgid "achievement_first_loan"
 msgstr "Généreux"
+
+#. First Book Read
+msgid "achievement_first_read"
+msgstr "Première lecture"
 
 #. Scanner Pro
 msgid "achievement_first_scan"
 msgstr "Scanner Pro"
 
+#. First Memory Game
+msgid "achievement_memory_first_game"
+msgstr "Mémoire novice"
+
+#. Master Difficulty
+msgid "achievement_memory_master"
+msgstr "Grand maître du Memory"
+
+#. Perfect Game
+msgid "achievement_memory_perfect"
+msgstr "Mémoire parfaite"
+
 #. Avid Reader
 msgid "achievement_reader_bronze"
 msgstr "Lecteur Assidu"
+
+#. 10 Books Read
+msgid "achievement_reader_10"
+msgstr "Rat de bibliothèque"
 
 #. Regular
 msgid "achievement_streak_3"
@@ -38,6 +66,10 @@ msgstr "Régulier"
 #. Perfect Week
 msgid "achievement_streak_7"
 msgstr "Semaine Parfaite"
+
+#. 30 Day Streak
+msgid "achievement_streak_30"
+msgstr "Champion du mois"
 
 #. 🏆 Achievement Unlocked!
 msgid "achievement_unlocked"

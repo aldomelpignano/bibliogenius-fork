@@ -5551,3 +5551,75 @@ msgstr "Вашето текущо ниво"
 #. Your Progress
 msgid "your_progress"
 msgstr "Вашият напредък"
+
+#. Memory Game
+msgid "memory_game_title"
+msgstr "Игра на памет"
+
+#. Memory Game - Choose difficulty
+msgid "memory_game_choose_difficulty"
+msgstr "Изберете трудност"
+
+#. Memory Game - Play button
+msgid "memory_game_play"
+msgstr "Играй"
+
+#. Memory Game - Not enough books
+msgid "memory_game_not_enough_books"
+msgstr "Необходими са поне 3 книги с корица, за да играете. Добавете още книги в библиотеката си!"
+
+#. Memory Game - Easy difficulty
+msgid "memory_game_easy"
+msgstr "Лесно"
+
+#. Memory Game - Medium difficulty
+msgid "memory_game_medium"
+msgstr "Средно"
+
+#. Memory Game - Hard difficulty
+msgid "memory_game_hard"
+msgstr "Трудно"
+
+#. Memory Game - Expert difficulty
+msgid "memory_game_expert"
+msgstr "Експерт"
+
+#. Memory Game - Master difficulty
+msgid "memory_game_master"
+msgstr "Майстор"
+
+#. Memory Game - Time label
+msgid "memory_game_time"
+msgstr "Време"
+
+#. Memory Game - Pairs label
+msgid "memory_game_pairs"
+msgstr "Двойки"
+
+#. Memory Game - Errors label
+msgid "memory_game_errors"
+msgstr "Грешки"
+
+#. Memory Game - Score label
+msgid "memory_game_score"
+msgstr "Резултат"
+
+#. Memory Game - Difficulty label
+msgid "memory_game_difficulty_label"
+msgstr "Трудност"
+
+#. Memory Game - Congratulations
+msgid "memory_game_congratulations"
+msgstr "Поздравления!"
+
+#. Memory Game - Play again
+msgid "memory_game_play_again"
+msgstr "Играй отново"
+
+#. Memory Game - Change difficulty
+msgid "memory_game_change_difficulty"
+msgstr "Промени трудност"
+
+#. Memory Game - Dashboard subtitle
+msgid "memory_game_dashboard_subtitle"
+msgstr "Намерете кориците на книгите си!"

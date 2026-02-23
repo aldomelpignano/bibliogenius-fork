@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/memory_game_provider.dart';
 import '../services/translation_service.dart';
+import '../widgets/achievement_pop_animation.dart';
 import '../widgets/memory_game_board.dart';
 
 /// Memory Game screen with three phases:
@@ -18,18 +20,63 @@ class MemoryGameScreen extends StatefulWidget {
 
 class _MemoryGameScreenState extends State<MemoryGameScreen> {
   late MemoryGameProvider _provider;
+  bool _achievementsShown = false;
 
   @override
   void initState() {
     super.initState();
     _provider = context.read<MemoryGameProvider>();
-    _provider.loadDifficulties();
+    _provider.addListener(_onProviderChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _provider.loadDifficulties();
+    });
+  }
+
+  @override
+  void dispose() {
+    _provider.removeListener(_onProviderChanged);
+    super.dispose();
+  }
+
+  void _onProviderChanged() {
+    if (_provider.phase == GamePhase.complete && !_achievementsShown) {
+      final achievements = _provider.lastScore?.newAchievements ?? [];
+      if (achievements.isNotEmpty) {
+        _achievementsShown = true;
+        // Show achievements with a slight delay between each
+        for (var i = 0; i < achievements.length; i++) {
+          Future.delayed(Duration(milliseconds: i * 500), () {
+            if (!mounted) return;
+            AchievementPopAnimation.show(
+              context,
+              achievementName: TranslationService.translate(
+                context,
+                'achievement_${achievements[i]}',
+              ),
+            );
+          });
+        }
+      }
+    } else if (_provider.phase == GamePhase.setup ||
+        _provider.phase == GamePhase.playing) {
+      _achievementsShown = false;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              context.pop();
+            } else {
+              context.go('/books');
+            }
+          },
+        ),
         title: Text(
           TranslationService.translate(context, 'memory_game_title'),
         ),
@@ -198,14 +245,9 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
           const Divider(height: 1),
           // Game board
           Expanded(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 500),
-                child: MemoryGameBoard(
-                  cards: provider.cards,
-                  onCardTap: provider.flipCard,
-                ),
-              ),
+            child: MemoryGameBoard(
+              cards: provider.cards,
+              onCardTap: provider.flipCard,
             ),
           ),
         ],

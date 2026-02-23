@@ -1263,319 +1263,77 @@ class ApiService {
 
   // Gamification
   Future<Response> getUserStatus() async {
-    // In FFI mode, calculate stats from actual data
+    // In FFI mode, delegate to Rust via FFI (single source of truth)
     if (useFfi) {
       try {
-        final books = await FfiService().getBooks();
-        final activeLoans = await FfiService().countActiveLoans();
-        final prefs = await SharedPreferences.getInstance();
-        final totalBooks = books.length;
-        final totalBooksRead = books
-            .where((b) => b.readingStatus == 'read')
-            .length;
-        final booksReading = books
-            .where((b) => b.readingStatus == 'reading')
-            .length;
-
-        // Count books finished THIS YEAR (based on finishedReadingAt)
-        final currentYear = DateTime.now().year;
-        final booksReadThisYear = books.where((b) {
-          if (b.finishedReadingAt == null) return false;
-          return b.finishedReadingAt!.year == currentYear;
-        }).length;
-
-        // Read goals from SharedPreferences
-        final readingGoalYearly = prefs.getInt('ffi_reading_goal_yearly') ?? 12;
-        final readingGoalMonthly =
-            prefs.getInt('ffi_reading_goal_monthly') ?? 0;
-
-        // Streak Calculation (Daily Logic)
-        final now = DateTime.now();
-        // Format YYYY-MM-DD
-        final todayStr =
-            "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-        final yesterday = now.subtract(const Duration(days: 1));
-        final yesterdayStr =
-            "${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}";
-
-        final lastActiveStr = prefs.getString('ffi_last_active_date');
-        int currentStreak = prefs.getInt('ffi_current_streak') ?? 0;
-        int longestStreak = prefs.getInt('ffi_longest_streak') ?? 0;
-
-        // Only update if not already logged today
-        if (lastActiveStr != todayStr) {
-          if (lastActiveStr == yesterdayStr) {
-            // Continue streak
-            currentStreak++;
-          } else {
-            // Streak broken or first time (start at 1)
-            currentStreak = 1;
-          }
-
-          if (currentStreak > longestStreak) {
-            longestStreak = currentStreak;
-          }
-
-          await prefs.setString('ffi_last_active_date', todayStr);
-          await prefs.setInt('ffi_current_streak', currentStreak);
-          await prefs.setInt('ffi_longest_streak', longestStreak);
-        } else {
-          // Already logged today, ensure at least 1 if somehow 0
-          if (currentStreak == 0) currentStreak = 1;
-          if (longestStreak < currentStreak) longestStreak = currentStreak;
-        }
-
-        // Calculate collector progress (6 levels: Novice 25, Apprenti 50, Bronze 100, Argent 250, Or 500, Platine 1000)
-        int collectorLevel = 0;
-        int collectorNext = 25;
-        if (totalBooks >= 1000) {
-          collectorLevel = 6;
-          collectorNext = 1000;
-        } else if (totalBooks >= 500) {
-          collectorLevel = 5;
-          collectorNext = 1000;
-        } else if (totalBooks >= 250) {
-          collectorLevel = 4;
-          collectorNext = 500;
-        } else if (totalBooks >= 100) {
-          collectorLevel = 3;
-          collectorNext = 250;
-        } else if (totalBooks >= 50) {
-          collectorLevel = 2;
-          collectorNext = 100;
-        } else if (totalBooks >= 25) {
-          collectorLevel = 1;
-          collectorNext = 50;
-        }
-
-        // Calculate reader progress (6 levels: 25, 50, 100, 250, 500, 1000)
-        // Uses all-time read count, not just this year
-        int readerLevel = 0;
-        int readerNext = 25;
-        if (totalBooksRead >= 1000) {
-          readerLevel = 6;
-          readerNext = 1000;
-        } else if (totalBooksRead >= 500) {
-          readerLevel = 5;
-          readerNext = 1000;
-        } else if (totalBooksRead >= 250) {
-          readerLevel = 4;
-          readerNext = 500;
-        } else if (totalBooksRead >= 100) {
-          readerLevel = 3;
-          readerNext = 250;
-        } else if (totalBooksRead >= 50) {
-          readerLevel = 2;
-          readerNext = 100;
-        } else if (totalBooksRead >= 25) {
-          readerLevel = 1;
-          readerNext = 50;
-        }
-
-        double collectorProgress = collectorLevel >= 6
-            ? 1.0
-            : totalBooks / collectorNext;
-        double readerProgress = readerLevel >= 6
-            ? 1.0
-            : totalBooksRead / readerNext;
-
-        // Calculate lender progress (thresholds: 5, 20, 50)
-        int totalLoans = 0;
-        try {
-          final allLoans = await FfiService().getAllLoans();
-          totalLoans = allLoans.length;
-        } catch (e) {
-          debugPrint('Error fetching loans for user status: $e');
-        }
-
-        int lenderLevel = 0;
-        int lenderNext = 25;
-        if (totalLoans >= 1000) {
-          lenderLevel = 6;
-          lenderNext = 1000;
-        } else if (totalLoans >= 500) {
-          lenderLevel = 5;
-          lenderNext = 1000;
-        } else if (totalLoans >= 250) {
-          lenderLevel = 4;
-          lenderNext = 500;
-        } else if (totalLoans >= 100) {
-          lenderLevel = 3;
-          lenderNext = 250;
-        } else if (totalLoans >= 50) {
-          lenderLevel = 2;
-          lenderNext = 100;
-        } else if (totalLoans >= 25) {
-          lenderLevel = 1;
-          lenderNext = 50;
-        }
-        double lenderProgress = lenderLevel >= 6
-            ? 1.0
-            : totalLoans / lenderNext;
-
-        // Calculate cataloguer progress (6 levels: 25, 50, 100, 250, 500, 1000) based on shelves (tags)
-        int totalShelves = 0;
-        try {
-          final tags = await FfiService().getTags();
-          totalShelves = tags.length;
-        } catch (e) {
-          debugPrint('Error fetching tags for user status: $e');
-        }
-
-        int cataloguerLevel = 0;
-        int cataloguerNext = 25;
-        if (totalShelves >= 1000) {
-          cataloguerLevel = 6;
-          cataloguerNext = 1000;
-        } else if (totalShelves >= 500) {
-          cataloguerLevel = 5;
-          cataloguerNext = 1000;
-        } else if (totalShelves >= 250) {
-          cataloguerLevel = 4;
-          cataloguerNext = 500;
-        } else if (totalShelves >= 100) {
-          cataloguerLevel = 3;
-          cataloguerNext = 250;
-        } else if (totalShelves >= 50) {
-          cataloguerLevel = 2;
-          cataloguerNext = 100;
-        } else if (totalShelves >= 25) {
-          cataloguerLevel = 1;
-          cataloguerNext = 50;
-        }
-        double cataloguerProgress = cataloguerLevel >= 6
-            ? 1.0
-            : totalShelves / cataloguerNext;
-
+        final status = await FfiService().getGamificationStatus();
+        return Response(
+          requestOptions: RequestOptions(path: '/api/user/status'),
+          statusCode: 200,
+          data: _frbStatusToJson(status),
+        );
+      } catch (e) {
+        debugPrint('FFI getUserStatus error: $e');
+        // Fallback to defaults on error
         return Response(
           requestOptions: RequestOptions(path: '/api/user/status'),
           statusCode: 200,
           data: {
             'tracks': {
-              'collector': {
-                'level': collectorLevel,
-                'progress': collectorProgress.clamp(0.0, 1.0),
-                'current': totalBooks,
-                'next_threshold': collectorNext,
-              },
-              'reader': {
-                'level': readerLevel,
-                'progress': readerProgress.clamp(0.0, 1.0),
-                'current': totalBooksRead,
-                'next_threshold': readerNext,
-              },
-              'lender': {
-                'level': lenderLevel,
-                'progress': lenderProgress.clamp(0.0, 1.0),
-                'current': totalLoans,
-                'next_threshold': lenderNext,
-              },
-              'cataloguer': {
-                'level': cataloguerLevel,
-                'progress': cataloguerProgress.clamp(0.0, 1.0),
-                'current': totalShelves,
-                'next_threshold': cataloguerNext,
-              },
+              'collector': {'level': 0, 'progress': 0.0, 'current': 0, 'next_threshold': 25},
+              'reader': {'level': 0, 'progress': 0.0, 'current': 0, 'next_threshold': 25},
+              'lender': {'level': 0, 'progress': 0.0, 'current': 0, 'next_threshold': 25},
+              'cataloguer': {'level': 0, 'progress': 0.0, 'current': 0, 'next_threshold': 25},
             },
-            'streak': {'current': currentStreak, 'longest': longestStreak},
-            'recent_achievements': [],
+            'streak': {'current': 0, 'longest': 0},
+            'recent_achievements': <String>[],
             'config': {
               'achievements_style': 'minimal',
-              'reading_goal_yearly': readingGoalYearly,
-              'reading_goal_monthly': readingGoalMonthly,
-              'reading_goal_progress':
-                  booksReadThisYear, // Books finished THIS YEAR
-              'total_books_read': totalBooksRead, // All-time read count
-              'fallback_preferences':
-                  prefs.getString('ffi_fallback_preferences') != null
-                  ? jsonDecode(prefs.getString('ffi_fallback_preferences')!)
-                  : <String, dynamic>{},
-              'api_keys':
-                  prefs.getString('ffi_api_keys') != null
-                  ? jsonDecode(prefs.getString('ffi_api_keys')!)
-                  : <String, dynamic>{},
+              'reading_goal_yearly': 12,
+              'reading_goal_progress': 0,
+              'total_books_read': 0,
             },
             'level': 'Member',
-            'loans_count': activeLoans,
+            'loans_count': 0,
             'edits_count': 0,
-            'next_level_progress': collectorProgress.clamp(0.0, 1.0),
+            'next_level_progress': 0.0,
+            'badge_url': '',
           },
         );
-      } catch (e) {
-        debugPrint('FFI getUserStatus error: $e');
       }
-      // Fallback to defaults on error
-      return Response(
-        requestOptions: RequestOptions(path: '/api/user/status'),
-        statusCode: 200,
-        data: {
-          'tracks': {
-            'collector': {
-              'level': 0,
-              'progress': 0.0,
-              'current': 0,
-              'next_threshold': 10,
-            },
-            'reader': {
-              'level': 0,
-              'progress': 0.0,
-              'current': 0,
-              'next_threshold': 5,
-            },
-            'lender': {
-              'level': 0,
-              'progress': 0.0,
-              'current': 0,
-              'next_threshold': 5,
-            },
-            'cataloguer': {
-              'level': 0,
-              'progress': 0.0,
-              'current': 0,
-              'next_threshold': 10,
-            },
-          },
-          'streak': {'current': 0, 'longest': 0},
-          'recent_achievements': [],
-          'config': {
-            'achievements_style': 'minimal',
-            'reading_goal_yearly': 12,
-            'reading_goal_progress': 0,
-            'total_books_read': 0,
-            'fallback_preferences': <String, dynamic>{},
-          },
-          'level': 'Member',
-          'loans_count': 0,
-          'edits_count': 0,
-          'next_level_progress': 0.0,
-        },
-      );
     }
     return await _dio.get('/api/user/status');
   }
 
   /// Get network gamification leaderboard
   Future<Response> getLeaderboard() async {
+    if (useFfi) {
+      try {
+        final lb = await FfiService().getGamificationLeaderboard();
+        return Response(
+          requestOptions: RequestOptions(path: '/api/gamification/leaderboard'),
+          statusCode: 200,
+          data: _frbLeaderboardToJson(lb),
+        );
+      } catch (e) {
+        debugPrint('FFI getLeaderboard error: $e');
+      }
+    }
     try {
-      final dio = useFfi ? await _getLocalDio() : _dio;
-      return await dio.get('/api/gamification/leaderboard');
+      return await _dio.get('/api/gamification/leaderboard');
     } catch (e) {
       debugPrint('Leaderboard: server unavailable, returning empty ($e)');
       return Response(
         requestOptions: RequestOptions(path: '/api/gamification/leaderboard'),
         statusCode: 200,
-        data: {
-          'collector': [],
-          'reader': [],
-          'lender': [],
-          'cataloguer': [],
-        },
+        data: {'collector': [], 'reader': [], 'lender': [], 'cataloguer': []},
       );
     }
   }
 
   /// Refresh leaderboard by syncing gamification stats from all connected peers,
   /// then return the updated leaderboard data.
+  /// Note: peer sync requires the HTTP endpoint, so this still uses HTTP.
   Future<Response> refreshLeaderboard() async {
     try {
       final dio = useFfi ? await _getLocalDio() : _dio;
@@ -1593,41 +1351,86 @@ class ApiService {
     String? achievementsStyle,
     Map<String, dynamic>? fallbackPreferences,
   }) async {
-    final data = <String, dynamic>{};
-    if (readingGoalYearly != null)
-      data['reading_goal_yearly'] = readingGoalYearly;
-    if (readingGoalMonthly != null)
-      data['reading_goal_monthly'] = readingGoalMonthly;
-    if (achievementsStyle != null)
-      data['achievements_style'] = achievementsStyle;
-    if (fallbackPreferences != null)
-      data['fallback_preferences'] = fallbackPreferences;
-
     if (useFfi) {
-      // In FFI mode, store in SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      if (readingGoalYearly != null) {
-        await prefs.setInt('ffi_reading_goal_yearly', readingGoalYearly);
-      }
-      if (readingGoalMonthly != null) {
-        await prefs.setInt('ffi_reading_goal_monthly', readingGoalMonthly);
-      }
-      if (achievementsStyle != null) {
-        await prefs.setString('ffi_achievements_style', achievementsStyle);
-      }
-      if (fallbackPreferences != null) {
-        await prefs.setString(
-          'ffi_fallback_preferences',
-          jsonEncode(fallbackPreferences),
-        );
-      }
+      await FfiService().updateGamificationConfig(
+        readingGoalYearly: readingGoalYearly,
+        achievementsStyle: achievementsStyle,
+      );
       return Response(
         requestOptions: RequestOptions(path: '/api/user/config'),
         statusCode: 200,
         data: {'message': 'Config updated successfully'},
       );
     }
+    final data = <String, dynamic>{};
+    if (readingGoalYearly != null) {
+      data['reading_goal_yearly'] = readingGoalYearly;
+    }
+    if (readingGoalMonthly != null) {
+      data['reading_goal_monthly'] = readingGoalMonthly;
+    }
+    if (achievementsStyle != null) {
+      data['achievements_style'] = achievementsStyle;
+    }
+    if (fallbackPreferences != null) {
+      data['fallback_preferences'] = fallbackPreferences;
+    }
     return await _dio.put('/api/user/config', data: data);
+  }
+
+  // ============ FFI → JSON conversion helpers ============
+
+  /// Convert FrbGamificationStatus to JSON map matching GamificationStatus.fromJson
+  Map<String, dynamic> _frbStatusToJson(frb.FrbGamificationStatus status) {
+    Map<String, dynamic> trackToJson(frb.FrbTrackProgress t) => {
+      'level': t.level,
+      'progress': t.progress,
+      'current': t.current.toInt(),
+      'next_threshold': t.nextThreshold,
+    };
+    return {
+      'tracks': {
+        'collector': trackToJson(status.collector),
+        'reader': trackToJson(status.reader),
+        'lender': trackToJson(status.lender),
+        'cataloguer': trackToJson(status.cataloguer),
+      },
+      'streak': {
+        'current': status.streak.current,
+        'longest': status.streak.longest,
+      },
+      'recent_achievements': status.recentAchievements,
+      'config': {
+        'achievements_style': status.config.achievementsStyle,
+        'reading_goal_yearly': status.config.readingGoalYearly,
+        'reading_goal_progress': status.config.readingGoalProgress,
+        'total_books_read': status.config.totalBooksRead,
+      },
+      'level': status.level,
+      'loans_count': status.loansCount.toInt(),
+      'edits_count': status.editsCount.toInt(),
+      'next_level_progress': status.nextLevelProgress,
+      'badge_url': status.badgeUrl,
+    };
+  }
+
+  /// Convert FrbLeaderboardResponse to JSON map matching leaderboard consumers
+  Map<String, dynamic> _frbLeaderboardToJson(frb.FrbLeaderboardResponse lb) {
+    List<Map<String, dynamic>> entriesToJson(List<frb.FrbLeaderboardEntry> entries) =>
+        entries.map((e) => {
+          'library_name': e.libraryName,
+          'level': e.level,
+          'current': e.current.toInt(),
+          'is_self': e.isSelf,
+          'peer_id': e.peerId,
+        }).toList();
+    return {
+      'collector': entriesToJson(lb.collector),
+      'reader': entriesToJson(lb.reader),
+      'lender': entriesToJson(lb.lender),
+      'cataloguer': entriesToJson(lb.cataloguer),
+      if (lb.lastRefreshed != null) 'last_refreshed': lb.lastRefreshed,
+    };
   }
 
   // Export

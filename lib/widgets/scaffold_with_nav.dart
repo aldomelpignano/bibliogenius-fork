@@ -126,7 +126,13 @@ class ScaffoldWithNav extends StatelessWidget {
           label: Text(TranslationService.translate(context, 'dashboard')),
         ),
       ),
-
+      _NavItem(
+        route: '/memory-game',
+        destination: NavigationRailDestination(
+          icon: const Icon(Icons.auto_stories),
+          label: Text(TranslationService.translate(context, 'memory_game_title')),
+        ),
+      ),
       _NavItem(
         route: '/settings',
         destination: NavigationRailDestination(
