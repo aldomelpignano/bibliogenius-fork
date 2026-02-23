@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/pending_peers_provider.dart';
+import '../providers/theme_provider.dart';
 import '../services/translation_service.dart';
 import 'app_drawer.dart';
 import '../utils/global_keys.dart';
@@ -85,6 +86,7 @@ class ScaffoldWithNav extends StatelessWidget {
   }
 
   List<_NavItem> _buildNavItems(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return [
       _NavItem(
         route: '/books',
@@ -126,13 +128,14 @@ class ScaffoldWithNav extends StatelessWidget {
           label: Text(TranslationService.translate(context, 'dashboard')),
         ),
       ),
-      _NavItem(
-        route: '/memory-game',
-        destination: NavigationRailDestination(
-          icon: const Icon(Icons.auto_stories),
-          label: Text(TranslationService.translate(context, 'memory_game_title')),
+      if (themeProvider.memoryGameEnabled)
+        _NavItem(
+          route: '/memory-game',
+          destination: NavigationRailDestination(
+            icon: const Icon(Icons.auto_stories),
+            label: Text(TranslationService.translate(context, 'memory_game_title')),
+          ),
         ),
-      ),
       _NavItem(
         route: '/settings',
         destination: NavigationRailDestination(

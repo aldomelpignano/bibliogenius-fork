@@ -314,6 +314,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   themeProvider.gamificationEnabled,
                   (value) => themeProvider.setGamificationEnabled(value),
                 ),
+                _buildModuleToggle(
+                  context,
+                  'memory_game_module',
+                  'memory_game_module_desc',
+                  Icons.auto_stories,
+                  themeProvider.memoryGameEnabled,
+                  (value) => themeProvider.setMemoryGameEnabled(value),
+                ),
                 if (themeProvider.gamificationEnabled &&
                     themeProvider.networkEnabled)
                   Padding(

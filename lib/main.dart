@@ -462,6 +462,11 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
             ),
             GoRoute(
               path: '/memory-game',
+              redirect: (context, state) {
+                final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+                if (!themeProvider.memoryGameEnabled) return '/dashboard';
+                return null;
+              },
               builder: (context, state) => const MemoryGameScreen(),
             ),
             GoRoute(

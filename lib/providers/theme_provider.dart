@@ -87,6 +87,9 @@ class ThemeProvider with ChangeNotifier {
   bool _gamificationEnabled = true;
   bool get gamificationEnabled => _gamificationEnabled;
 
+  // Memory Game Module
+  bool _memoryGameEnabled = true;
+  bool get memoryGameEnabled => _memoryGameEnabled;
 
   // Digital Formats Module
   bool _digitalFormatsEnabled = false;
@@ -280,6 +283,7 @@ class ThemeProvider with ChangeNotifier {
     _audioEnabled = prefs.getBool('audioEnabled') ?? false;
     _mcpEnabled = prefs.getBool('mcpEnabled') ?? false;
     _simplifiedMode = prefs.getBool('simplifiedMode') ?? false;
+    _memoryGameEnabled = prefs.getBool('memoryGameEnabled') ?? true;
 
     // Load gamification setting (default based on profile type)
     final savedGamification = prefs.getBool('gamificationEnabled');
@@ -377,6 +381,13 @@ class ThemeProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setMemoryGameEnabled(bool enabled) async {
+    _memoryGameEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('memoryGameEnabled', enabled);
+    await _updateEnabledModules();
+    notifyListeners();
+  }
 
   Future<void> setCurrency(String currency) async {
     _currency = currency;
@@ -908,6 +919,7 @@ class ThemeProvider with ChangeNotifier {
       enabledModules.add('auto_approve_loans');
     }
     if (commerceEnabled) enabledModules.add('commerce');
+    if (memoryGameEnabled) enabledModules.add('memory_game');
     if (networkGamificationEnabled) {
       enabledModules.add('network_gamification');
     }

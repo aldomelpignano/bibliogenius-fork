@@ -84,14 +84,15 @@ class AppDrawer extends StatelessWidget {
             currentPath: currentPath,
             theme: theme,
           ),
-          _buildDrawerItem(
-            context,
-            icon: Icons.auto_stories,
-            titleKey: 'memory_game_title',
-            route: '/memory-game',
-            currentPath: currentPath,
-            theme: theme,
-          ),
+          if (themeProvider.memoryGameEnabled)
+            _buildDrawerItem(
+              context,
+              icon: Icons.auto_stories,
+              titleKey: 'memory_game_title',
+              route: '/memory-game',
+              currentPath: currentPath,
+              theme: theme,
+            ),
           _buildDrawerItem(
             context,
             icon: Icons.settings,

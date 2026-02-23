@@ -571,7 +571,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                       ),
 
                     // Memory Game card
-                    if (!isKid) _buildMemoryGameCard(context),
+                    if (!isKid && themeProvider.memoryGameEnabled)
+                      _buildMemoryGameCard(context),
 
                     const SizedBox(height: 24),
                     if (!isKid)

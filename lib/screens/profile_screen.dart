@@ -7,6 +7,7 @@ import '../models/gamification_status.dart';
 import '../models/leaderboard_entry.dart';
 import '../providers/theme_provider.dart';
 import '../services/api_service.dart';
+import '../services/ffi_service.dart';
 import '../services/translation_service.dart';
 import '../widgets/avatar_customizer.dart';
 import '../widgets/gamification_widgets.dart';
@@ -79,6 +80,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _fetchFresh({required bool showLoading}) async {
     try {
       final apiService = Provider.of<ApiService>(context, listen: false);
+
+      // Retroactively unlock pending achievements (e.g. first_book for existing libraries)
+      if (apiService.useFfi) {
+        try {
+          await FfiService().checkAchievements();
+        } catch (e) {
+          debugPrint('Achievement check failed (non-blocking): $e');
+        }
+      }
 
       // Parallel: status + config
       final results = await Future.wait([

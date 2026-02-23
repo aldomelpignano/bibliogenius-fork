@@ -5723,6 +5723,14 @@ msgstr "Nochmal spielen"
 msgid "memory_game_change_difficulty"
 msgstr "Schwierigkeit ändern"
 
+#. Memory Game Module
+msgid "memory_game_module"
+msgstr "Memory-Spiel"
+
+#. Memory Game Module Description
+msgid "memory_game_module_desc"
+msgstr "Finde deine Buchcover im Memory-Spiel"
+
 #. Memory Game - Dashboard subtitle
 msgid "memory_game_dashboard_subtitle"
 msgstr "Finde deine Buchcover!"
