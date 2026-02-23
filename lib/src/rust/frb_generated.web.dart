@@ -66,6 +66,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FrbLoan dco_decode_frb_loan(dynamic raw);
 
   @protected
+  FrbMemoryCard dco_decode_frb_memory_card(dynamic raw);
+
+  @protected
+  FrbMemoryLeaderboardEntry dco_decode_frb_memory_leaderboard_entry(
+    dynamic raw,
+  );
+
+  @protected
+  FrbMemoryScore dco_decode_frb_memory_score(dynamic raw);
+
+  @protected
   FrbTag dco_decode_frb_tag(dynamic raw);
 
   @protected
@@ -91,6 +102,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<FrbLoan> dco_decode_list_frb_loan(dynamic raw);
+
+  @protected
+  List<FrbMemoryCard> dco_decode_list_frb_memory_card(dynamic raw);
+
+  @protected
+  List<FrbMemoryLeaderboardEntry> dco_decode_list_frb_memory_leaderboard_entry(
+    dynamic raw,
+  );
+
+  @protected
+  List<FrbMemoryScore> dco_decode_list_frb_memory_score(dynamic raw);
 
   @protected
   List<FrbTag> dco_decode_list_frb_tag(dynamic raw);
@@ -183,6 +205,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FrbLoan sse_decode_frb_loan(SseDeserializer deserializer);
 
   @protected
+  FrbMemoryCard sse_decode_frb_memory_card(SseDeserializer deserializer);
+
+  @protected
+  FrbMemoryLeaderboardEntry sse_decode_frb_memory_leaderboard_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbMemoryScore sse_decode_frb_memory_score(SseDeserializer deserializer);
+
+  @protected
   FrbTag sse_decode_frb_tag(SseDeserializer deserializer);
 
   @protected
@@ -212,6 +245,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<FrbLoan> sse_decode_list_frb_loan(SseDeserializer deserializer);
+
+  @protected
+  List<FrbMemoryCard> sse_decode_list_frb_memory_card(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbMemoryLeaderboardEntry> sse_decode_list_frb_memory_leaderboard_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbMemoryScore> sse_decode_list_frb_memory_score(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<FrbTag> sse_decode_list_frb_tag(SseDeserializer deserializer);
@@ -315,6 +363,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_frb_loan(FrbLoan self, SseSerializer serializer);
 
   @protected
+  void sse_encode_frb_memory_card(FrbMemoryCard self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_frb_memory_leaderboard_entry(
+    FrbMemoryLeaderboardEntry self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_memory_score(
+    FrbMemoryScore self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_frb_tag(FrbTag self, SseSerializer serializer);
 
   @protected
@@ -349,6 +412,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_frb_loan(List<FrbLoan> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_frb_memory_card(
+    List<FrbMemoryCard> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_memory_leaderboard_entry(
+    List<FrbMemoryLeaderboardEntry> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_memory_score(
+    List<FrbMemoryScore> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_frb_tag(List<FrbTag> self, SseSerializer serializer);

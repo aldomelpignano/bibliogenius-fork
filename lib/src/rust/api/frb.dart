@@ -282,6 +282,35 @@ Future<String> resetApp() => RustLib.instance.api.crateApiFrbResetApp();
 Future<int> startServer({required int port}) =>
     RustLib.instance.api.crateApiFrbStartServer(port: port);
 
+/// Get available difficulty levels based on books with covers
+Future<List<String>> memoryGameAvailableDifficulties() =>
+    RustLib.instance.api.crateApiFrbMemoryGameAvailableDifficulties();
+
+/// Set up a new memory game with the given difficulty
+Future<List<FrbMemoryCard>> memoryGameSetup({required String difficulty}) =>
+    RustLib.instance.api.crateApiFrbMemoryGameSetup(difficulty: difficulty);
+
+/// Submit a completed game and get the score back
+Future<FrbMemoryScore> memoryGameFinish({
+  required String difficulty,
+  required double elapsedSeconds,
+  required int errors,
+  required int pairsCount,
+}) => RustLib.instance.api.crateApiFrbMemoryGameFinish(
+  difficulty: difficulty,
+  elapsedSeconds: elapsedSeconds,
+  errors: errors,
+  pairsCount: pairsCount,
+);
+
+/// Get top memory game scores
+Future<List<FrbMemoryScore>> memoryGameTopScores() =>
+    RustLib.instance.api.crateApiFrbMemoryGameTopScores();
+
+/// Get leaderboard (peer scores)
+Future<List<FrbMemoryLeaderboardEntry>> memoryGameLeaderboard() =>
+    RustLib.instance.api.crateApiFrbMemoryGameLeaderboard();
+
 /// Simplified book structure for FFI
 @freezed
 sealed class FrbBook with _$FrbBook {
@@ -387,6 +416,111 @@ sealed class FrbLoan with _$FrbLoan {
     required String contactName,
     required String bookTitle,
   }) = _FrbLoan;
+}
+
+/// A card in the memory game (FFI-safe)
+class FrbMemoryCard {
+  final int bookId;
+  final String title;
+  final String coverUrl;
+
+  const FrbMemoryCard({
+    required this.bookId,
+    required this.title,
+    required this.coverUrl,
+  });
+
+  @override
+  int get hashCode => bookId.hashCode ^ title.hashCode ^ coverUrl.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbMemoryCard &&
+          runtimeType == other.runtimeType &&
+          bookId == other.bookId &&
+          title == other.title &&
+          coverUrl == other.coverUrl;
+}
+
+/// A leaderboard entry (FFI-safe)
+class FrbMemoryLeaderboardEntry {
+  final int peerId;
+  final String libraryName;
+  final double bestScore;
+  final String difficulty;
+  final String playedAt;
+
+  const FrbMemoryLeaderboardEntry({
+    required this.peerId,
+    required this.libraryName,
+    required this.bestScore,
+    required this.difficulty,
+    required this.playedAt,
+  });
+
+  @override
+  int get hashCode =>
+      peerId.hashCode ^
+      libraryName.hashCode ^
+      bestScore.hashCode ^
+      difficulty.hashCode ^
+      playedAt.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbMemoryLeaderboardEntry &&
+          runtimeType == other.runtimeType &&
+          peerId == other.peerId &&
+          libraryName == other.libraryName &&
+          bestScore == other.bestScore &&
+          difficulty == other.difficulty &&
+          playedAt == other.playedAt;
+}
+
+/// A saved memory game score (FFI-safe)
+class FrbMemoryScore {
+  final int? id;
+  final String difficulty;
+  final int pairsCount;
+  final double elapsedSeconds;
+  final int errors;
+  final double normalizedScore;
+  final String playedAt;
+
+  const FrbMemoryScore({
+    this.id,
+    required this.difficulty,
+    required this.pairsCount,
+    required this.elapsedSeconds,
+    required this.errors,
+    required this.normalizedScore,
+    required this.playedAt,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      difficulty.hashCode ^
+      pairsCount.hashCode ^
+      elapsedSeconds.hashCode ^
+      errors.hashCode ^
+      normalizedScore.hashCode ^
+      playedAt.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbMemoryScore &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          difficulty == other.difficulty &&
+          pairsCount == other.pairsCount &&
+          elapsedSeconds == other.elapsedSeconds &&
+          errors == other.errors &&
+          normalizedScore == other.normalizedScore &&
+          playedAt == other.playedAt;
 }
 
 /// Simplified tag structure for FFI

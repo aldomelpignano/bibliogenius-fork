@@ -5678,3 +5678,75 @@ msgstr "End-to-end encryption enabled"
 msgid "share_invite_link"
 msgstr "Share invite link"
 
+#. Memory Game
+msgid "memory_game_title"
+msgstr "Memory Game"
+
+#. Memory Game - Choose difficulty
+msgid "memory_game_choose_difficulty"
+msgstr "Choose a difficulty"
+
+#. Memory Game - Play button
+msgid "memory_game_play"
+msgstr "Play"
+
+#. Memory Game - Not enough books
+msgid "memory_game_not_enough_books"
+msgstr "You need at least 3 books with covers to play. Add more books to your library!"
+
+#. Memory Game - Easy difficulty
+msgid "memory_game_easy"
+msgstr "Easy"
+
+#. Memory Game - Medium difficulty
+msgid "memory_game_medium"
+msgstr "Medium"
+
+#. Memory Game - Hard difficulty
+msgid "memory_game_hard"
+msgstr "Hard"
+
+#. Memory Game - Expert difficulty
+msgid "memory_game_expert"
+msgstr "Expert"
+
+#. Memory Game - Master difficulty
+msgid "memory_game_master"
+msgstr "Master"
+
+#. Memory Game - Time label
+msgid "memory_game_time"
+msgstr "Time"
+
+#. Memory Game - Pairs label
+msgid "memory_game_pairs"
+msgstr "Pairs"
+
+#. Memory Game - Errors label
+msgid "memory_game_errors"
+msgstr "Errors"
+
+#. Memory Game - Score label
+msgid "memory_game_score"
+msgstr "Score"
+
+#. Memory Game - Difficulty label
+msgid "memory_game_difficulty_label"
+msgstr "Difficulty"
+
+#. Memory Game - Congratulations
+msgid "memory_game_congratulations"
+msgstr "Congratulations!"
+
+#. Memory Game - Play again
+msgid "memory_game_play_again"
+msgstr "Play again"
+
+#. Memory Game - Change difficulty
+msgid "memory_game_change_difficulty"
+msgstr "Change difficulty"
+
+#. Memory Game - Dashboard subtitle
+msgid "memory_game_dashboard_subtitle"
+msgstr "Match your book covers!"
+

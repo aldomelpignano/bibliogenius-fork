@@ -481,6 +481,7 @@ When incrementing the version in `pubspec.yaml`, run the appropriate level of no
 5. **Unbounded audio cache**: `AudioProvider._audioCache` can grow indefinitely
 6. **Italian i18n**: Italian `.po` file exists but is empty (0%). EN/FR/ES/DE are at 100%. See `dart tools/validate_po.dart`
 7. **ApiService bloat**: 3,700+ lines with mixed concerns (FFI routing, retry, health check)
+8. **HTTP local legacy**: Collections and gamification use `_getLocalDio()` detour instead of FFI direct. New features MUST use `FfiService` → `frb.*` (see root CLAUDE.md Rule F3)
 
 ---
 

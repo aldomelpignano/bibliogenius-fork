@@ -496,6 +496,68 @@ class FfiService {
     }
   }
 
+  // ============ Memory Game ============
+
+  /// Get available difficulty levels based on books with covers
+  Future<List<String>> getMemoryDifficulties() async {
+    try {
+      return await frb.memoryGameAvailableDifficulties();
+    } catch (e) {
+      debugPrint('FFI memoryGameAvailableDifficulties error: $e');
+      return [];
+    }
+  }
+
+  /// Set up a new game: returns shuffled card pairs
+  Future<List<frb.FrbMemoryCard>> setupMemoryGame(String difficulty) async {
+    try {
+      return await frb.memoryGameSetup(difficulty: difficulty);
+    } catch (e) {
+      debugPrint('FFI memoryGameSetup error: $e');
+      rethrow;
+    }
+  }
+
+  /// Submit a completed game and get the computed score
+  Future<frb.FrbMemoryScore> finishMemoryGame({
+    required String difficulty,
+    required double elapsedSeconds,
+    required int errors,
+    required int pairsCount,
+  }) async {
+    try {
+      return await frb.memoryGameFinish(
+        difficulty: difficulty,
+        elapsedSeconds: elapsedSeconds,
+        errors: errors,
+        pairsCount: pairsCount,
+      );
+    } catch (e) {
+      debugPrint('FFI memoryGameFinish error: $e');
+      rethrow;
+    }
+  }
+
+  /// Get top memory game scores
+  Future<List<frb.FrbMemoryScore>> getMemoryTopScores() async {
+    try {
+      return await frb.memoryGameTopScores();
+    } catch (e) {
+      debugPrint('FFI memoryGameTopScores error: $e');
+      return [];
+    }
+  }
+
+  /// Get leaderboard (peer scores)
+  Future<List<frb.FrbMemoryLeaderboardEntry>> getMemoryLeaderboard() async {
+    try {
+      return await frb.memoryGameLeaderboard();
+    } catch (e) {
+      debugPrint('FFI memoryGameLeaderboard error: $e');
+      return [];
+    }
+  }
+
   // ============ mDNS Local Discovery (Modular) ============
 
   /// Check if mDNS discovery service is available
