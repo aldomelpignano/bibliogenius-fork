@@ -40,6 +40,7 @@ class MemoryGameProvider extends ChangeNotifier {
   MemoryGameScore? _lastScore;
   List<MemoryGameScore> _topScores = [];
   List<MemoryLeaderboardEntry> _networkScores = [];
+  bool _isSyncingNetwork = false;
 
   // --- Rank info (computed after game finish) ---
   int? _personalRank;
@@ -59,6 +60,7 @@ class MemoryGameProvider extends ChangeNotifier {
   MemoryGameScore? get lastScore => _lastScore;
   List<MemoryGameScore> get topScores => _topScores;
   List<MemoryLeaderboardEntry> get networkScores => _networkScores;
+  bool get isSyncingNetwork => _isSyncingNetwork;
   bool get isMatchChecking => _phase == GamePhase.matchCheck;
   int? get personalRank => _personalRank;
   bool get isNewPersonalBest => _isNewPersonalBest;
@@ -298,9 +300,13 @@ class MemoryGameProvider extends ChangeNotifier {
   }
 
   /// Load network leaderboard (peer best scores) via FFI.
+  /// Triggers a peer sync first to get fresh data.
   Future<void> loadNetworkLeaderboard() async {
+    _isSyncingNetwork = true;
+    notifyListeners();
+
     try {
-      final frbEntries = await _ffi.getMemoryLeaderboard();
+      final frbEntries = await _ffi.refreshMemoryLeaderboard();
       _networkScores = frbEntries
           .map((e) => MemoryLeaderboardEntry(
                 peerId: e.peerId,
@@ -311,9 +317,11 @@ class MemoryGameProvider extends ChangeNotifier {
                 isSelf: e.isSelf,
               ))
           .toList();
-      notifyListeners();
     } catch (e) {
       debugPrint('MemoryGameProvider: loadNetworkLeaderboard error: $e');
+    } finally {
+      _isSyncingNetwork = false;
+      notifyListeners();
     }
   }
 

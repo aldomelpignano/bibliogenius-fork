@@ -2035,6 +2035,10 @@ msgstr "Nach Tag filtern"
 msgid "filter_contacts_only"
 msgstr "Nur Kontakte"
 
+#. Games
+msgid "filter_games"
+msgstr "Spiele"
+
 #. Libraries
 msgid "filter_libraries"
 msgstr "Bibliotheken"
@@ -5618,6 +5622,10 @@ msgstr "Dein Fortschritt"
 msgid "memory_game_title"
 msgstr "Memory-Spiel"
 
+#. Memory Game - Intro tagline
+msgid "memory_game_intro"
+msgstr "Entdecke das klassische Memory-Spiel neu mit deinen eigenen Buchcovern!"
+
 #. Memory Game - Choose difficulty
 msgid "memory_game_choose_difficulty"
 msgstr "Wähle einen Schwierigkeitsgrad"
@@ -5754,6 +5762,14 @@ msgstr "Noch keine Ergebnisse. Spiele eine Runde!"
 #. Memory Game - No network scores
 msgid "memory_no_network_scores"
 msgstr "Keine Netzwerk-Ergebnisse verfügbar"
+
+#. Memory Game - Syncing with peers
+msgid "memory_leaderboard_refreshing"
+msgstr "Synchronisiere mit Peers..."
+
+#. Memory Game - Empty network leaderboard
+msgid "memory_leaderboard_empty_network"
+msgstr "Noch keine Peer-Punkte. Verbinde dich mit Peers, um ihre Punkte zu sehen!"
 
 #. Memory Game - New personal best
 msgid "memory_rank_new_best"

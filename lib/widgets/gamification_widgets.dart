@@ -1069,6 +1069,7 @@ class GamificationSummaryCard extends StatefulWidget {
 
 class _GamificationSummaryCardState extends State<GamificationSummaryCard> {
   bool _showHelp = false;
+  String _achievementFilter = 'all';
 
   @override
   Widget build(BuildContext context) {
@@ -1211,25 +1212,66 @@ class _GamificationSummaryCardState extends State<GamificationSummaryCard> {
                                 color: Colors.amber[600],
                               ),
                               const SizedBox(width: 6),
-                              Text(
-                                TranslationService.translate(
-                                  context,
-                                  'recent_achievements',
+                              Expanded(
+                                child: Text(
+                                  TranslationService.translate(
+                                    context,
+                                    'recent_achievements',
+                                  ),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(fontWeight: FontWeight.w600),
                                 ),
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              _buildFilterChip(
+                                context,
+                                'all',
+                                TranslationService.translate(
+                                    context, 'filter_all'),
+                                Icons.star,
+                              ),
+                              const SizedBox(width: 4),
+                              _buildFilterChip(
+                                context,
+                                'games',
+                                TranslationService.translate(
+                                    context, 'filter_games'),
+                                Icons.sports_esports,
                               ),
                             ],
                           ),
                           const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 6,
-                            children: widget.status.recentAchievements
-                                .take(3)
-                                .map((id) => _buildAchievementChip(context, id))
-                                .toList(),
-                          ),
+                          Builder(builder: (context) {
+                            final filtered = _achievementFilter == 'games'
+                                ? widget.status.recentAchievements
+                                    .where((id) => id.startsWith('memory'))
+                                    .toList()
+                                : widget.status.recentAchievements;
+                            if (filtered.isEmpty) {
+                              return Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                child: Text(
+                                  '-',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: isDark
+                                            ? Colors.white54
+                                            : Colors.black38,
+                                      ),
+                                ),
+                              );
+                            }
+                            return Wrap(
+                              spacing: 8,
+                              runSpacing: 6,
+                              children: filtered
+                                  .map((id) =>
+                                      _buildAchievementChip(context, id))
+                                  .toList(),
+                            );
+                          }),
                         ],
                       ),
                     ),
@@ -1476,6 +1518,48 @@ class _GamificationSummaryCardState extends State<GamificationSummaryCard> {
     );
   }
 
+  Widget _buildFilterChip(
+    BuildContext context,
+    String value,
+    String label,
+    IconData icon,
+  ) {
+    final isSelected = _achievementFilter == value;
+    return GestureDetector(
+      onTap: () => setState(() => _achievementFilter = value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Colors.amber.withValues(alpha: 0.25)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? Colors.amber.withValues(alpha: 0.6)
+                : Colors.grey.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 12, color: isSelected ? Colors.amber[700] : Colors.grey),
+            const SizedBox(width: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected ? Colors.amber[800] : Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildAchievementChip(BuildContext context, String id) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -1530,6 +1614,7 @@ class _GamificationSummaryCardState extends State<GamificationSummaryCard> {
   }
 
   IconData _getAchievementIcon(String id) {
+    if (id.startsWith('memory')) return Icons.sports_esports;
     if (id.contains('collector')) return Icons.library_books;
     if (id.contains('reader')) return Icons.menu_book;
     if (id.contains('lender') || id.contains('loan')) return Icons.handshake;

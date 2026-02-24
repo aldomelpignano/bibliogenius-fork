@@ -2087,6 +2087,10 @@ msgstr "Filter by Shelf"
 msgid "filter_contacts_only"
 msgstr "Contacts Only"
 
+#. Games
+msgid "filter_games"
+msgstr "Games"
+
 #. Libraries
 msgid "filter_libraries"
 msgstr "Libraries"
@@ -5718,6 +5722,10 @@ msgstr "Share invite link"
 msgid "memory_game_title"
 msgstr "Memory Game"
 
+#. Memory Game - Intro tagline
+msgid "memory_game_intro"
+msgstr "Rediscover the classic Memory game with your own book covers!"
+
 #. Memory Game - Choose difficulty
 msgid "memory_game_choose_difficulty"
 msgstr "Choose a difficulty"
@@ -5854,6 +5862,14 @@ msgstr "No scores yet. Play a game!"
 #. Memory Game - No network scores
 msgid "memory_no_network_scores"
 msgstr "No network scores available"
+
+#. Memory Game - Syncing with peers
+msgid "memory_leaderboard_refreshing"
+msgstr "Syncing with peers..."
+
+#. Memory Game - Empty network leaderboard
+msgid "memory_leaderboard_empty_network"
+msgstr "No peer scores yet. Connect to peers to see their scores!"
 
 #. Memory Game - New personal best
 msgid "memory_rank_new_best"

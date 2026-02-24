@@ -311,6 +311,12 @@ Future<List<FrbMemoryScore>> memoryGameTopScores() =>
 Future<List<FrbMemoryLeaderboardEntry>> memoryGameLeaderboard() =>
     RustLib.instance.api.crateApiFrbMemoryGameLeaderboard();
 
+/// Refresh the network memory game leaderboard by syncing with all accepted peers.
+/// Fetches each peer's /api/game/memory/public-best, upserts into peer_memory_scores,
+/// then returns the merged leaderboard.
+Future<List<FrbMemoryLeaderboardEntry>> memoryGameRefreshLeaderboard() =>
+    RustLib.instance.api.crateApiFrbMemoryGameRefreshLeaderboard();
+
 /// Get full gamification status via FFI (replaces HTTP getUserStatus)
 Future<FrbGamificationStatus> gamificationGetStatus() =>
     RustLib.instance.api.crateApiFrbGamificationGetStatus();

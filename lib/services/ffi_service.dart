@@ -558,6 +558,17 @@ class FfiService {
     }
   }
 
+  /// Refresh network leaderboard: sync with peers then return merged leaderboard
+  Future<List<frb.FrbMemoryLeaderboardEntry>>
+      refreshMemoryLeaderboard() async {
+    try {
+      return await frb.memoryGameRefreshLeaderboard();
+    } catch (e) {
+      debugPrint('FFI memoryGameRefreshLeaderboard error: $e');
+      return [];
+    }
+  }
+
   // ============ Gamification (FFI direct) ============
 
   /// Get full gamification status (tracks, streak, achievements, config)

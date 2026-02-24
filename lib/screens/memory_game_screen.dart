@@ -205,6 +205,14 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
             children: [
               Text(
                 TranslationService.translate(
+                    context, 'memory_game_intro'),
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                TranslationService.translate(
                     context, 'memory_game_choose_difficulty'),
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
@@ -1085,13 +1093,34 @@ class _LeaderboardSheetState extends State<_LeaderboardSheet>
                 ),
               ),
             ),
-            // Title
+            // Title + refresh button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                TranslationService.translate(
-                    context, 'memory_leaderboard_title'),
-                style: theme.textTheme.titleLarge,
+              child: Consumer<MemoryGameProvider>(
+                builder: (context, provider, _) => Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        TranslationService.translate(
+                            context, 'memory_leaderboard_title'),
+                        style: theme.textTheme.titleLarge,
+                      ),
+                    ),
+                    if (provider.isSyncingNetwork)
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    else
+                      IconButton(
+                        icon: const Icon(Icons.refresh, size: 20),
+                        onPressed: () => provider.loadNetworkLeaderboard(),
+                        tooltip: TranslationService.translate(
+                            context, 'memory_leaderboard_refreshing'),
+                      ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -1263,17 +1292,58 @@ class _LeaderboardSheetState extends State<_LeaderboardSheet>
               .toList();
         }
 
+        if (provider.isSyncingNetwork && scores.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    TranslationService.translate(
+                        context, 'memory_leaderboard_refreshing'),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.grey[500],
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
         if (scores.isEmpty) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(32),
-              child: Text(
-                TranslationService.translate(
-                    context, 'memory_no_network_scores'),
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey[500],
-                    ),
-                textAlign: TextAlign.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    TranslationService.translate(
+                        context, 'memory_leaderboard_empty_network'),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.grey[500],
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  IconButton(
+                    onPressed: provider.isSyncingNetwork
+                        ? null
+                        : () => provider.loadNetworkLeaderboard(),
+                    icon: const Icon(Icons.refresh),
+                    tooltip: TranslationService.translate(
+                        context, 'memory_leaderboard_refreshing'),
+                  ),
+                ],
               ),
             ),
           );

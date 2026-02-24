@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../providers/memory_game_provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/translation_service.dart';
 import '../theme/app_design.dart';
@@ -146,6 +147,15 @@ class AppDrawer extends StatelessWidget {
       ),
       onTap: () {
         Navigator.pop(context);
+        // Same-route tap on Memory Game: force reset to setup
+        if (route == '/memory-game' && currentPath.startsWith('/memory-game')) {
+          final provider = context.read<MemoryGameProvider>();
+          if (provider.phase != GamePhase.setup) {
+            provider.resetToSetup();
+            provider.loadDifficulties();
+          }
+          return;
+        }
         if (isPush) {
           context.push(route);
         } else {

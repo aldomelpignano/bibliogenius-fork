@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../providers/memory_game_provider.dart';
 import '../providers/pending_peers_provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/translation_service.dart';
@@ -174,6 +175,18 @@ class ScaffoldWithNav extends StatelessWidget {
   void _onItemTapped(int index, BuildContext context, List<_NavItem> navItems) {
     if (index >= 0 && index < navItems.length) {
       final item = navItems[index];
+      // Same-route tap on Memory Game: force reset to setup
+      if (item.route == '/memory-game') {
+        final location = GoRouterState.of(context).uri.path;
+        if (location.startsWith('/memory-game')) {
+          final provider = context.read<MemoryGameProvider>();
+          if (provider.phase != GamePhase.setup) {
+            provider.resetToSetup();
+            provider.loadDifficulties();
+          }
+          return;
+        }
+      }
       if (item.isPush) {
         context.push(item.route);
       } else {
