@@ -36,6 +36,7 @@ class CachedBookCover extends StatelessWidget {
   final BorderRadius? borderRadius;
   final Widget? placeholder;
   final Widget? errorWidget;
+  final String? semanticLabel;
 
   const CachedBookCover({
     super.key,
@@ -46,12 +47,13 @@ class CachedBookCover extends StatelessWidget {
     this.borderRadius,
     this.placeholder,
     this.errorWidget,
+    this.semanticLabel,
   });
 
   @override
   Widget build(BuildContext context) {
     if (imageUrl == null || imageUrl!.isEmpty) {
-      return _buildFallback();
+      return _wrapSemantics(_buildFallback());
     }
 
     // Local file path detection (from cover upload feature)
@@ -71,7 +73,7 @@ class CachedBookCover extends StatelessWidget {
       if (borderRadius != null) {
         localImage = ClipRRect(borderRadius: borderRadius!, child: localImage);
       }
-      return localImage;
+      return _wrapSemantics(localImage);
     }
 
     String resolvedUrl = imageUrl!;
@@ -103,7 +105,14 @@ class CachedBookCover extends StatelessWidget {
       image = ClipRRect(borderRadius: borderRadius!, child: image);
     }
 
-    return image;
+    return _wrapSemantics(image);
+  }
+
+  Widget _wrapSemantics(Widget child) {
+    if (semanticLabel != null) {
+      return Semantics(image: true, label: semanticLabel, child: child);
+    }
+    return ExcludeSemantics(child: child);
   }
 
   Widget _buildPlaceholder() {
@@ -147,8 +156,14 @@ class CachedBookCover extends StatelessWidget {
 class CompactBookCover extends StatelessWidget {
   final String? imageUrl;
   final double size;
+  final String? semanticLabel;
 
-  const CompactBookCover({super.key, required this.imageUrl, this.size = 50});
+  const CompactBookCover({
+    super.key,
+    required this.imageUrl,
+    this.size = 50,
+    this.semanticLabel,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -157,6 +172,7 @@ class CompactBookCover extends StatelessWidget {
       width: size,
       height: size * 1.5,
       borderRadius: BorderRadius.circular(4),
+      semanticLabel: semanticLabel,
     );
   }
 }

@@ -69,10 +69,11 @@ class GenieAppBar extends StatelessWidget implements PreferredSizeWidget {
           (shouldShowBackButton
               ? IconButton(
                   icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  tooltip: TranslationService.translate(context, 'back'),
                   onPressed: () => GoRouter.of(context).pop(),
                 )
               : null),
-      flexibleSpace: Container(
+      flexibleSpace: ExcludeSemantics(child: Container(
         decoration: BoxDecoration(
           gradient: transparent
               ? null
@@ -83,7 +84,7 @@ class GenieAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
           color: transparent ? Colors.transparent : null,
         ),
-      ),
+      )),
       elevation: 0,
       leadingWidth: 40, // Reduce space after hamburger menu
       title: LayoutBuilder(
@@ -107,67 +108,72 @@ class GenieAppBar extends StatelessWidget implements PreferredSizeWidget {
           final screenWidth = MediaQuery.of(context).size.width;
           final isMobile = screenWidth <= 600;
 
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (!isMobile)
-                Container(
-                  child: SizedBox(
-                    width: logoSize,
-                    height: logoSize,
-                    child: BiblioGeniusLogo(
-                      size: logoSize,
-                      color: Colors.white,
+          return MergeSemantics(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!isMobile)
+                  ExcludeSemantics(
+                    child: SizedBox(
+                      width: logoSize,
+                      height: logoSize,
+                      child: BiblioGeniusLogo(
+                        size: logoSize,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                ),
-              // Hide text entirely if space is too tight (don't truncate)
-              if (!hideTitle) ...[
-                if (!isMobile) SizedBox(width: spacing),
-                Flexible(
-                  child: title is Widget
-                      ? title
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              title,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: titleFontSize,
-                                color: Colors.white,
-                                letterSpacing: 0.5,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.fade,
-                              softWrap: false,
-                            ),
-                            // Hide subtitle on narrower screens
-                            if (!hideSubtitle && displaySubtitle.isNotEmpty)
+                // Hide text entirely if space is too tight (don't truncate)
+                if (!hideTitle) ...[
+                  if (!isMobile) ExcludeSemantics(child: SizedBox(width: spacing)),
+                  Flexible(
+                    child: title is Widget
+                        ? title
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
                               Text(
-                                displaySubtitle,
+                                title,
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w400,
-                                  fontSize: subtitleFontSize,
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                  letterSpacing: 0.3,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: titleFontSize,
+                                  color: Colors.white,
+                                  letterSpacing: 0.5,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.fade,
                                 softWrap: false,
                               ),
-                          ],
-                        ),
-                ),
+                              // Hide subtitle on narrower screens
+                              if (!hideSubtitle && displaySubtitle.isNotEmpty)
+                                Text(
+                                  displaySubtitle,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w400,
+                                    fontSize: subtitleFontSize,
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    letterSpacing: 0.3,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.fade,
+                                  softWrap: false,
+                                ),
+                            ],
+                          ),
+                  ),
+                ],
               ],
-            ],
+            ),
           );
         },
       ),
       actions: [
         // Global Quick Actions Button (New)
-        Padding(
+        Semantics(
+          button: true,
+          label: TranslationService.translate(context, 'quick_actions_title'),
+          child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
           child: Container(
             decoration: BoxDecoration(
@@ -242,6 +248,7 @@ class GenieAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
         ),
+        ),
 
         // Quick Action Buttons (Scanner & Online Search) - only when explicitly enabled
         if (showQuickActions) ...[
@@ -281,7 +288,10 @@ class GenieAppBar extends StatelessWidget implements PreferredSizeWidget {
         if (actions != null) ...actions!,
         // Avatar
         if (avatarConfig?.style != 'initials')
-          Padding(
+          Semantics(
+            button: true,
+            label: TranslationService.translate(context, 'nav_profile'),
+            child: Padding(
             padding: const EdgeInsets.only(right: 16, left: 8),
             child: GestureDetector(
               onTap: () => context.push('/profile'),
@@ -320,6 +330,7 @@ class GenieAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ),
             ),
+          ),
           ),
       ],
       bottom: bottom,

@@ -132,7 +132,7 @@ class AppDesign {
   static const refinedSuccessGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF5C8C9F), Color(0xFF6BB0A9)],
+    colors: [Color(0xFF3A7186), Color(0xFF3D8B83)],
   );
 
   /// Accent stat (Muted rose — warm complement to teal)
@@ -337,7 +337,7 @@ class AppDesign {
         );
       default:
         return const LinearGradient(
-          colors: [Color(0xFF6BB0A9), Color(0xFF5C8C9F)],
+          colors: [Color(0xFF3D8B83), Color(0xFF3A7186)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );

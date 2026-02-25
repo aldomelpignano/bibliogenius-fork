@@ -26,10 +26,14 @@ class ScaffoldWithNav extends StatelessWidget {
     return Scaffold(
       key: GlobalKeys.rootScaffoldKey,
       drawer: useRail ? null : const AppDrawer(),
-      body: Row(
+      body: Semantics(
+        explicitChildNodes: true,
+        child: Row(
         children: [
           if (useRail)
-            LayoutBuilder(
+            Semantics(
+              label: TranslationService.translate(context, 'navigation'),
+              child: LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
                   child: ConstrainedBox(
@@ -74,13 +78,15 @@ class ScaffoldWithNav extends StatelessWidget {
                 );
               },
             ),
-          if (useRail) VerticalDivider(
+            ),
+          if (useRail) ExcludeSemantics(child: VerticalDivider(
             thickness: 1,
             width: 1,
             color: theme.dividerColor,
-          ),
+          )),
           Expanded(child: child),
         ],
+      ),
       ),
     );
   }

@@ -175,6 +175,7 @@ class _NetworkScreenState extends State<NetworkScreen>
         leading: isMobile
             ? IconButton(
                 icon: const Icon(Icons.menu, color: Colors.white),
+                tooltip: TranslationService.translate(context, 'tooltip_open_menu'),
                 onPressed: () => Scaffold.of(context).openDrawer(),
               )
             : null,
@@ -987,7 +988,9 @@ class _ContactsListViewState extends State<ContactsListView> {
 
   /// Builds a visual status badge with rounded corners and semi-transparent background
   Widget _buildStatusBadge(String text, Color color) {
-    return UnconstrainedBox(
+    return Semantics(
+      label: text,
+      child: UnconstrainedBox(
       alignment: Alignment.centerLeft,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -1003,6 +1006,7 @@ class _ContactsListViewState extends State<ContactsListView> {
             color: color,
           ),
         ),
+      ),
       ),
     );
   }

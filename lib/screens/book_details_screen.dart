@@ -640,7 +640,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
       stretch: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       flexibleSpace: FlexibleSpaceBar(
-        background: Stack(
+        background: ExcludeSemantics(child: Stack(
           fit: StackFit.expand,
           children: [
             // Layer 0: Fallback (always rendered at bottom)
@@ -653,6 +653,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                 fit: BoxFit.cover,
                 placeholder: const SizedBox.shrink(),
                 errorWidget: const SizedBox.shrink(),
+                semanticLabel: book.title,
               ),
 
             // Layer 2: Blur Effect (applied on top of fallback or image)
@@ -696,6 +697,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                             fit: BoxFit.cover,
                             placeholder: const SizedBox.shrink(),
                             errorWidget: const SizedBox.shrink(),
+                            semanticLabel: book.title,
                           ),
                       ],
                     ),
@@ -705,7 +707,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
               ),
             ),
           ],
-        ),
+        )),
       ),
     );
   }

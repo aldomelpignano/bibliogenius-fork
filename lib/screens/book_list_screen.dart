@@ -335,6 +335,7 @@ class _BookListScreenState extends State<BookListScreen>
         leading: isMobile
             ? IconButton(
                 icon: const Icon(Icons.menu, color: Colors.white),
+                tooltip: TranslationService.translate(context, 'tooltip_open_menu'),
                 onPressed: () => Scaffold.of(context).openDrawer(),
               )
             : null,
@@ -815,19 +816,14 @@ class _BookListScreenState extends State<BookListScreen>
             textEditingController.text = _searchQuery;
           }
 
-          // Assuming GenieAppBar is defined elsewhere and this is part of a Scaffold's appBar property
-          // This part of the change seems to be misplaced based on the provided context.
-          // I will integrate the subtitle part into the _buildHeader function as it's the closest
-          // logical place for displaying library name in a header/appBar-like context within the provided snippet.
-          // If GenieAppBar is used in the Scaffold, the subtitle should be added there.
-          // Given the instruction, I'm assuming the user wants to add `subtitle: _libraryName` to an existing GenieAppBar.
-          // As I cannot modify the Scaffold directly, I will make a note here.
-
           return TextField(
             controller: textEditingController,
             focusNode: focusNode,
             style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             decoration: InputDecoration(
+              labelText: TranslationService.translate(context, 'search_books'),
+              labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
+              floatingLabelBehavior: FloatingLabelBehavior.never,
               hintText: TranslationService.translate(context, 'search_books'),
               hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
               prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
@@ -873,17 +869,23 @@ class _BookListScreenState extends State<BookListScreen>
                       onTap: () => onSelected(option),
                       child: ListTile(
                         leading: option.coverUrl != null
-                            ? CachedNetworkImage(
-                                imageUrl: option.coverUrl!,
-                                width: 30,
-                                fit: BoxFit.cover,
-                                errorWidget: (_, __, ___) =>
-                                    const Icon(Icons.book, size: 30),
+                            ? Semantics(
+                                image: true,
+                                label: '${option.title}, ${option.author ?? ''}',
+                                child: CachedNetworkImage(
+                                  imageUrl: option.coverUrl!,
+                                  width: 30,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (_, __, ___) =>
+                                      const Icon(Icons.book, size: 30),
+                                ),
                               )
-                            : const Icon(
-                                Icons.book,
-                                size: 30,
-                                color: Colors.grey,
+                            : const ExcludeSemantics(
+                                child: Icon(
+                                  Icons.book,
+                                  size: 30,
+                                  color: Colors.grey,
+                                ),
                               ),
                         title: Text(
                           option.title,
@@ -1967,13 +1969,19 @@ class _BookListScreenState extends State<BookListScreen>
             child: ListTile(
               contentPadding: const EdgeInsets.all(8),
               leading: book.coverUrl != null
-                  ? CachedNetworkImage(
-                      imageUrl: book.coverUrl!,
-                      width: 40,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, __, ___) => const Icon(Icons.book),
+                  ? Semantics(
+                      image: true,
+                      label: '${book.title}, ${book.author ?? ''}',
+                      child: CachedNetworkImage(
+                        imageUrl: book.coverUrl!,
+                        width: 40,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) => const Icon(Icons.book),
+                      ),
                     )
-                  : const Icon(Icons.book, size: 40, color: Colors.grey),
+                  : const ExcludeSemantics(
+                      child: Icon(Icons.book, size: 40, color: Colors.grey),
+                    ),
               title: Text(book.title),
               subtitle: Text(book.author ?? 'Unknown'),
               trailing: ReorderableDragStartListener(

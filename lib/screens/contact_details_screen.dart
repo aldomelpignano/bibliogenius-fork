@@ -37,6 +37,7 @@ class _ContactDetailsScreenState extends State<ContactDetailsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
+            tooltip: TranslationService.translate(context, 'tooltip_edit_contact'),
             onPressed: () async {
               final result = await Navigator.push(
                 context,

@@ -806,7 +806,9 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
       // Force complete widget tree rebuild when theme changes to avoid
       // TextStyle.lerp errors with AnimatedDefaultTextStyle during transitions
       key: ValueKey(themeProvider.themeStyle),
-      title: 'BiblioGenius',
+      // Window title set by macOS CFBundleName - empty here to avoid
+      // VoiceOver reading "BiblioGenius" multiple times in the accessibility tree
+      title: '',
       debugShowCheckedModeBanner: false,
       theme: themeProvider.themeData,
       // Disable theme animation to prevent TextStyle.lerp errors when switching between
@@ -824,11 +826,12 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
           .toList(),
       scrollBehavior: AppScrollBehavior(),
       builder: (context, child) {
-        final scale = Provider.of<ThemeProvider>(context).textScaleFactor;
-        if (scale == 1.0) return child!;
+        final appScale = Provider.of<ThemeProvider>(context).textScaleFactor;
+        if (appScale == 1.0) return child!;
+        final systemScale = MediaQuery.of(context).textScaler.scale(1.0);
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(scale),
+            textScaler: TextScaler.linear(appScale * systemScale),
           ),
           child: child!,
         );

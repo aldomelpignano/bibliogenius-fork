@@ -6127,3 +6127,59 @@ msgstr "Reconstruct a book cover by sliding tiles"
 msgid "help_cta_play_puzzle"
 msgstr "Play"
 
+#. Accessibility - Tooltip: open navigation menu
+msgid "tooltip_open_menu"
+msgstr "Open menu"
+
+#. Accessibility - Tooltip: edit contact
+msgid "tooltip_edit_contact"
+msgstr "Edit contact"
+
+#. Accessibility - Tooltip: toggle password visibility
+msgid "tooltip_toggle_password"
+msgstr "Toggle password visibility"
+
+#. Accessibility - Tooltip: search by ISBN
+msgid "tooltip_search_isbn"
+msgstr "Search by ISBN"
+
+#. Accessibility - Tooltip: lend book
+msgid "tooltip_lend_book"
+msgstr "Lend this book"
+
+#. Accessibility - Tooltip: return book
+msgid "tooltip_return_book"
+msgstr "Return this book"
+
+#. Accessibility - Tooltip: borrow book
+msgid "tooltip_borrow_book"
+msgstr "Borrow this book"
+
+#. Accessibility - Tooltip: give back book
+msgid "tooltip_give_back"
+msgstr "Give back this book"
+
+#. Accessibility - Tooltip: sell book
+msgid "tooltip_sell_book"
+msgstr "Sell this book"
+
+#. Accessibility - Tooltip: edit avatar
+msgid "tooltip_edit_avatar"
+msgstr "Edit avatar"
+
+#. Accessibility - Profile avatar label
+msgid "profile_avatar"
+msgstr "Profile avatar"
+
+#. Accessibility - Progress label
+msgid "progress"
+msgstr "Progress"
+
+#. Accessibility - Navigation sidebar label
+msgid "navigation"
+msgstr "Navigation"
+
+#. Accessibility - Back button
+msgid "back"
+msgstr "Back"
+

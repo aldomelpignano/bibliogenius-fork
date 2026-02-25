@@ -586,6 +586,7 @@ class _LoginScreenState extends State<LoginScreen>
                                             ? Icons.visibility_off_outlined
                                             : Icons.visibility_outlined,
                                       ),
+                                      tooltip: TranslationService.translate(context, 'tooltip_toggle_password'),
                                       onPressed: () {
                                         setState(
                                           () => _obscurePassword =

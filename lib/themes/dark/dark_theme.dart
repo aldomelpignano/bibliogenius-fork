@@ -18,7 +18,7 @@ class DarkColors {
   // Text
   static const textPrimary = Color(0xFFF8FAFC); // Slate 50 (near-white)
   static const textSecondary = Color(0xFF94A3B8); // Slate 400
-  static const textMuted = Color(0xFF64748B); // Slate 500
+  static const textMuted = Color(0xFF8896AB); // Accessible on Slate 800 (>= 5.0:1)
 
   // Accent — Neon Cyan
   static const cyan = Color(0xFF06B6D4); // Cyan 500

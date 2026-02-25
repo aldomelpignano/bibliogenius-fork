@@ -138,10 +138,19 @@ class _PremiumBookCardState extends State<PremiumBookCard>
     );
   }
 
+  String get _semanticLabel {
+    final parts = [widget.book.title];
+    if (widget.book.author != null) parts.add(widget.book.author!);
+    return parts.join(', ');
+  }
+
   Widget _buildHeroCard(BuildContext context) {
     final theme = Theme.of(context);
 
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      label: _semanticLabel,
+      child: GestureDetector(
       onTap: () => context.push('/books/${widget.book.id}', extra: widget.book),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
@@ -321,13 +330,17 @@ class _PremiumBookCardState extends State<PremiumBookCard>
           ),
         ),
       ),
+      ),
     );
   }
 
   Widget _buildStandardCard(BuildContext context) {
     final theme = Theme.of(context);
 
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      label: _semanticLabel,
+      child: GestureDetector(
       onTap: () => context.push('/books/${widget.book.id}', extra: widget.book),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
@@ -434,6 +447,7 @@ class _PremiumBookCardState extends State<PremiumBookCard>
             ),
           ),
         ),
+      ),
       ),
     );
   }

@@ -26,7 +26,7 @@ class MinimalTheme extends AppTheme {
     const bgBody = Color(0xFFFFFFFF); // Pure white
     const bgCard = Color(0xFFFAFAFA); // Very subtle gray
     const textMain = Color(0xFF1A1A1A); // Near black
-    const textMuted = Color(0xFF6B7280); // Gray 500
+    const textMuted = Color(0xFF565C66); // Accessible on white (>= 6.3:1)
     const border = Color(0xFFE5E5E5); // Light gray
     const accent = Color(0xFF2563EB); // Blue 600 (always blue for minimal)
 

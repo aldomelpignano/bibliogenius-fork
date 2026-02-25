@@ -20,8 +20,8 @@ class DefaultTheme extends AppTheme {
   Color get previewColor => const Color(0xFF4CAF50); // Green preview
 
   // Theme color constants
-  static const _tealLight = Color(0xFF6BB0A9); // New Gradient Start
-  static const _tealDark = Color(0xFF5C8C9F); // New Gradient End
+  static const _tealLight = Color(0xFF3D8B83); // Accessible teal (>= 4.5:1 on white)
+  static const _tealDark = Color(0xFF3A7186); // Accessible dark teal (>= 5.0:1 on white)
   static const _headerBlue = Color(0xFF6366F1); // Keep blue for buttons
 
   @override
@@ -106,7 +106,7 @@ class DefaultTheme extends AppTheme {
         bodyLarge: TextStyle(color: textMain, fontSize: 16, height: 1.5),
         bodyMedium: TextStyle(color: textMain, fontSize: 14, height: 1.5),
         bodySmall: TextStyle(
-          color: Color(0xFF78716C), // Stone 500 — secondary text
+          color: Color(0xFF696462), // Stone 600 - accessible on cream bg (>= 5.5:1)
           fontSize: 13,
           fontWeight: FontWeight.w500,
           height: 1.4,

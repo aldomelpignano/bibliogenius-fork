@@ -251,66 +251,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     final themeColor = Theme.of(context).primaryColor;
                     return Stack(
                       children: [
-                        Container(
-                          width: 140,
-                          height: 140,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: themeColor, width: 4),
-                            color: themeProvider.avatarConfig?.style == 'genie'
-                                ? Color(
-                                    int.parse(
-                                      'FF${themeProvider.avatarConfig?.genieBackground ?? "fbbf24"}',
-                                      radix: 16,
+                        Semantics(
+                          image: true,
+                          label: TranslationService.translate(context, 'profile_avatar'),
+                          child: Container(
+                            width: 140,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: themeColor, width: 4),
+                              color: themeProvider.avatarConfig?.style == 'genie'
+                                  ? Color(
+                                      int.parse(
+                                        'FF${themeProvider.avatarConfig?.genieBackground ?? "fbbf24"}',
+                                        radix: 16,
+                                      ),
+                                    )
+                                  : Colors.grey[100],
+                            ),
+                            child: ClipOval(
+                              child:
+                                  (themeProvider.avatarConfig?.isGenie ?? false)
+                                  ? Image.asset(
+                                      themeProvider.avatarConfig?.assetPath ??
+                                          'assets/genie_mascot.jpg',
+                                      fit: BoxFit.cover,
+                                    )
+                                  : CachedNetworkImage(
+                                      imageUrl:
+                                          themeProvider.avatarConfig?.toUrl(
+                                            size: 140,
+                                            format: 'png',
+                                          ) ??
+                                          '',
+                                      fit: BoxFit.cover,
+                                      errorWidget: (context, url, error) =>
+                                          const Icon(
+                                            Icons.person,
+                                            size: 60,
+                                            color: Colors.grey,
+                                          ),
                                     ),
-                                  )
-                                : Colors.grey[100],
-                          ),
-                          child: ClipOval(
-                            child:
-                                (themeProvider.avatarConfig?.isGenie ?? false)
-                                ? Image.asset(
-                                    themeProvider.avatarConfig?.assetPath ??
-                                        'assets/genie_mascot.jpg',
-                                    fit: BoxFit.cover,
-                                  )
-                                : CachedNetworkImage(
-                                    imageUrl:
-                                        themeProvider.avatarConfig?.toUrl(
-                                          size: 140,
-                                          format: 'png',
-                                        ) ??
-                                        '',
-                                    fit: BoxFit.cover,
-                                    errorWidget: (context, url, error) =>
-                                        const Icon(
-                                          Icons.person,
-                                          size: 60,
-                                          color: Colors.grey,
-                                        ),
-                                  ),
+                            ),
                           ),
                         ),
                         Positioned(
                           bottom: 0,
                           right: 0,
-                          child: GestureDetector(
-                            onTap: () =>
-                                _showAvatarPicker(context, themeProvider),
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).primaryColor,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
+                          child: Semantics(
+                            button: true,
+                            label: TranslationService.translate(context, 'tooltip_edit_avatar'),
+                            child: GestureDetector(
+                              onTap: () =>
+                                  _showAvatarPicker(context, themeProvider),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).primaryColor,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
                                 ),
-                              ),
-                              child: const Icon(
-                                Icons.edit,
-                                color: Colors.white,
-                                size: 20,
+                                child: const Icon(
+                                  Icons.edit,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
                               ),
                             ),
                           ),
@@ -535,7 +543,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           if (!isOptional && progress > 0) ...[
             const SizedBox(height: 20),
-            Stack(
+            Semantics(
+              label: '${TranslationService.translate(context, 'progress')} : ${(progress * 100).toInt()}%, $current ${TranslationService.translate(context, 'books_read')}',
+              child: Stack(
               children: [
                 Container(
                   height: 10,
@@ -567,6 +577,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                 ),
               ],
+            ),
             ),
             const SizedBox(height: 12),
             Row(

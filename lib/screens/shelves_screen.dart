@@ -353,7 +353,7 @@ class _ShelvesScreenState extends State<ShelvesScreen> {
             (tag) => Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
+                ExcludeSemantics(child: Icon(Icons.chevron_right, size: 20, color: Colors.grey[400])),
                 InkWell(
                   onTap: () {
                     final index = _path.indexOf(tag);
@@ -375,7 +375,7 @@ class _ShelvesScreenState extends State<ShelvesScreen> {
 
           // Current level
           if (_currentParent != null) ...[
-            Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
+            ExcludeSemantics(child: Icon(Icons.chevron_right, size: 20, color: Colors.grey[400])),
             Text(
               _currentParent!.name,
               style: const TextStyle(fontWeight: FontWeight.bold),
@@ -388,7 +388,9 @@ class _ShelvesScreenState extends State<ShelvesScreen> {
 
   Widget _buildShelvesCountBadge(BuildContext context, int count) {
     final theme = Theme.of(context);
-    return Padding(
+    return Semantics(
+      label: '$count ${count == 1 ? 'etagere' : 'etageres'}',
+      child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
@@ -423,6 +425,7 @@ class _ShelvesScreenState extends State<ShelvesScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -749,7 +752,10 @@ class _ShelvesScreenState extends State<ShelvesScreen> {
       end: Alignment.bottomRight,
     );
 
-    return Card(
+    return Semantics(
+      button: true,
+      label: '${tag.name}, $aggregatedCount ${aggregatedCount == 1 ? 'livre' : 'livres'}',
+      child: Card(
       elevation: 8,
       shadowColor: color.withValues(alpha: 0.4),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -915,7 +921,10 @@ class _ShelvesScreenState extends State<ShelvesScreen> {
                 Positioned(
                   bottom: 16,
                   right: 16,
-                  child: Material(
+                  child: Semantics(
+                    button: true,
+                    label: '${TranslationService.translate(context, 'view')} ${tag.name}',
+                    child: Material(
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: () => context.go('/shelves?tag=${tag.name}'),
@@ -953,11 +962,13 @@ class _ShelvesScreenState extends State<ShelvesScreen> {
                         ),
                       ),
                     ),
+                    ),
                   ),
                 ),
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -21,6 +21,7 @@ class GamesHubScreen extends StatelessWidget {
         leading: isMobile
             ? IconButton(
                 icon: const Icon(Icons.menu, color: Colors.white),
+                tooltip: TranslationService.translate(context, 'tooltip_open_menu'),
                 onPressed: () => Scaffold.of(context).openDrawer(),
               )
             : null,

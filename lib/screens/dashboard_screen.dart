@@ -279,6 +279,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             : IconButton(
                 key: _menuKey,
                 icon: const Icon(Icons.menu, color: Colors.white),
+                tooltip: TranslationService.translate(context, 'tooltip_open_menu'),
                 onPressed: () => Scaffold.of(context).openDrawer(),
               ),
         automaticallyImplyLeading: false,
@@ -1116,7 +1117,10 @@ class _DashboardScreenState extends State<DashboardScreen>
         ? Colors.white.withValues(alpha: 0.8)
         : theme.colorScheme.onSurfaceVariant;
 
-    return ScaleOnTap(
+    return Semantics(
+      button: onTap != null,
+      label: '$label : $value',
+      child: ScaleOnTap(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -1185,6 +1189,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           },
         ),
       ),
+      ),
     );
   }
 
@@ -1206,38 +1211,41 @@ class _DashboardScreenState extends State<DashboardScreen>
     final accentGradient = AppDesign.sectionAccentGradient(themeStyle);
     final iconColor = theme.colorScheme.primary;
 
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 5,
-            height: 32,
-            decoration: BoxDecoration(
-              gradient: accentGradient,
-              borderRadius: BorderRadius.circular(3),
+    return Semantics(
+      header: true,
+      child: Container(
+        margin: const EdgeInsets.only(top: 8),
+        child: Row(
+          children: [
+            Container(
+              width: 5,
+              height: 32,
+              decoration: BoxDecoration(
+                gradient: accentGradient,
+                borderRadius: BorderRadius.circular(3),
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.all(9),
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppDesign.radiusMedium),
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.all(9),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppDesign.radiusMedium),
+              ),
+              child: Icon(icon, size: 20, color: iconColor),
             ),
-            child: Icon(icon, size: 20, color: iconColor),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: theme.colorScheme.onSurface,
-              letterSpacing: 0.2,
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: theme.colorScheme.onSurface,
+                letterSpacing: 0.2,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1288,7 +1296,10 @@ class _DashboardScreenState extends State<DashboardScreen>
     VoidCallback onTap, {
     Key? key,
   }) {
-    return ScaleOnTap(
+    return Semantics(
+      button: true,
+      label: label,
+      child: ScaleOnTap(
       onTap: onTap,
       child: Container(
         key: key,
@@ -1321,6 +1332,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             ),
           ],
         ),
+      ),
       ),
     );
   }

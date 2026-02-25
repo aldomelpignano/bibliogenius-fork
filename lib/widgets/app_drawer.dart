@@ -20,29 +20,32 @@ class AppDrawer extends StatelessWidget {
     final currentPath = GoRouterState.of(context).uri.path;
 
     return Drawer(
+      semanticLabel: TranslationService.translate(context, 'navigation'),
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          DrawerHeader(
-            decoration: BoxDecoration(gradient: headerGradient),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                const Text(
-                  'BiblioGenius',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+          MergeSemantics(
+            child: DrawerHeader(
+              decoration: BoxDecoration(gradient: headerGradient),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const Text(
+                    'BiblioGenius',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  TranslationService.translate(context, 'app_subtitle'),
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    TranslationService.translate(context, 'app_subtitle'),
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ],
+              ),
             ),
           ),
           _buildDrawerItem(

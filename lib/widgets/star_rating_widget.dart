@@ -43,7 +43,10 @@ class StarRatingWidget extends StatelessWidget {
     final starCount = 5;
     final displayRating = (rating ?? 0) / 2.0; // Convert 0-10 to 0-5
 
-    return Row(
+    return Semantics(
+      label: 'Note : ${displayRating.toStringAsFixed(1)} sur 5',
+      slider: isInteractive,
+      child: Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(starCount, (index) {
         final starValue = index + 1;
@@ -111,6 +114,7 @@ class StarRatingWidget extends StatelessWidget {
           ),
         );
       }),
+      ),
     );
   }
 }
@@ -130,20 +134,23 @@ class CompactStarRating extends StatelessWidget {
 
     final starRating = rating! / 2.0;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.star_rounded, size: size, color: Colors.amber),
-        const SizedBox(width: 2),
-        Text(
-          starRating.toStringAsFixed(1),
-          style: TextStyle(
-            fontSize: size - 2,
-            fontWeight: FontWeight.bold,
-            color: Colors.amber[700],
+    return Semantics(
+      label: 'Note : ${starRating.toStringAsFixed(1)} sur 5',
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.star_rounded, size: size, color: Colors.amber),
+          const SizedBox(width: 2),
+          Text(
+            starRating.toStringAsFixed(1),
+            style: TextStyle(
+              fontSize: size - 2,
+              fontWeight: FontWeight.bold,
+              color: Colors.amber[700],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
