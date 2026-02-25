@@ -394,6 +394,123 @@ Text(TranslationService.translate(context, 'key') ?? 'Default English')
 
 ---
 
+## Accessibility (MANDATORY)
+
+> **Target**: RGAA 4.1 level AA (WCAG 2.1 AA)
+> **Roadmap**: `bibliogenius-docs/docs/research/accessibility-interoperability-roadmap.md`
+> **Enforcement rules**: Root `CLAUDE.md` (Rules A1-A4)
+
+### Screen Reader Support (VoiceOver / TalkBack)
+
+Every new or modified widget that conveys information visually MUST also convey it to screen readers.
+
+```dart
+// REQUIRED: Book covers MUST have a semantic label
+CachedNetworkImage(
+  imageUrl: book.coverUrl ?? '',
+  // ...
+)
+// Wrap with Semantics:
+Semantics(
+  image: true,
+  label: '${book.title}, ${book.author}',
+  child: CachedNetworkImage(/* ... */),
+)
+
+// REQUIRED: IconButton MUST have a translated tooltip
+IconButton(
+  icon: const Icon(Icons.delete),
+  tooltip: TranslationService.translate(context, 'tooltip_delete'),
+  onPressed: _onDelete,
+)
+
+// REQUIRED: Tappable cards MUST announce their content
+Semantics(
+  button: true,
+  label: '${shelf.name}, ${shelf.bookCount} livres',
+  child: InkWell(
+    onTap: () => _openShelf(shelf),
+    child: _ShelfCard(shelf: shelf),
+  ),
+)
+
+// REQUIRED: Section headers MUST be marked
+Semantics(
+  header: true,
+  child: Text('A lire', style: Theme.of(context).textTheme.titleLarge),
+)
+
+// REQUIRED: Decorative images MUST be excluded
+Image.asset('assets/bg_pattern.png', excludeFromSemantics: true)
+```
+
+### What MUST Be Annotated (Checklist for New Screens)
+
+```
+- [ ] Every Image/CachedNetworkImage has semanticLabel or is excluded
+- [ ] Every IconButton has a translated tooltip
+- [ ] Every tappable card/tile is wrapped in Semantics(button: true, label: ...)
+- [ ] Section titles use Semantics(header: true)
+- [ ] Star ratings / progress bars have Semantics(label: 'Note : 3 sur 5')
+- [ ] Empty states are already readable (Text widget - usually OK)
+- [ ] Form fields have labelText or hintText in InputDecoration (usually OK)
+```
+
+### Color Contrast
+
+```dart
+// NEVER introduce a color pair without checking contrast ratio
+// Minimum ratios (WCAG AA):
+//   Normal text (< 18px):  4.5:1
+//   Large text (>= 18px or 14px bold):  3:1
+//   Icons / UI components:  3:1
+
+// BAD: Light color on white
+Text('Label', style: TextStyle(color: Color(0xFF6BB0A9)))  // ~2.5:1 on white
+
+// GOOD: Checked color on white
+Text('Label', style: TextStyle(color: Color(0xFF3D8B83)))  // >= 4.5:1 on white
+
+// ALWAYS use Theme colors, which have been vetted:
+Text('Label', style: Theme.of(context).textTheme.bodyMedium)
+```
+
+### Text Scaling
+
+```dart
+// The in-app text scaler MUST compose with the OS setting, not replace it.
+// This is handled in main.dart - do NOT override MediaQuery.textScaler elsewhere.
+
+// NEVER set a fixed fontSize that ignores scaling:
+// BAD:
+Text('Title', style: TextStyle(fontSize: 14))  // Won't scale with OS setting
+
+// GOOD: Use theme text styles which respect the scaler
+Text('Title', style: Theme.of(context).textTheme.bodyMedium)
+
+// If you must use a custom fontSize, it will still scale via MediaQuery.
+// Just don't wrap it in a local MediaQuery that overrides the scaler.
+```
+
+### NEVER Do This
+
+```dart
+// BAD: IconButton without tooltip
+IconButton(icon: Icon(Icons.edit), onPressed: _onEdit)
+
+// BAD: Image without semantic label
+CachedNetworkImage(imageUrl: url)  // Screen reader says nothing
+
+// BAD: Hardcoded English/French tooltip
+IconButton(tooltip: 'Delete', ...)          // Not translated
+IconButton(tooltip: 'Supprimer', ...)       // Not translated
+
+// BAD: Color contrast not checked
+Container(color: Color(0xFFB0D0CC), child: Text('light on light'))
+```
+
+---
+
 ## Error Handling
 
 ```dart
@@ -494,3 +611,13 @@ When incrementing the version in `pubspec.yaml`, run the appropriate level of no
 - [ ] Debounce search/filter inputs (300ms)
 - [ ] Use `CachedNetworkImage` for remote images
 - [ ] Avoid business logic in `build()` methods
+
+## Accessibility Checklist
+
+- [ ] Every `IconButton` has a translated `tooltip`
+- [ ] Every `Image` / `CachedNetworkImage` has `semanticLabel` or `excludeFromSemantics: true`
+- [ ] Tappable cards wrapped in `Semantics(button: true, label: ...)`
+- [ ] Section headers wrapped in `Semantics(header: true)`
+- [ ] No new hardcoded colors without contrast ratio check (>= 4.5:1 normal text)
+- [ ] Star ratings / sliders / progress have `Semantics(label: ...)` with current value
+- [ ] No `MediaQuery` override that replaces the system text scaler
