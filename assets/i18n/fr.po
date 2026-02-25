@@ -1641,6 +1641,38 @@ msgstr "Aucun livre prêté actuellement"
 msgid "empty_no_loans_hint"
 msgstr "Prêtez un livre de votre bibliothèque pour commencer"
 
+#. Clear returned loans history
+msgid "clean_returned_loans"
+msgstr "Nettoyer l'historique"
+
+#. Confirmation dialog for clearing returned loans
+msgid "clean_returned_loans_confirm"
+msgstr "Supprimer %d emprunt(s) retourne(s) ? Cette action est irreversible."
+
+#. Success message after clearing returned loans
+msgid "clean_returned_loans_success"
+msgstr "%d emprunt(s) retourne(s) supprime(s)"
+
+#. No returned loans to clear
+msgid "clean_returned_loans_empty"
+msgstr "Aucun emprunt retourne a supprimer"
+
+#. Clear closed requests history
+msgid "clean_closed_requests"
+msgstr "Nettoyer l'historique"
+
+#. Confirmation dialog for clearing closed requests
+msgid "clean_closed_requests_confirm"
+msgstr "Supprimer %d demande(s) cloturee(s) ? Cette action est irreversible."
+
+#. Success message after clearing closed requests
+msgid "clean_closed_requests_success"
+msgstr "%d demande(s) cloturee(s) supprimee(s)"
+
+#. No closed requests to clear
+msgid "clean_closed_requests_empty"
+msgstr "Aucune demande cloturee a supprimer"
+
 #. No outgoing requests
 msgid "empty_no_outgoing"
 msgstr "Aucune demande envoyée"
@@ -4627,6 +4659,18 @@ msgstr "Scannez le code d'un ami pour activer les prêts et la synchro"
 #. Align barcode within the frame
 msgid "scan_instruction"
 msgstr "Alignez le code-barres dans le cadre"
+
+#. Offline banner shown on scan screen when no internet
+msgid "scan_offline_banner"
+msgstr "Hors ligne - recherche de metadonnees indisponible"
+
+#. Dialog message when scan fails due to offline
+msgid "scan_offline_message"
+msgstr "La recherche de metadonnees necessite une connexion internet. Vous pouvez ajouter ce livre manuellement avec l'ISBN."
+
+#. Dialog title when scan fails due to offline
+msgid "scan_offline_title"
+msgstr "Pas de connexion internet"
 
 #. Scan into this collection
 msgid "scan_into_collection"

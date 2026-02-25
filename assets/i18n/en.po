@@ -1641,6 +1641,38 @@ msgstr "No books currently lent"
 msgid "empty_no_loans_hint"
 msgstr "Lend a book from your library to get started"
 
+#. Clear returned loans history
+msgid "clean_returned_loans"
+msgstr "Clear history"
+
+#. Confirmation dialog for clearing returned loans
+msgid "clean_returned_loans_confirm"
+msgstr "Delete %d returned loan(s)? This cannot be undone."
+
+#. Success message after clearing returned loans
+msgid "clean_returned_loans_success"
+msgstr "%d returned loan(s) deleted"
+
+#. No returned loans to clear
+msgid "clean_returned_loans_empty"
+msgstr "No returned loans to clear"
+
+#. Clear closed requests history
+msgid "clean_closed_requests"
+msgstr "Clear history"
+
+#. Confirmation dialog for clearing closed requests
+msgid "clean_closed_requests_confirm"
+msgstr "Delete %d closed request(s)? This cannot be undone."
+
+#. Success message after clearing closed requests
+msgid "clean_closed_requests_success"
+msgstr "%d closed request(s) deleted"
+
+#. No closed requests to clear
+msgid "clean_closed_requests_empty"
+msgstr "No closed requests to clear"
+
 #. No outgoing requests
 msgid "empty_no_outgoing"
 msgstr "No outgoing requests"
@@ -4627,6 +4659,18 @@ msgstr "Scan a friend's code to enable loans and sync"
 #. Align barcode within the frame
 msgid "scan_instruction"
 msgstr "Align barcode within the frame"
+
+#. Offline banner shown on scan screen when no internet
+msgid "scan_offline_banner"
+msgstr "Offline - metadata search unavailable"
+
+#. Dialog message when scan fails due to offline
+msgid "scan_offline_message"
+msgstr "Metadata search requires an internet connection. You can add this book manually with just the ISBN."
+
+#. Dialog title when scan fails due to offline
+msgid "scan_offline_title"
+msgstr "No internet connection"
 
 #. Scan into this collection
 msgid "scan_into_collection"

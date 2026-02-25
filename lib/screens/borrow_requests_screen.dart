@@ -8,6 +8,7 @@ import '../data/repositories/copy_repository.dart';
 import '../data/repositories/loan_repository.dart';
 import '../models/loan.dart';
 import '../services/api_service.dart';
+import '../services/ffi_service.dart';
 import '../services/translation_service.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/premium_empty_state.dart';
@@ -367,14 +368,98 @@ class _LoansScreenState extends State<LoansScreen>
     }
     return RefreshIndicator(
       onRefresh: _fetchAllData,
-      child: ListView.builder(
-        itemCount: _activeLoans.length,
-        itemBuilder: (context, index) {
-          final loan = _activeLoans[index];
-          return _buildLoanTile(loan);
-        },
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: _cleanReturnedLoans,
+                  icon: const Icon(Icons.cleaning_services, size: 18),
+                  label: Text(
+                    TranslationService.translate(context, 'clean_returned_loans'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _activeLoans.length,
+              itemBuilder: (context, index) {
+                final loan = _activeLoans[index];
+                return _buildLoanTile(loan);
+              },
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> _cleanReturnedLoans() async {
+    final ffi = FfiService();
+    final count = await ffi.countReturnedLoans();
+
+    if (!mounted) return;
+
+    if (count == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            TranslationService.translate(context, 'clean_returned_loans_empty'),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          TranslationService.translate(context, 'clean_returned_loans'),
+        ),
+        content: Text(
+          TranslationService.translate(context, 'clean_returned_loans_confirm')
+              .replaceAll('%d', count.toString()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(TranslationService.translate(context, 'cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(TranslationService.translate(context, 'confirm')),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final deleted = await ffi.deleteReturnedLoans();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              TranslationService.translate(context, 'clean_returned_loans_success')
+                  .replaceAll('%d', deleted.toString()),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    }
   }
 
   Widget _buildLoanTile(Loan loan) {
@@ -659,11 +744,32 @@ class _LoansScreenState extends State<LoansScreen>
         TranslationService.translate(context, 'empty_no_incoming'),
       );
     }
-    return ListView.builder(
-      itemCount: _incomingRequests.length,
-      itemBuilder: (context, index) {
-        return _buildRequestTile(_incomingRequests[index], isIncoming: true);
-      },
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                onPressed: () => _cleanClosedRequests(isIncoming: true),
+                icon: const Icon(Icons.cleaning_services, size: 18),
+                label: Text(
+                  TranslationService.translate(context, 'clean_closed_requests'),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: _incomingRequests.length,
+            itemBuilder: (context, index) {
+              return _buildRequestTile(_incomingRequests[index], isIncoming: true);
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -673,12 +779,101 @@ class _LoansScreenState extends State<LoansScreen>
         TranslationService.translate(context, 'empty_no_outgoing'),
       );
     }
-    return ListView.builder(
-      itemCount: _outgoingRequests.length,
-      itemBuilder: (context, index) {
-        return _buildRequestTile(_outgoingRequests[index], isIncoming: false);
-      },
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                onPressed: () => _cleanClosedRequests(isIncoming: false),
+                icon: const Icon(Icons.cleaning_services, size: 18),
+                label: Text(
+                  TranslationService.translate(context, 'clean_closed_requests'),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: _outgoingRequests.length,
+            itemBuilder: (context, index) {
+              return _buildRequestTile(_outgoingRequests[index], isIncoming: false);
+            },
+          ),
+        ),
+      ],
     );
+  }
+
+  Future<void> _cleanClosedRequests({required bool isIncoming}) async {
+    final ffi = FfiService();
+    final count = isIncoming
+        ? await ffi.countClosedIncomingRequests()
+        : await ffi.countClosedOutgoingRequests();
+
+    if (!mounted) return;
+
+    if (count == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            TranslationService.translate(context, 'clean_closed_requests_empty'),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          TranslationService.translate(context, 'clean_closed_requests'),
+        ),
+        content: Text(
+          TranslationService.translate(context, 'clean_closed_requests_confirm')
+              .replaceAll('%d', count.toString()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(TranslationService.translate(context, 'cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(TranslationService.translate(context, 'confirm')),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final deleted = isIncoming
+            ? await ffi.deleteClosedIncomingRequests()
+            : await ffi.deleteClosedOutgoingRequests();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              TranslationService.translate(context, 'clean_closed_requests_success')
+                  .replaceAll('%d', deleted.toString()),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _fetchAllData();
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    }
   }
 
   Widget _buildConnectionList() {

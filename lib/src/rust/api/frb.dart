@@ -268,6 +268,30 @@ Future<int> createLoan({
   notes: notes,
 );
 
+/// Count returned loans (for cleanup confirmation dialog)
+Future<PlatformInt64> countReturnedLoans() =>
+    RustLib.instance.api.crateApiFrbCountReturnedLoans();
+
+/// Delete all returned loans, returns the number of deleted rows
+Future<BigInt> deleteReturnedLoans() =>
+    RustLib.instance.api.crateApiFrbDeleteReturnedLoans();
+
+/// Count closed incoming P2P requests (not pending)
+Future<PlatformInt64> countClosedIncomingRequests() =>
+    RustLib.instance.api.crateApiFrbCountClosedIncomingRequests();
+
+/// Delete all closed incoming P2P requests (not pending)
+Future<BigInt> deleteClosedIncomingRequests() =>
+    RustLib.instance.api.crateApiFrbDeleteClosedIncomingRequests();
+
+/// Count closed outgoing P2P requests (not pending)
+Future<PlatformInt64> countClosedOutgoingRequests() =>
+    RustLib.instance.api.crateApiFrbCountClosedOutgoingRequests();
+
+/// Delete all closed outgoing P2P requests (not pending)
+Future<BigInt> deleteClosedOutgoingRequests() =>
+    RustLib.instance.api.crateApiFrbDeleteClosedOutgoingRequests();
+
 /// Return a loan
 Future<String> returnLoan({required int id}) =>
     RustLib.instance.api.crateApiFrbReturnLoan(id: id);

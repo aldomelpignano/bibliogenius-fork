@@ -4516,6 +4516,18 @@ msgstr "QR-Code eines Freundes scannen"
 msgid "scan_instruction"
 msgstr "Richten Sie den QR-Code im Rahmen aus"
 
+#. Offline banner shown on scan screen when no internet
+msgid "scan_offline_banner"
+msgstr "Offline - Metadatensuche nicht verfuegbar"
+
+#. Dialog message when scan fails due to offline
+msgid "scan_offline_message"
+msgstr "Die Metadatensuche erfordert eine Internetverbindung. Sie koennen dieses Buch manuell mit der ISBN hinzufuegen."
+
+#. Dialog title when scan fails due to offline
+msgid "scan_offline_title"
+msgstr "Keine Internetverbindung"
+
 #. Scan into this collection
 msgid "scan_into_collection"
 msgstr "In Sammlung scannen"

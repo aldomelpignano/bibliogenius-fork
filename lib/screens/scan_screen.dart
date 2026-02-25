@@ -8,6 +8,7 @@ import '../data/repositories/copy_repository.dart';
 import '../services/translation_service.dart';
 import '../services/api_service.dart';
 import '../utils/isbn_validator.dart';
+import '../utils/book_url_helper.dart';
 import '../models/book.dart';
 
 /// Scan screen with optional batch mode and pre-selected destination.
@@ -66,10 +67,16 @@ class _ScanScreenState extends State<ScanScreen> {
         controller.start();
       }
     });
+
+    // Check connectivity to show offline banner
+    BookUrlHelper.isOnline().then((online) {
+      if (mounted) setState(() => _isOffline = !online);
+    });
   }
 
   bool _isScanning = true;
   bool _isTorchOn = false;
+  bool _isOffline = false;
   String? _lastScannedIsbn; // Prevent duplicate navigation for same ISBN
 
   // Batch mode state
@@ -186,6 +193,10 @@ class _ScanScreenState extends State<ScanScreen> {
         }
       } else {
         // 2. Not found locally, lookup metadata
+        // Re-check connectivity before network call
+        final isOnline = await BookUrlHelper.isOnline();
+        if (mounted) setState(() => _isOffline = !isOnline);
+
         final bookData = await api.lookupBook(
           isbn,
           locale: Localizations.localeOf(context),
@@ -215,7 +226,13 @@ class _ScanScreenState extends State<ScanScreen> {
           bookCoverUrl = bookData['cover_url'] as String?;
         } else {
           // Book not found in metadata sources
-          if (mounted) await _showBookNotFoundDialog(isbn);
+          if (mounted) {
+            if (_isOffline) {
+              await _showOfflineDialog(isbn);
+            } else {
+              await _showBookNotFoundDialog(isbn);
+            }
+          }
           return; // Stop here, don't show success snackbar
         }
       }
@@ -320,6 +337,53 @@ class _ScanScreenState extends State<ScanScreen> {
             onPressed: () {
               Navigator.pop(ctx);
               // Navigate to add book screen with ISBN and pre-selected destination
+              final extra = {
+                'isbn': isbn,
+                if (widget.preSelectedShelfId != null)
+                  'shelfId': widget.preSelectedShelfId,
+                if (widget.preSelectedCollectionId != null)
+                  'collectionId': widget.preSelectedCollectionId,
+              };
+              context.push('/books/add', extra: extra);
+            },
+            icon: const Icon(Icons.edit),
+            label: Text(
+              TranslationService.translate(context, 'add_book_manually'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showOfflineDialog(String isbn) async {
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.wifi_off, color: Colors.orange),
+            const SizedBox(width: 8),
+            Text(TranslationService.translate(
+              context,
+              'scan_offline_title',
+            )),
+          ],
+        ),
+        content: Text(
+          '${TranslationService.translate(context, 'scan_offline_message')}'
+          '\n\nISBN: $isbn',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+            },
+            child: Text(TranslationService.translate(context, 'cancel')),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(ctx);
               final extra = {
                 'isbn': isbn,
                 if (widget.preSelectedShelfId != null)
@@ -519,11 +583,47 @@ class _ScanScreenState extends State<ScanScreen> {
             child: Container(),
           ),
 
+          // Offline warning banner
+          if (_isOffline)
+            Positioned(
+              top: 90,
+              left: 20,
+              right: 20,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade800.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.wifi_off, color: Colors.white, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        TranslationService.translate(
+                          context,
+                          'scan_offline_banner',
+                        ),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
           // Batch mode: scanned covers side panel (Gleeph-style)
           if (widget.batchMode && _batchedBooks.isNotEmpty)
             Positioned(
               left: 0,
-              top: 100,
+              top: _isOffline ? 140 : 100,
               bottom: 160,
               width: 70,
               child: Container(
@@ -567,7 +667,7 @@ class _ScanScreenState extends State<ScanScreen> {
           // Batch mode: destination indicator at top
           if (widget.batchMode && _hasDestination)
             Positioned(
-              top: 100,
+              top: _isOffline ? 140 : 100,
               left: 80,
               right: 20,
               child: Container(

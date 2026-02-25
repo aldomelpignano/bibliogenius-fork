@@ -300,6 +300,74 @@ class FfiService {
     }
   }
 
+  /// Count returned loans (for cleanup confirmation)
+  Future<int> countReturnedLoans() async {
+    try {
+      final count = await frb.countReturnedLoans();
+      return count.toInt();
+    } catch (e) {
+      debugPrint('FFI countReturnedLoans error: $e');
+      return 0;
+    }
+  }
+
+  /// Delete all returned loans, returns the number deleted
+  Future<int> deleteReturnedLoans() async {
+    try {
+      final count = await frb.deleteReturnedLoans();
+      return count.toInt();
+    } catch (e) {
+      debugPrint('FFI deleteReturnedLoans error: $e');
+      rethrow;
+    }
+  }
+
+  // ============ P2P Request Cleanup ============
+
+  /// Count closed incoming requests (not pending)
+  Future<int> countClosedIncomingRequests() async {
+    try {
+      final count = await frb.countClosedIncomingRequests();
+      return count.toInt();
+    } catch (e) {
+      debugPrint('FFI countClosedIncomingRequests error: $e');
+      return 0;
+    }
+  }
+
+  /// Delete all closed incoming requests, returns the number deleted
+  Future<int> deleteClosedIncomingRequests() async {
+    try {
+      final count = await frb.deleteClosedIncomingRequests();
+      return count.toInt();
+    } catch (e) {
+      debugPrint('FFI deleteClosedIncomingRequests error: $e');
+      rethrow;
+    }
+  }
+
+  /// Count closed outgoing requests (not pending)
+  Future<int> countClosedOutgoingRequests() async {
+    try {
+      final count = await frb.countClosedOutgoingRequests();
+      return count.toInt();
+    } catch (e) {
+      debugPrint('FFI countClosedOutgoingRequests error: $e');
+      return 0;
+    }
+  }
+
+  /// Delete all closed outgoing requests, returns the number deleted
+  Future<int> deleteClosedOutgoingRequests() async {
+    try {
+      final count = await frb.deleteClosedOutgoingRequests();
+      return count.toInt();
+    } catch (e) {
+      debugPrint('FFI deleteClosedOutgoingRequests error: $e');
+      rethrow;
+    }
+  }
+
   /// Return a loan
   Future<void> returnLoan(int id) async {
     try {
