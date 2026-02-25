@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../providers/memory_game_provider.dart';
 import '../providers/pending_peers_provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/translation_service.dart';
@@ -129,12 +128,14 @@ class ScaffoldWithNav extends StatelessWidget {
           label: Text(TranslationService.translate(context, 'dashboard')),
         ),
       ),
-      if (themeProvider.memoryGameEnabled)
+      if (themeProvider.gamesEnabled &&
+          (themeProvider.memoryGameEnabled || themeProvider.slidingPuzzleEnabled))
         _NavItem(
-          route: '/memory-game',
+          route: '/games',
+          matchPrefixes: ['/games', '/memory-game', '/sliding-puzzle'],
           destination: NavigationRailDestination(
-            icon: const Icon(Icons.auto_stories),
-            label: Text(TranslationService.translate(context, 'memory_game_title')),
+            icon: const Icon(Icons.sports_esports),
+            label: Text(TranslationService.translate(context, 'games_section')),
           ),
         ),
       _NavItem(
@@ -175,18 +176,6 @@ class ScaffoldWithNav extends StatelessWidget {
   void _onItemTapped(int index, BuildContext context, List<_NavItem> navItems) {
     if (index >= 0 && index < navItems.length) {
       final item = navItems[index];
-      // Same-route tap on Memory Game: force reset to setup
-      if (item.route == '/memory-game') {
-        final location = GoRouterState.of(context).uri.path;
-        if (location.startsWith('/memory-game')) {
-          final provider = context.read<MemoryGameProvider>();
-          if (provider.phase != GamePhase.setup) {
-            provider.resetToSetup();
-            provider.loadDifficulties();
-          }
-          return;
-        }
-      }
       if (item.isPush) {
         context.push(item.route);
       } else {

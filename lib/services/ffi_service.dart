@@ -569,6 +569,81 @@ class FfiService {
     }
   }
 
+  // ============ Sliding Puzzle ============
+
+  /// Get available puzzle difficulty levels based on books with covers
+  Future<List<String>> getPuzzleDifficulties() async {
+    try {
+      return await frb.puzzleAvailableDifficulties();
+    } catch (e) {
+      debugPrint('FFI puzzleAvailableDifficulties error: $e');
+      return [];
+    }
+  }
+
+  /// Set up a new puzzle: returns a board with shuffled tiles
+  Future<frb.FrbPuzzleBoard> setupPuzzle(String difficulty) async {
+    try {
+      return await frb.puzzleSetup(difficulty: difficulty);
+    } catch (e) {
+      debugPrint('FFI puzzleSetup error: $e');
+      rethrow;
+    }
+  }
+
+  /// Submit a completed puzzle and get the computed score
+  Future<frb.FrbPuzzleScore> finishPuzzle({
+    required String difficulty,
+    required int gridSize,
+    required double elapsedSeconds,
+    required int moveCount,
+    required int parMoves,
+  }) async {
+    try {
+      return await frb.puzzleFinish(
+        difficulty: difficulty,
+        gridSize: gridSize,
+        elapsedSeconds: elapsedSeconds,
+        moveCount: moveCount,
+        parMoves: parMoves,
+      );
+    } catch (e) {
+      debugPrint('FFI puzzleFinish error: $e');
+      rethrow;
+    }
+  }
+
+  /// Get top sliding puzzle scores
+  Future<List<frb.FrbPuzzleScore>> getPuzzleTopScores() async {
+    try {
+      return await frb.puzzleTopScores();
+    } catch (e) {
+      debugPrint('FFI puzzleTopScores error: $e');
+      return [];
+    }
+  }
+
+  /// Get puzzle leaderboard (cached peer scores + local best)
+  Future<List<frb.FrbPuzzleLeaderboardEntry>> getPuzzleLeaderboard() async {
+    try {
+      return await frb.puzzleGameLeaderboard();
+    } catch (e) {
+      debugPrint('FFI puzzleGameLeaderboard error: $e');
+      return [];
+    }
+  }
+
+  /// Refresh puzzle leaderboard: sync with peers then return merged leaderboard
+  Future<List<frb.FrbPuzzleLeaderboardEntry>>
+      refreshPuzzleLeaderboard() async {
+    try {
+      return await frb.puzzleGameRefreshLeaderboard();
+    } catch (e) {
+      debugPrint('FFI puzzleGameRefreshLeaderboard error: $e');
+      return [];
+    }
+  }
+
   // ============ Gamification (FFI direct) ============
 
   /// Get full gamification status (tracks, streak, achievements, config)

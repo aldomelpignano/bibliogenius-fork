@@ -316,12 +316,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 _buildModuleToggle(
                   context,
-                  'memory_game_module',
-                  'memory_game_module_desc',
-                  Icons.auto_stories,
-                  themeProvider.memoryGameEnabled,
-                  (value) => themeProvider.setMemoryGameEnabled(value),
+                  'games_module',
+                  'games_module_desc',
+                  Icons.sports_esports,
+                  themeProvider.gamesEnabled,
+                  (value) => themeProvider.setGamesEnabled(value),
                 ),
+                if (themeProvider.gamesEnabled)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16.0),
+                    child: _buildModuleToggle(
+                      context,
+                      'memory_game_module',
+                      'memory_game_module_desc',
+                      Icons.auto_stories,
+                      themeProvider.memoryGameEnabled,
+                      (value) => themeProvider.setMemoryGameEnabled(value),
+                    ),
+                  ),
+                if (themeProvider.gamesEnabled)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16.0),
+                    child: _buildModuleToggle(
+                      context,
+                      'sliding_puzzle_module',
+                      'sliding_puzzle_module_desc',
+                      Icons.grid_view,
+                      themeProvider.slidingPuzzleEnabled,
+                      (value) => themeProvider.setSlidingPuzzleEnabled(value),
+                    ),
+                  ),
                 if (themeProvider.gamificationEnabled &&
                     themeProvider.networkEnabled)
                   Padding(

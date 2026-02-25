@@ -26,6 +26,7 @@ class _HelpScreenState extends State<HelpScreen> {
     final collectionsEnabled = themeProvider.collectionsEnabled;
     final audioEnabled = themeProvider.audioEnabled;
     final memoryGameEnabled = themeProvider.memoryGameEnabled;
+    final slidingPuzzleEnabled = themeProvider.slidingPuzzleEnabled;
 
     _topics = [
       // Getting Started
@@ -133,6 +134,17 @@ class _HelpScreenState extends State<HelpScreen> {
           ),
           ctaKey: 'help_cta_play_memory',
           ctaRoute: '/memory-game',
+        ),
+      if (slidingPuzzleEnabled)
+        _HelpTopic(
+          icon: Icons.grid_view,
+          titleKey: 'help_topic_sliding_puzzle',
+          descKey: 'help_desc_sliding_puzzle',
+          gradient: const LinearGradient(
+            colors: [Color(0xFF2563EB), Color(0xFF60A5FA)],
+          ),
+          ctaKey: 'help_cta_play_puzzle',
+          ctaRoute: '/sliding-puzzle',
         ),
       // Data & Privacy
       _HelpTopic(

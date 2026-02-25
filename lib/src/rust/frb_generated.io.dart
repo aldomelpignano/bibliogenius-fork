@@ -90,6 +90,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FrbMemoryScore dco_decode_frb_memory_score(dynamic raw);
 
   @protected
+  FrbPuzzleBoard dco_decode_frb_puzzle_board(dynamic raw);
+
+  @protected
+  FrbPuzzleLeaderboardEntry dco_decode_frb_puzzle_leaderboard_entry(
+    dynamic raw,
+  );
+
+  @protected
+  FrbPuzzleScore dco_decode_frb_puzzle_score(dynamic raw);
+
+  @protected
   FrbStreakInfo dco_decode_frb_streak_info(dynamic raw);
 
   @protected
@@ -137,6 +148,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<FrbMemoryScore> dco_decode_list_frb_memory_score(dynamic raw);
 
   @protected
+  List<FrbPuzzleLeaderboardEntry> dco_decode_list_frb_puzzle_leaderboard_entry(
+    dynamic raw,
+  );
+
+  @protected
+  List<FrbPuzzleScore> dco_decode_list_frb_puzzle_score(dynamic raw);
+
+  @protected
   List<FrbTag> dco_decode_list_frb_tag(dynamic raw);
 
   @protected
@@ -168,6 +187,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int dco_decode_u_16(dynamic raw);
+
+  @protected
+  int dco_decode_u_32(dynamic raw);
 
   @protected
   int dco_decode_u_8(dynamic raw);
@@ -261,6 +283,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FrbMemoryScore sse_decode_frb_memory_score(SseDeserializer deserializer);
 
   @protected
+  FrbPuzzleBoard sse_decode_frb_puzzle_board(SseDeserializer deserializer);
+
+  @protected
+  FrbPuzzleLeaderboardEntry sse_decode_frb_puzzle_leaderboard_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbPuzzleScore sse_decode_frb_puzzle_score(SseDeserializer deserializer);
+
+  @protected
   FrbStreakInfo sse_decode_frb_streak_info(SseDeserializer deserializer);
 
   @protected
@@ -318,6 +351,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<FrbPuzzleLeaderboardEntry> sse_decode_list_frb_puzzle_leaderboard_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbPuzzleScore> sse_decode_list_frb_puzzle_score(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<FrbTag> sse_decode_list_frb_tag(SseDeserializer deserializer);
 
   @protected
@@ -351,6 +394,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int sse_decode_u_16(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_u_32(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_8(SseDeserializer deserializer);
@@ -461,6 +507,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_frb_puzzle_board(
+    FrbPuzzleBoard self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_puzzle_leaderboard_entry(
+    FrbPuzzleLeaderboardEntry self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_puzzle_score(
+    FrbPuzzleScore self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_frb_streak_info(FrbStreakInfo self, SseSerializer serializer);
 
   @protected
@@ -530,6 +594,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_frb_puzzle_leaderboard_entry(
+    List<FrbPuzzleLeaderboardEntry> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_puzzle_score(
+    List<FrbPuzzleScore> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_frb_tag(List<FrbTag> self, SseSerializer serializer);
 
   @protected
@@ -573,6 +649,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_u_16(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_u_32(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_8(int self, SseSerializer serializer);

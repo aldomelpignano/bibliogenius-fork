@@ -87,9 +87,17 @@ class ThemeProvider with ChangeNotifier {
   bool _gamificationEnabled = true;
   bool get gamificationEnabled => _gamificationEnabled;
 
+  // Games (parent toggle for all mini-games)
+  bool _gamesEnabled = true;
+  bool get gamesEnabled => _gamesEnabled;
+
   // Memory Game Module
   bool _memoryGameEnabled = true;
   bool get memoryGameEnabled => _memoryGameEnabled;
+
+  // Sliding Puzzle Module
+  bool _slidingPuzzleEnabled = true;
+  bool get slidingPuzzleEnabled => _slidingPuzzleEnabled;
 
   // Digital Formats Module
   bool _digitalFormatsEnabled = false;
@@ -283,7 +291,9 @@ class ThemeProvider with ChangeNotifier {
     _audioEnabled = prefs.getBool('audioEnabled') ?? false;
     _mcpEnabled = prefs.getBool('mcpEnabled') ?? false;
     _simplifiedMode = prefs.getBool('simplifiedMode') ?? false;
+    _gamesEnabled = prefs.getBool('gamesEnabled') ?? true;
     _memoryGameEnabled = prefs.getBool('memoryGameEnabled') ?? true;
+    _slidingPuzzleEnabled = prefs.getBool('slidingPuzzleEnabled') ?? true;
 
     // Load gamification setting (default based on profile type)
     final savedGamification = prefs.getBool('gamificationEnabled');
@@ -381,10 +391,37 @@ class ThemeProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setGamesEnabled(bool enabled) async {
+    _gamesEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('gamesEnabled', enabled);
+    if (!enabled) {
+      _memoryGameEnabled = false;
+      _slidingPuzzleEnabled = false;
+      await prefs.setBool('memoryGameEnabled', false);
+      await prefs.setBool('slidingPuzzleEnabled', false);
+    } else {
+      _memoryGameEnabled = true;
+      _slidingPuzzleEnabled = true;
+      await prefs.setBool('memoryGameEnabled', true);
+      await prefs.setBool('slidingPuzzleEnabled', true);
+    }
+    await _updateEnabledModules();
+    notifyListeners();
+  }
+
   Future<void> setMemoryGameEnabled(bool enabled) async {
     _memoryGameEnabled = enabled;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('memoryGameEnabled', enabled);
+    await _updateEnabledModules();
+    notifyListeners();
+  }
+
+  Future<void> setSlidingPuzzleEnabled(bool enabled) async {
+    _slidingPuzzleEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('slidingPuzzleEnabled', enabled);
     await _updateEnabledModules();
     notifyListeners();
   }
@@ -919,7 +956,9 @@ class ThemeProvider with ChangeNotifier {
       enabledModules.add('auto_approve_loans');
     }
     if (commerceEnabled) enabledModules.add('commerce');
+    if (gamesEnabled) enabledModules.add('games');
     if (memoryGameEnabled) enabledModules.add('memory_game');
+    if (slidingPuzzleEnabled) enabledModules.add('sliding_puzzle');
     if (networkGamificationEnabled) {
       enabledModules.add('network_gamification');
     }

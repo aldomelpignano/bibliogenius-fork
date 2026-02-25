@@ -23,6 +23,7 @@ import 'providers/book_refresh_notifier.dart';
 import 'providers/pending_peers_provider.dart';
 import 'audio/audio_module.dart'; // Audio module (decoupled)
 import 'providers/memory_game_provider.dart';
+import 'providers/sliding_puzzle_provider.dart';
 import 'data/repositories/book_repository.dart';
 import 'data/repositories/tag_repository.dart';
 import 'data/repositories/contact_repository.dart';
@@ -54,6 +55,8 @@ import 'screens/peer_book_list_screen.dart';
 import 'screens/shelf_management_screen.dart';
 import 'screens/search_peer_screen.dart';
 import 'screens/memory_game_screen.dart';
+import 'screens/sliding_puzzle_screen.dart';
+import 'screens/games_hub_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/statistics_screen.dart';
 import 'screens/help_screen.dart';
@@ -359,6 +362,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<MemoryGameProvider>(
           create: (_) => MemoryGameProvider(),
         ),
+        ChangeNotifierProvider<SlidingPuzzleProvider>(
+          create: (_) => SlidingPuzzleProvider(),
+        ),
       ],
       child: const AppRouter(),
     );
@@ -461,13 +467,31 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
               builder: (context, state) => const DashboardScreen(),
             ),
             GoRoute(
+              path: '/games',
+              redirect: (context, state) {
+                final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+                if (!themeProvider.gamesEnabled) return '/dashboard';
+                return null;
+              },
+              builder: (context, state) => const GamesHubScreen(),
+            ),
+            GoRoute(
               path: '/memory-game',
               redirect: (context, state) {
                 final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-                if (!themeProvider.memoryGameEnabled) return '/dashboard';
+                if (!themeProvider.memoryGameEnabled) return '/games';
                 return null;
               },
               builder: (context, state) => const MemoryGameScreen(),
+            ),
+            GoRoute(
+              path: '/sliding-puzzle',
+              redirect: (context, state) {
+                final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+                if (!themeProvider.slidingPuzzleEnabled) return '/games';
+                return null;
+              },
+              builder: (context, state) => const SlidingPuzzleScreen(),
             ),
             GoRoute(
               path: '/books',

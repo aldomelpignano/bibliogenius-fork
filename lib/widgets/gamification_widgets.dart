@@ -1243,7 +1243,9 @@ class _GamificationSummaryCardState extends State<GamificationSummaryCard> {
                           Builder(builder: (context) {
                             final filtered = _achievementFilter == 'games'
                                 ? widget.status.recentAchievements
-                                    .where((id) => id.startsWith('memory'))
+                                    .where((id) =>
+                                        id.startsWith('memory') ||
+                                        id.startsWith('puzzle'))
                                     .toList()
                                 : widget.status.recentAchievements;
                             if (filtered.isEmpty) {
@@ -1615,6 +1617,7 @@ class _GamificationSummaryCardState extends State<GamificationSummaryCard> {
 
   IconData _getAchievementIcon(String id) {
     if (id.startsWith('memory')) return Icons.sports_esports;
+    if (id.startsWith('puzzle')) return Icons.extension;
     if (id.contains('collector')) return Icons.library_books;
     if (id.contains('reader')) return Icons.menu_book;
     if (id.contains('lender') || id.contains('loan')) return Icons.handshake;

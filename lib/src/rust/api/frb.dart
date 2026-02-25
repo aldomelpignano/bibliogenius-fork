@@ -317,6 +317,43 @@ Future<List<FrbMemoryLeaderboardEntry>> memoryGameLeaderboard() =>
 Future<List<FrbMemoryLeaderboardEntry>> memoryGameRefreshLeaderboard() =>
     RustLib.instance.api.crateApiFrbMemoryGameRefreshLeaderboard();
 
+/// Get available puzzle difficulty levels based on books with covers
+Future<List<String>> puzzleAvailableDifficulties() =>
+    RustLib.instance.api.crateApiFrbPuzzleAvailableDifficulties();
+
+/// Set up a new sliding puzzle with the given difficulty
+Future<FrbPuzzleBoard> puzzleSetup({required String difficulty}) =>
+    RustLib.instance.api.crateApiFrbPuzzleSetup(difficulty: difficulty);
+
+/// Submit a completed sliding puzzle and get the score back
+Future<FrbPuzzleScore> puzzleFinish({
+  required String difficulty,
+  required int gridSize,
+  required double elapsedSeconds,
+  required int moveCount,
+  required int parMoves,
+}) => RustLib.instance.api.crateApiFrbPuzzleFinish(
+  difficulty: difficulty,
+  gridSize: gridSize,
+  elapsedSeconds: elapsedSeconds,
+  moveCount: moveCount,
+  parMoves: parMoves,
+);
+
+/// Get top sliding puzzle scores
+Future<List<FrbPuzzleScore>> puzzleTopScores() =>
+    RustLib.instance.api.crateApiFrbPuzzleTopScores();
+
+/// Get puzzle leaderboard (peer scores + local user's best)
+Future<List<FrbPuzzleLeaderboardEntry>> puzzleGameLeaderboard() =>
+    RustLib.instance.api.crateApiFrbPuzzleGameLeaderboard();
+
+/// Refresh the network puzzle leaderboard by syncing with all accepted peers.
+/// Fetches each peer's /api/game/puzzle/public-best, upserts into peer_puzzle_scores,
+/// then returns the merged leaderboard.
+Future<List<FrbPuzzleLeaderboardEntry>> puzzleGameRefreshLeaderboard() =>
+    RustLib.instance.api.crateApiFrbPuzzleGameRefreshLeaderboard();
+
 /// Get full gamification status via FFI (replaces HTTP getUserStatus)
 Future<FrbGamificationStatus> gamificationGetStatus() =>
     RustLib.instance.api.crateApiFrbGamificationGetStatus();
@@ -734,6 +771,144 @@ class FrbMemoryScore {
           pairsCount == other.pairsCount &&
           elapsedSeconds == other.elapsedSeconds &&
           errors == other.errors &&
+          normalizedScore == other.normalizedScore &&
+          playedAt == other.playedAt &&
+          newAchievements == other.newAchievements;
+}
+
+/// A generated puzzle board (FFI-safe)
+class FrbPuzzleBoard {
+  final int bookId;
+  final String title;
+  final String coverUrl;
+  final int gridSize;
+  final Uint8List tiles;
+  final int emptyIndex;
+  final int parMoves;
+
+  const FrbPuzzleBoard({
+    required this.bookId,
+    required this.title,
+    required this.coverUrl,
+    required this.gridSize,
+    required this.tiles,
+    required this.emptyIndex,
+    required this.parMoves,
+  });
+
+  @override
+  int get hashCode =>
+      bookId.hashCode ^
+      title.hashCode ^
+      coverUrl.hashCode ^
+      gridSize.hashCode ^
+      tiles.hashCode ^
+      emptyIndex.hashCode ^
+      parMoves.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbPuzzleBoard &&
+          runtimeType == other.runtimeType &&
+          bookId == other.bookId &&
+          title == other.title &&
+          coverUrl == other.coverUrl &&
+          gridSize == other.gridSize &&
+          tiles == other.tiles &&
+          emptyIndex == other.emptyIndex &&
+          parMoves == other.parMoves;
+}
+
+/// A leaderboard entry for the sliding puzzle (FFI-safe)
+class FrbPuzzleLeaderboardEntry {
+  final int peerId;
+  final String libraryName;
+  final double bestScore;
+  final String difficulty;
+  final String playedAt;
+  final bool isSelf;
+
+  const FrbPuzzleLeaderboardEntry({
+    required this.peerId,
+    required this.libraryName,
+    required this.bestScore,
+    required this.difficulty,
+    required this.playedAt,
+    required this.isSelf,
+  });
+
+  @override
+  int get hashCode =>
+      peerId.hashCode ^
+      libraryName.hashCode ^
+      bestScore.hashCode ^
+      difficulty.hashCode ^
+      playedAt.hashCode ^
+      isSelf.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbPuzzleLeaderboardEntry &&
+          runtimeType == other.runtimeType &&
+          peerId == other.peerId &&
+          libraryName == other.libraryName &&
+          bestScore == other.bestScore &&
+          difficulty == other.difficulty &&
+          playedAt == other.playedAt &&
+          isSelf == other.isSelf;
+}
+
+/// A saved sliding puzzle score (FFI-safe)
+class FrbPuzzleScore {
+  final int? id;
+  final String difficulty;
+  final int gridSize;
+  final double elapsedSeconds;
+  final int moveCount;
+  final int parMoves;
+  final double normalizedScore;
+  final String playedAt;
+
+  /// Achievements unlocked after this game (empty if none)
+  final List<String> newAchievements;
+
+  const FrbPuzzleScore({
+    this.id,
+    required this.difficulty,
+    required this.gridSize,
+    required this.elapsedSeconds,
+    required this.moveCount,
+    required this.parMoves,
+    required this.normalizedScore,
+    required this.playedAt,
+    required this.newAchievements,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      difficulty.hashCode ^
+      gridSize.hashCode ^
+      elapsedSeconds.hashCode ^
+      moveCount.hashCode ^
+      parMoves.hashCode ^
+      normalizedScore.hashCode ^
+      playedAt.hashCode ^
+      newAchievements.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbPuzzleScore &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          difficulty == other.difficulty &&
+          gridSize == other.gridSize &&
+          elapsedSeconds == other.elapsedSeconds &&
+          moveCount == other.moveCount &&
+          parMoves == other.parMoves &&
           normalizedScore == other.normalizedScore &&
           playedAt == other.playedAt &&
           newAchievements == other.newAchievements;

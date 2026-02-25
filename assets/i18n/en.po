@@ -51,6 +51,18 @@ msgstr "Memory Grand Master"
 msgid "achievement_memory_perfect"
 msgstr "Perfect Memory"
 
+#. Sliding Puzzle - First Game
+msgid "achievement_puzzle_first_game"
+msgstr "Puzzle Novice"
+
+#. Sliding Puzzle - Solved in par moves or fewer
+msgid "achievement_puzzle_perfect"
+msgstr "Puzzle Perfectionist"
+
+#. Sliding Puzzle - Completed a 5x5 puzzle
+msgid "achievement_puzzle_master"
+msgstr "Puzzle Master"
+
 #. Avid Reader
 msgid "achievement_reader_bronze"
 msgstr "Avid Reader"
@@ -5906,4 +5918,168 @@ msgstr "#%s in your top scores"
 #. Memory Game - Rank column header
 msgid "memory_rank_header"
 msgstr "Rank"
+
+#. Sliding Puzzle - Title
+msgid "sliding_puzzle_title"
+msgstr "Sliding Puzzle"
+
+#. Sliding Puzzle - Intro tagline
+msgid "sliding_puzzle_intro"
+msgstr "Slide the tiles to reconstruct one of your book covers!"
+
+#. Sliding Puzzle - Choose difficulty
+msgid "sliding_puzzle_choose_difficulty"
+msgstr "Choose a difficulty"
+
+#. Sliding Puzzle - Play button
+msgid "sliding_puzzle_play"
+msgstr "Play"
+
+#. Sliding Puzzle - Not enough books
+msgid "sliding_puzzle_not_enough_books"
+msgstr "You need at least 1 book with a cover to play. Add books to your library!"
+
+#. Sliding Puzzle - Easy difficulty
+msgid "sliding_puzzle_easy"
+msgstr "Easy"
+
+#. Sliding Puzzle - Medium difficulty
+msgid "sliding_puzzle_medium"
+msgstr "Medium"
+
+#. Sliding Puzzle - Hard difficulty
+msgid "sliding_puzzle_hard"
+msgstr "Hard"
+
+#. Sliding Puzzle - Time label
+msgid "sliding_puzzle_time"
+msgstr "Time"
+
+#. Sliding Puzzle - Moves label
+msgid "sliding_puzzle_moves"
+msgstr "Moves"
+
+#. Sliding Puzzle - Par label
+msgid "sliding_puzzle_par"
+msgstr "Par"
+
+#. Sliding Puzzle - Score label
+msgid "sliding_puzzle_score"
+msgstr "Score"
+
+#. Sliding Puzzle - Difficulty label
+msgid "sliding_puzzle_difficulty_label"
+msgstr "Difficulty"
+
+#. Sliding Puzzle - Congratulations
+msgid "sliding_puzzle_congratulations"
+msgstr "Congratulations!"
+
+#. Sliding Puzzle - Varied congrats messages
+msgid "puzzle_congrats_0"
+msgstr "Well solved!"
+
+msgid "puzzle_congrats_1"
+msgstr "Great sliding!"
+
+msgid "puzzle_congrats_2"
+msgstr "You nailed it!"
+
+msgid "puzzle_congrats_3"
+msgstr "Sharp moves!"
+
+msgid "puzzle_congrats_4"
+msgstr "Puzzle complete!"
+
+#. Sliding Puzzle - Play again
+msgid "sliding_puzzle_play_again"
+msgstr "Play again"
+
+#. Sliding Puzzle - Change difficulty
+msgid "sliding_puzzle_change_difficulty"
+msgstr "Change difficulty"
+
+#. Sliding Puzzle Module
+msgid "sliding_puzzle_module"
+msgstr "Sliding Puzzle"
+
+#. Sliding Puzzle Module Description
+msgid "sliding_puzzle_module_desc"
+msgstr "Slide tiles to reconstruct a book cover"
+
+#. Sliding Puzzle - Dashboard subtitle
+msgid "sliding_puzzle_dashboard_subtitle"
+msgstr "Reconstruct your covers!"
+
+#. Sliding Puzzle - Reference image label
+msgid "sliding_puzzle_reference"
+msgstr "Reference"
+
+#. Sliding Puzzle - New personal best
+msgid "puzzle_new_personal_best"
+msgstr "New personal best!"
+
+#. Sliding Puzzle - Rank position
+msgid "puzzle_rank_position"
+msgstr "#%s in your top scores"
+
+#. Sliding Puzzle - Scores title
+msgid "sliding_puzzle_scores_title"
+msgstr "Top Scores"
+
+#. Sliding Puzzle - No scores yet
+msgid "sliding_puzzle_no_scores_yet"
+msgstr "No scores yet. Play a game!"
+
+#. Sliding Puzzle - Leaderboard
+msgid "puzzle_leaderboard_title"
+msgstr "Leaderboard"
+
+#. Sliding Puzzle - My Scores tab
+msgid "puzzle_my_scores_tab"
+msgstr "My Scores"
+
+#. Sliding Puzzle - Network tab
+msgid "puzzle_network_tab"
+msgstr "Network"
+
+#. Sliding Puzzle - Syncing with peers
+msgid "puzzle_leaderboard_refreshing"
+msgstr "Syncing with peers..."
+
+#. Sliding Puzzle - Empty network leaderboard
+msgid "puzzle_leaderboard_empty_network"
+msgstr "No peer scores yet. Connect to peers to see their scores!"
+
+#. Games section title
+msgid "games_section"
+msgstr "Games"
+
+#. Games module toggle
+msgid "games_module"
+msgstr "Games"
+
+#. Games module description
+msgid "games_module_desc"
+msgstr "Enable mini-games based on your library"
+
+#. Games hub title
+msgid "games_hub_title"
+msgstr "Games"
+
+#. Games hub subtitle
+msgid "games_hub_subtitle"
+msgstr "Have fun with your book covers"
+
+#. Help - Sliding Puzzle topic title
+msgid "help_topic_sliding_puzzle"
+msgstr "Sliding Puzzle"
+
+#. Help - Sliding Puzzle description
+msgid "help_desc_sliding_puzzle"
+msgstr "Reconstruct a book cover by sliding tiles"
+
+#. Help - Sliding Puzzle CTA
+msgid "help_cta_play_puzzle"
+msgstr "Play"
 

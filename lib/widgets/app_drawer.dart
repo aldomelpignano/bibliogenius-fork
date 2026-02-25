@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/memory_game_provider.dart';
+import '../providers/sliding_puzzle_provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/translation_service.dart';
 import '../theme/app_design.dart';
@@ -85,15 +86,9 @@ class AppDrawer extends StatelessWidget {
             currentPath: currentPath,
             theme: theme,
           ),
-          if (themeProvider.memoryGameEnabled)
-            _buildDrawerItem(
-              context,
-              icon: Icons.auto_stories,
-              titleKey: 'memory_game_title',
-              route: '/memory-game',
-              currentPath: currentPath,
-              theme: theme,
-            ),
+          if (themeProvider.gamesEnabled &&
+              (themeProvider.memoryGameEnabled || themeProvider.slidingPuzzleEnabled))
+            _buildGamesExpansionTile(context, themeProvider, currentPath, theme),
           _buildDrawerItem(
             context,
             icon: Icons.settings,
@@ -112,6 +107,54 @@ class AppDrawer extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildGamesExpansionTile(
+    BuildContext context,
+    ThemeProvider themeProvider,
+    String currentPath,
+    ThemeData theme,
+  ) {
+    final isGamesActive = currentPath.startsWith('/memory-game') ||
+        currentPath.startsWith('/sliding-puzzle') ||
+        currentPath.startsWith('/games');
+
+    return ExpansionTile(
+      leading: Icon(
+        Icons.sports_esports,
+        color: isGamesActive ? theme.colorScheme.primary : null,
+      ),
+      title: Text(
+        TranslationService.translate(context, 'games_section'),
+        style: isGamesActive
+            ? TextStyle(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              )
+            : null,
+      ),
+      initiallyExpanded: isGamesActive,
+      children: [
+        if (themeProvider.memoryGameEnabled)
+          _buildDrawerItem(
+            context,
+            icon: Icons.auto_stories,
+            titleKey: 'memory_game_title',
+            route: '/memory-game',
+            currentPath: currentPath,
+            theme: theme,
+          ),
+        if (themeProvider.slidingPuzzleEnabled)
+          _buildDrawerItem(
+            context,
+            icon: Icons.grid_view,
+            titleKey: 'sliding_puzzle_title',
+            route: '/sliding-puzzle',
+            currentPath: currentPath,
+            theme: theme,
+          ),
+      ],
     );
   }
 
@@ -153,6 +196,14 @@ class AppDrawer extends StatelessWidget {
           if (provider.phase != GamePhase.setup) {
             provider.resetToSetup();
             provider.loadDifficulties();
+          }
+          return;
+        }
+        // Same-route tap on Sliding Puzzle: force reset to setup
+        if (route == '/sliding-puzzle' && currentPath.startsWith('/sliding-puzzle')) {
+          final provider = context.read<SlidingPuzzleProvider>();
+          if (provider.phase != PuzzlePhase.setup) {
+            provider.resetToSetup();
           }
           return;
         }
