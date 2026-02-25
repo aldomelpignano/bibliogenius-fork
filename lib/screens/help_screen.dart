@@ -25,6 +25,7 @@ class _HelpScreenState extends State<HelpScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final collectionsEnabled = themeProvider.collectionsEnabled;
     final audioEnabled = themeProvider.audioEnabled;
+    final memoryGameEnabled = themeProvider.memoryGameEnabled;
 
     _topics = [
       // Getting Started
@@ -122,6 +123,17 @@ class _HelpScreenState extends State<HelpScreen> {
           ctaKey: 'help_cta_go_to_profile',
           ctaRoute: '/profile',
         ),
+      if (memoryGameEnabled)
+        _HelpTopic(
+          icon: Icons.grid_view_rounded,
+          titleKey: 'help_topic_memory_game',
+          descKey: 'help_desc_memory_game',
+          gradient: const LinearGradient(
+            colors: [Color(0xFFEA580C), Color(0xFFFB923C)],
+          ),
+          ctaKey: 'help_cta_play_memory',
+          ctaRoute: '/memory-game',
+        ),
       // Data & Privacy
       _HelpTopic(
         icon: Icons.shield_outlined,
@@ -129,6 +141,17 @@ class _HelpScreenState extends State<HelpScreen> {
         descKey: 'help_desc_data_privacy',
         gradient: AppDesign.darkGradient,
         ctaKey: 'help_cta_go_to_profile',
+        ctaRoute: '/profile',
+      ),
+      // Profile
+      _HelpTopic(
+        icon: Icons.person_outline,
+        titleKey: 'help_topic_profile',
+        descKey: 'help_desc_profile',
+        gradient: const LinearGradient(
+          colors: [Color(0xFF7C3AED), Color(0xFFA78BFA)],
+        ),
+        ctaKey: 'help_cta_profile',
         ctaRoute: '/profile',
       ),
       // Import (FAQ)

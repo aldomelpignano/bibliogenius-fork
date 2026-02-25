@@ -2291,6 +2291,14 @@ msgstr "Gérer les étagères"
 msgid "help_cta_migrate"
 msgstr "Aller à la migration"
 
+#. Play
+msgid "help_cta_play_memory"
+msgstr "Jouer"
+
+#. View my profile
+msgid "help_cta_profile"
+msgstr "Voir mon profil"
+
 #. Search Catalogs
 msgid "help_cta_search_catalogs"
 msgstr "Rechercher dans les catalogues"
@@ -2555,6 +2563,14 @@ msgstr "Utilisez l'icône de recherche pour trouver des livres dans les catalogu
 msgid "help_desc_import"
 msgstr "Vous pouvez importer des livres depuis Gleeph, Goodreads, Babelio ou n'importe quel fichier CSV. Cela vous permet de centraliser votre bibliothèque dans BiblioGenius."
 
+#. Test your memory with your book covers
+msgid "help_desc_memory_game"
+msgstr "Testez votre mémoire avec les couvertures de vos livres"
+
+#. View your statistics, badges, goals and leaderboard
+msgid "help_desc_profile"
+msgstr "Consultez vos statistiques, badges, objectifs et classement"
+
 #. Find the book in your library, tap \"Manage Copies\", then \"Lend\". Select a contact to lend to.
 msgid "help_desc_lend"
 msgstr "Trouvez le livre, appuyez sur \"Gérer les copies\", puis \"Prêter\". Choisissez un contact."
@@ -2643,6 +2659,14 @@ msgstr "Comment chercher dans les catalogues externes ?"
 #. Importing Books
 msgid "help_topic_import"
 msgstr "Importer des livres"
+
+#. Memory Game
+msgid "help_topic_memory_game"
+msgstr "Jeu de Memory"
+
+#. My Profile
+msgid "help_topic_profile"
+msgstr "Mon profil"
 
 #. How to lend a book?
 msgid "help_topic_lend"

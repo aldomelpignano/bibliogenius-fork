@@ -298,6 +298,14 @@ void main() {
     await takeScreenshot(tester, 'help');
 
     // ==========================================
+    // 15. MEMORY GAME
+    // ==========================================
+    await navigateTo(tester, '/memory-game');
+    await Future.delayed(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
+    await takeScreenshot(tester, 'memory_game');
+
+    // ==========================================
     // Done!
     // ==========================================
     debugPrint('🎉 Screenshot tour complete! $screenshotIndex screenshots saved.');
