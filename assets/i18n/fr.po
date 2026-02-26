@@ -4491,7 +4491,7 @@ msgstr "À"
 
 #. Request to Borrow
 msgid "request_to_borrow"
-msgstr "Demander un emprunt"
+msgstr "Emprunter"
 
 #. Requests
 msgid "requests"
