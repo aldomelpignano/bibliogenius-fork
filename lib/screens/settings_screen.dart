@@ -111,10 +111,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _relayUrlController.text =
               relayRes.data['relay_url'] as String? ?? '';
         } else {
-          _relayUrlController.text = 'https://hub.bibliogenius.org';
+          _relayUrlController.text = ApiService.hubUrl;
         }
       } catch (_) {
-        _relayUrlController.text = 'https://hub.bibliogenius.org';
+        _relayUrlController.text = ApiService.hubUrl;
       }
 
       if (mounted) {
@@ -1190,7 +1190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'relay_url_label',
                     ) ??
                     'Hub URL',
-                hintText: 'https://hub.bibliogenius.org',
+                hintText: ApiService.hubUrl,
                 isDense: true,
                 border: const OutlineInputBorder(),
               ),

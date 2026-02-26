@@ -135,6 +135,9 @@ abstract class RustLibApi extends BaseApi {
     required String libraryName,
     required String url,
     required String libraryUuid,
+    String? relayUrl,
+    String? mailboxId,
+    String? relayWriteToken,
   });
 
   Future<String> crateApiFrbGenerateQrPayloadFfi({
@@ -979,6 +982,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String libraryName,
     required String url,
     required String libraryUuid,
+    String? relayUrl,
+    String? mailboxId,
+    String? relayWriteToken,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -987,6 +993,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(libraryName, serializer);
           sse_encode_String(url, serializer);
           sse_encode_String(libraryUuid, serializer);
+          sse_encode_opt_String(relayUrl, serializer);
+          sse_encode_opt_String(mailboxId, serializer);
+          sse_encode_opt_String(relayWriteToken, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -999,7 +1008,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateApiFrbGenerateInviteLinkFfiConstMeta,
-        argValues: [libraryName, url, libraryUuid],
+        argValues: [
+          libraryName,
+          url,
+          libraryUuid,
+          relayUrl,
+          mailboxId,
+          relayWriteToken,
+        ],
         apiImpl: this,
       ),
     );
@@ -1008,7 +1024,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiFrbGenerateInviteLinkFfiConstMeta =>
       const TaskConstMeta(
         debugName: "generate_invite_link_ffi",
-        argNames: ["libraryName", "url", "libraryUuid"],
+        argNames: [
+          "libraryName",
+          "url",
+          "libraryUuid",
+          "relayUrl",
+          "mailboxId",
+          "relayWriteToken",
+        ],
       );
 
   @override

@@ -28,7 +28,13 @@ class ApiService {
   // Read from .env with fallback to localhost
   static String get defaultBaseUrl =>
       dotenv.env['API_BASE_URL'] ?? 'http://localhost:8001';
-  static String get hubUrl => dotenv.env['HUB_URL'] ?? 'http://localhost:8081';
+  static String get hubUrl {
+    final envUrl = dotenv.env['HUB_URL'];
+    if (envUrl != null && envUrl.isNotEmpty) return envUrl;
+    // Production builds must not default to localhost
+    if (kReleaseMode) return 'https://hub.bibliogenius.org';
+    return 'http://localhost:8081';
+  }
 
   /// The actual HTTP server port (may differ from 8000 if occupied)
   static int httpPort = 8000;
@@ -1128,6 +1134,9 @@ class ApiService {
     String url, {
     String? ed25519PublicKey,
     String? x25519PublicKey,
+    String? relayUrl,
+    String? mailboxId,
+    String? relayWriteToken,
   }) async {
     if (useFfi) {
       return connectLocalPeer(
@@ -1135,6 +1144,9 @@ class ApiService {
         url,
         ed25519PublicKey: ed25519PublicKey,
         x25519PublicKey: x25519PublicKey,
+        relayUrl: relayUrl,
+        mailboxId: mailboxId,
+        relayWriteToken: relayWriteToken,
       );
     }
     // Fetch my config to send to remote peer for handshake
@@ -1200,6 +1212,11 @@ class ApiService {
         'url': url,
         'my_name': myName,
         'my_url': 'http://$myIp:$httpPort',
+        if (ed25519PublicKey != null) 'ed25519_public_key': ed25519PublicKey,
+        if (x25519PublicKey != null) 'x25519_public_key': x25519PublicKey,
+        if (relayUrl != null) 'relay_url': relayUrl,
+        if (mailboxId != null) 'mailbox_id': mailboxId,
+        if (relayWriteToken != null) 'relay_write_token': relayWriteToken,
       },
     );
   }
@@ -1249,7 +1266,28 @@ class ApiService {
           data['x25519_public_key'] = keys['x25519'];
         }
       } catch (_) {
-        // Identity not initialized yet — keys will be null
+        // Identity not initialized yet - keys will be null
+      }
+
+      // Fetch relay info from the local HTTP server (same pattern as connectLocalPeer)
+      try {
+        final localDio = Dio(
+          BaseOptions(baseUrl: 'http://localhost:${ApiService.httpPort}'),
+        );
+        final configResp = await localDio.get('/api/config');
+        if (configResp.data is Map) {
+          if (configResp.data['relay_url'] != null) {
+            data['relay_url'] = configResp.data['relay_url'];
+          }
+          if (configResp.data['mailbox_id'] != null) {
+            data['mailbox_id'] = configResp.data['mailbox_id'];
+          }
+          if (configResp.data['relay_write_token'] != null) {
+            data['relay_write_token'] = configResp.data['relay_write_token'];
+          }
+        }
+      } catch (_) {
+        // Relay info not available - will be null
       }
 
       return Response(
@@ -2037,7 +2075,7 @@ class ApiService {
           ),
         );
         final response = await localDio.get('/api/peers');
-        debugPrint('✅ getPeers: ${response.data}');
+        debugPrint('✅ getPeers: ${(response.data as Map)['data']?.length ?? 0} peers');
         return response;
       } catch (e) {
         debugPrint('❌ getPeers error: $e');
@@ -2683,6 +2721,9 @@ class ApiService {
     String url, {
     String? ed25519PublicKey,
     String? x25519PublicKey,
+    String? relayUrl,
+    String? mailboxId,
+    String? relayWriteToken,
   }) async {
     if (useFfi) {
       try {
@@ -2759,17 +2800,18 @@ class ApiService {
         );
 
         // Extract the remote peer's keys and relay info from the handshake response
+        // Prefer handshake response values, fall back to invite payload values
         String? remoteEd25519 = ed25519PublicKey;
         String? remoteX25519 = x25519PublicKey;
-        String? remoteRelayUrl;
-        String? remoteMailboxId;
-        String? remoteRelayWriteToken;
+        String? remoteRelayUrl = relayUrl;
+        String? remoteMailboxId = mailboxId;
+        String? remoteRelayWriteToken = relayWriteToken;
         if (response.data is Map) {
           remoteEd25519 ??= response.data['ed25519_public_key'] as String?;
           remoteX25519 ??= response.data['x25519_public_key'] as String?;
-          remoteRelayUrl = response.data['relay_url'] as String?;
-          remoteMailboxId = response.data['mailbox_id'] as String?;
-          remoteRelayWriteToken =
+          remoteRelayUrl ??= response.data['relay_url'] as String?;
+          remoteMailboxId ??= response.data['mailbox_id'] as String?;
+          remoteRelayWriteToken ??=
               response.data['relay_write_token'] as String?;
         }
 
@@ -2801,12 +2843,32 @@ class ApiService {
         debugPrint('P2P Connect Response Body: $responseData');
         debugPrint('P2P Connect Error: ${e.message}');
 
-        // Return more informative error
+        // Build a human-readable error from the DioException type
+        String errorDetail;
+        if (responseData != null) {
+          errorDetail = responseData is Map
+              ? (responseData['error']?.toString() ?? responseData.toString())
+              : responseData.toString();
+        } else {
+          switch (e.type) {
+            case DioExceptionType.connectionTimeout:
+              errorDetail = 'Connection timed out - peer may be offline';
+            case DioExceptionType.receiveTimeout:
+              errorDetail = 'Peer did not respond in time';
+            case DioExceptionType.connectionError:
+              errorDetail = 'Could not reach peer - check network and URL';
+            case DioExceptionType.badResponse:
+              errorDetail = 'Peer responded with error (${statusCode ?? "unknown"})';
+            default:
+              errorDetail = e.message ?? e.type.toString();
+          }
+        }
+
         return Response(
           requestOptions: e.requestOptions,
           statusCode: statusCode ?? 502,
           data: {
-            'error': 'Connection failed: ${responseData ?? e.message}',
+            'error': errorDetail,
             'status': statusCode,
           },
         );

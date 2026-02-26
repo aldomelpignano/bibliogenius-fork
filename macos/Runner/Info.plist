@@ -30,6 +30,17 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>bibliogenius</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>com.federico.bibliogenius</string>
+		</dict>
+	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access to scan barcodes</string>
 	<key>NSCameraUseContinuityCameraDeviceType</key>

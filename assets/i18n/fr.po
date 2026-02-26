@@ -6183,3 +6183,70 @@ msgstr "Navigation"
 msgid "back"
 msgstr "Retour"
 
+#. Invite acceptance screen
+msgid "invite_title"
+msgstr "Invitation de"
+
+msgid "invite_description"
+msgstr "souhaite se connecter avec vous pour partager des livres."
+
+msgid "invite_connect"
+msgstr "Se connecter"
+
+msgid "invite_decline"
+msgstr "Refuser"
+
+msgid "invite_connecting"
+msgstr "Connexion en cours..."
+
+msgid "invite_success"
+msgstr "Connecté à"
+
+msgid "invite_error"
+msgstr "Échec de la connexion"
+
+msgid "invite_self_error"
+msgstr "Vous ne pouvez pas vous connecter a votre propre bibliotheque"
+
+msgid "invite_encrypted"
+msgstr "Chiffré"
+
+msgid "invite_remote_ready"
+msgstr "Accès distant"
+
+msgid "invite_library_icon"
+msgstr "Icône de bibliothèque"
+
+#. Invite share sheet
+msgid "invite_share_title"
+msgstr "Votre lien d'invitation"
+
+msgid "invite_card_title"
+msgstr "Partagez votre lien d'invitation"
+
+msgid "invite_card_subtitle"
+msgstr "Invitez des contacts a se connecter"
+
+msgid "copy_invite_link"
+msgstr "Copier le lien"
+
+msgid "invite_link_copied"
+msgstr "Lien d'invitation copie !"
+
+msgid "tooltip_copy_invite"
+msgstr "Copier le lien d'invitation"
+
+msgid "tooltip_share_invite"
+msgstr "Partager le lien d'invitation"
+
+msgid "share_invite_empty_state"
+msgstr "Partager le lien d'invitation"
+
+#. Invite share message (used when sharing via SMS/messaging)
+msgid "invite_share_message"
+msgstr "Rejoins {name} sur BiblioGenius pour partager des livres : {link}"
+
+#. Profile screen - share invite link
+msgid "profile_share_invite"
+msgstr "Partager ma bibliotheque"
+

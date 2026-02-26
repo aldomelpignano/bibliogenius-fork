@@ -86,16 +86,23 @@ Future<String> parseQrPayloadFfi({required String payload}) =>
     RustLib.instance.api.crateApiFrbParseQrPayloadFfi(payload: payload);
 
 /// Generate an invite link with the library's connection info encoded in the URL fragment.
-/// Format: https://bibliogenius.app/invite#BASE64URL(json)
+/// Format: https://bibliogenius.org/invite#BASE64URL(json)
 /// The fragment (#) is never sent to the web server (B8 compliance).
+/// Payload v3 adds optional relay info for WAN connectivity.
 Future<String> generateInviteLinkFfi({
   required String libraryName,
   required String url,
   required String libraryUuid,
+  String? relayUrl,
+  String? mailboxId,
+  String? relayWriteToken,
 }) => RustLib.instance.api.crateApiFrbGenerateInviteLinkFfi(
   libraryName: libraryName,
   url: url,
   libraryUuid: libraryUuid,
+  relayUrl: relayUrl,
+  mailboxId: mailboxId,
+  relayWriteToken: relayWriteToken,
 );
 
 /// Parse an invite link, extracting the JSON payload from the URL fragment.

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'config/platform_init.dart';
@@ -16,6 +17,7 @@ import 'services/mdns_service.dart';
 import 'services/ffi_service.dart';
 import 'src/rust/api/frb.dart' as frb;
 import 'utils/app_constants.dart';
+import 'utils/invite_payload.dart';
 import 'utils/language_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/theme_provider.dart';
@@ -70,6 +72,8 @@ import 'screens/migration_wizard_screen.dart';
 
 import 'screens/link_device_screen.dart';
 import 'screens/external_search_screen.dart';
+import 'screens/invite_acceptance_screen.dart';
+import 'package:app_links/app_links.dart';
 
 import 'services/wizard_service.dart';
 import 'widgets/scaffold_with_nav.dart';
@@ -259,9 +263,9 @@ void main([List<String>? args]) async {
         if (needsSetup) {
           await localDio.post(
             '/api/peers/relay/setup',
-            data: {'relay_url': 'https://hub.bibliogenius.org'},
+            data: {'relay_url': ApiService.hubUrl},
           );
-          debugPrint('Relay: Auto-configured with hub.bibliogenius.org');
+          debugPrint('Relay: Auto-configured with ${ApiService.hubUrl}');
         }
       } catch (e) {
         debugPrint('Relay: Auto-setup failed (non-blocking): $e');
@@ -382,6 +386,11 @@ class AppRouter extends StatefulWidget {
 
 class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
   late final GoRouter _router;
+  late final AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
+  Map<String, dynamic>? _pendingInvitePayload;
+  String? _lastHandledDeepLink;
+  Timer? _deepLinkTimer;
 
   @override
   void initState() {
@@ -395,7 +404,11 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
       redirect: (context, state) async {
         final isOnboardingRoute = state.uri.path == '/onboarding';
         final isLoginRoute = state.uri.path == '/login';
+        final isInviteRoute = state.uri.path == '/invite';
         final authService = Provider.of<AuthService>(context, listen: false);
+
+        // Never redirect away from invite screen
+        if (isInviteRoute) return null;
 
         // Auto-init if setup not complete (e.g., after resetSetup)
         if (!themeProvider.isSetupComplete) {
@@ -456,6 +469,14 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
         GoRoute(
           path: '/shelves-management',
           builder: (context, state) => const ShelfManagementScreen(),
+        ),
+        GoRoute(
+          path: '/invite',
+          builder: (context, state) {
+            final payload = state.extra as Map<String, dynamic>?;
+            if (payload == null) return const LibraryScreen(initialIndex: 0);
+            return InviteAcceptanceScreen(payload: payload);
+          },
         ),
         ShellRoute(
           builder: (context, state, child) {
@@ -774,10 +795,88 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
         ),
       ],
     );
+
+    _initDeepLinks();
+  }
+
+  void _initDeepLinks() {
+    _appLinks = AppLinks();
+
+    // app_links plugin (works on iOS/Android, not reliable on macOS)
+    _appLinks.getInitialLink().then((uri) {
+      if (uri != null) _handleDeepLink(uri);
+    });
+    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+      _handleDeepLink(uri);
+    });
+
+    // macOS: AppDelegate stores URL in UserDefaults via Apple Event handler.
+    // Poll periodically because app_links doesn't work on macOS debug
+    // and didChangeAppLifecycleState doesn't fire reliably on window focus.
+    if (Platform.isMacOS) {
+      _checkPendingDeepLink();
+      _deepLinkTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+        _checkPendingDeepLink();
+      });
+    }
+  }
+
+  Map<String, dynamic>? _parseInviteUri(Uri uri) {
+    // Custom scheme: bibliogenius://invite?d=... (host=invite, path empty)
+    // Hub HTTPS: https://<any-hub>/invite?d=... (path=/invite)
+    final isInvite =
+        (uri.scheme == 'bibliogenius' && uri.host == 'invite') ||
+        (uri.path == '/invite' && uri.queryParameters.containsKey('d'));
+
+    if (!isInvite) return null;
+
+    final b64 = uri.queryParameters['d'];
+    if (b64 == null) return null;
+
+    try {
+      final decoded = base64Url.decode(base64Url.normalize(b64));
+      final jsonStr = utf8.decode(decoded);
+      final raw = jsonDecode(jsonStr) as Map<String, dynamic>;
+      return normalizeInvitePayload(raw);
+    } catch (e) {
+      debugPrint('Deep link decode error: $e');
+      return null;
+    }
+  }
+
+  Future<void> _checkPendingDeepLink() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.reload();
+      final pendingLink = prefs.getString('pending_deep_link');
+      if (pendingLink != null) {
+        await prefs.remove('pending_deep_link');
+        final uri = Uri.tryParse(pendingLink);
+        if (uri != null) _handleDeepLink(uri);
+      }
+    } catch (_) {}
+  }
+
+  void _handleDeepLink(Uri uri) {
+    // Dedup: avoid processing the same link twice
+    final key = uri.toString();
+    if (_lastHandledDeepLink == key) return;
+    _lastHandledDeepLink = key;
+
+    final payload = _parseInviteUri(uri);
+    if (payload == null) return;
+
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        _router.go('/invite', extra: payload);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _deepLinkTimer?.cancel();
+    _linkSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -786,13 +885,10 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // When app resumes from background, check if embedded HTTP server is still running
     if (state == AppLifecycleState.resumed) {
-      debugPrint('📱 App resumed from background, checking server health...');
       // Check server health asynchronously (don't block the UI)
       ApiService.ensureServerRunning().then((available) {
-        if (available) {
-          debugPrint('✅ Server is healthy after app resume');
-        } else {
-          debugPrint('⚠️ Server unavailable after app resume');
+        if (!available) {
+          debugPrint('Server unavailable after app resume');
         }
       });
     }

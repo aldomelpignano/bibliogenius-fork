@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../widgets/genie_app_bar.dart';
 import '../widgets/contextual_help_sheet.dart';
+import '../widgets/invite_share_sheet.dart';
+import '../utils/invite_payload.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
@@ -608,6 +611,8 @@ class _ContactsListViewState extends State<ContactsListView> {
                     return ListView(
                       key: const Key('networkMemberList'),
                       children: [
+                        // Invite card - always visible as first element
+                        _buildInviteCard(context),
                         // Pending connections section
                         if (pendingMembers.isNotEmpty) ...[
                           _buildSectionHeader(
@@ -656,6 +661,42 @@ class _ContactsListViewState extends State<ContactsListView> {
                 ),
         ),
       ],
+    );
+  }
+
+  Widget _buildInviteCard(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Semantics(
+        button: true,
+        label: TranslationService.translate(context, 'invite_card_title'),
+        child: Card(
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor:
+                  Theme.of(context).colorScheme.primaryContainer,
+              child: Icon(
+                Icons.person_add,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+            ),
+            title: Text(
+              TranslationService.translate(context, 'invite_card_title'),
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              TranslationService.translate(context, 'invite_card_subtitle'),
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.share),
+              tooltip: TranslationService.translate(
+                  context, 'tooltip_share_invite'),
+              onPressed: () => showInviteShareSheet(context),
+            ),
+            onTap: () => showInviteShareSheet(context),
+          ),
+        ),
+      ),
     );
   }
 
@@ -723,6 +764,23 @@ class _ContactsListViewState extends State<ContactsListView> {
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Share invite link button
+            OutlinedButton.icon(
+              key: const Key('shareInviteEmptyStateBtn'),
+              onPressed: () => showInviteShareSheet(context),
+              icon: const Icon(Icons.share, size: 20),
+              label: Text(
+                TranslationService.translate(
+                    context, 'share_invite_empty_state'),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
                 ),
               ),
             ),
@@ -1645,6 +1703,7 @@ class ShareContactView extends StatefulWidget {
 
 class _ShareContactViewState extends State<ShareContactView> {
   String? _qrData;
+  String? _inviteLink;
   bool _isLoading = true;
 
   @override
@@ -1686,19 +1745,27 @@ class _ShareContactViewState extends State<ShareContactView> {
       final libraryUuid = configRes.data['library_uuid'] as String?;
       final ed25519Key = configRes.data['ed25519_public_key'] as String?;
       final x25519Key = configRes.data['x25519_public_key'] as String?;
-      debugPrint('📱 [QR] libraryName=$libraryName, hasKeys=${ed25519Key != null}');
+      final relayUrl = configRes.data['relay_url'] as String?;
+      final mailboxId = configRes.data['mailbox_id'] as String?;
+      final relayWriteToken = configRes.data['relay_write_token'] as String?;
+      debugPrint('📱 [QR] libraryName=$libraryName, hasKeys=${ed25519Key != null}, hasRelay=${relayUrl != null}');
 
-      final data = <String, dynamic>{
-        "version": 2,
-        "name": libraryName,
-        "url": "http://$localIp:${ApiService.httpPort}",
-        if (libraryUuid != null) "library_uuid": libraryUuid,
-        if (ed25519Key != null) "ed25519_public_key": ed25519Key,
-        if (x25519Key != null) "x25519_public_key": x25519Key,
-      };
+      final data = buildInvitePayload(
+        name: libraryName,
+        url: "http://$localIp:${ApiService.httpPort}",
+        libraryUuid: libraryUuid,
+        ed25519PublicKey: ed25519Key,
+        x25519PublicKey: x25519Key,
+        relayUrl: relayUrl,
+        mailboxId: mailboxId,
+        relayWriteToken: relayWriteToken,
+      );
+      // Precalculate the short invite link (async, falls back to long format)
+      final link = await createInviteLink(data, hubBaseUrl: ApiService.hubUrl);
       if (mounted) {
         setState(() {
           _qrData = jsonEncode(data);
+          _inviteLink = link;
           _isLoading = false;
         });
         debugPrint('📱 [QR] QR data ready: $_qrData');
@@ -1771,18 +1838,42 @@ class _ShareContactViewState extends State<ShareContactView> {
           const SizedBox(height: 8),
           _buildStep(context, 3, TranslationService.translate(context, 'show_code_step_3')),
           const SizedBox(height: 16),
-          // Share invite link button
-          OutlinedButton.icon(
-            key: const Key('shareInviteLinkBtn'),
-            onPressed: () {
-              final fragment = base64Url.encode(utf8.encode(_qrData!));
-              final link = 'https://bibliogenius.app/invite#$fragment';
-              Share.share(link);
-            },
-            icon: const Icon(Icons.link, size: 18),
-            label: Text(
-              TranslationService.translate(context, 'share_invite_link'),
-            ),
+          // Copy + Share invite link buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton.icon(
+                key: const Key('copyInviteLinkBtn'),
+                onPressed: _inviteLink == null ? null : () {
+                  Clipboard.setData(ClipboardData(text: _inviteLink!));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        TranslationService.translate(
+                            context, 'invite_link_copied'),
+                      ),
+                      backgroundColor: Colors.green,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.content_copy, size: 18),
+                label: Text(
+                  TranslationService.translate(context, 'copy_invite_link'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                key: const Key('shareInviteLinkBtn'),
+                onPressed: _inviteLink == null ? null : () {
+                  Share.share(_inviteLink!);
+                },
+                icon: const Icon(Icons.share, size: 18),
+                label: Text(
+                  TranslationService.translate(context, 'share_invite_link'),
+                ),
+              ),
+            ],
           ),
         ] else
           Padding(

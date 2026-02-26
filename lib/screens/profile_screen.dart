@@ -12,6 +12,7 @@ import '../services/translation_service.dart';
 import '../widgets/avatar_customizer.dart';
 import '../widgets/gamification_widgets.dart';
 import '../widgets/genie_app_bar.dart';
+import '../widgets/invite_share_sheet.dart';
 import '../widgets/network_leaderboard_card.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -360,7 +361,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 4),
+
+                // Share invite link (discreet)
+                TextButton.icon(
+                  onPressed: () => showInviteShareSheet(context),
+                  icon: Icon(
+                    Icons.share_outlined,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  label: Text(
+                    TranslationService.translate(
+                        context, 'profile_share_invite'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                ),
+                const SizedBox(height: 8),
 
                 // Gamification Card
                 Consumer<ThemeProvider>(

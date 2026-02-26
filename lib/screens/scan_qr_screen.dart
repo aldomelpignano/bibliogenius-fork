@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../services/api_service.dart';
 import '../services/translation_service.dart';
+import '../utils/invite_payload.dart';
 import '../widgets/genie_app_bar.dart';
 
 class ScanQrScreen extends StatelessWidget {
@@ -140,17 +141,21 @@ class _ScanContactViewState extends State<ScanContactView> {
     for (final barcode in barcodes) {
       if (barcode.rawValue != null) {
         try {
-          final data = jsonDecode(barcode.rawValue!);
+          final raw = jsonDecode(barcode.rawValue!);
+          final data = normalizeInvitePayload(raw as Map<String, dynamic>);
           if (data['name'] != null && data['url'] != null) {
             _isProcessingScan = true;
             setState(() {});
             _controller?.stop();
-            // QR v2 includes E2EE keys; v1 won't have them (null)
+            // QR v2+ includes E2EE keys; v3 adds relay info for WAN; v4 uses short keys
             _connect(
               data['name'] as String,
               data['url'] as String,
               ed25519PublicKey: data['ed25519_public_key'] as String?,
               x25519PublicKey: data['x25519_public_key'] as String?,
+              relayUrl: data['relay_url'] as String?,
+              mailboxId: data['mailbox_id'] as String?,
+              relayWriteToken: data['relay_write_token'] as String?,
             );
             return;
           }
@@ -164,15 +169,21 @@ class _ScanContactViewState extends State<ScanContactView> {
     String url, {
     String? ed25519PublicKey,
     String? x25519PublicKey,
+    String? relayUrl,
+    String? mailboxId,
+    String? relayWriteToken,
   }) async {
     final api = Provider.of<ApiService>(context, listen: false);
     try {
-      debugPrint('QR Connect: connectPeer($name, $url, hasKeys=${ed25519PublicKey != null})');
+      debugPrint('QR Connect: connectPeer($name, $url, hasKeys=${ed25519PublicKey != null}, hasRelay=${relayUrl != null})');
       final response = await api.connectPeer(
         name,
         url,
         ed25519PublicKey: ed25519PublicKey,
         x25519PublicKey: x25519PublicKey,
+        relayUrl: relayUrl,
+        mailboxId: mailboxId,
+        relayWriteToken: relayWriteToken,
       );
       debugPrint('📷 [CONNECT] Response: status=${response.statusCode}, data=${response.data}');
 
