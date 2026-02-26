@@ -6250,3 +6250,218 @@ msgstr "Join {name} on BiblioGenius to share books: {link}"
 msgid "profile_share_invite"
 msgstr "Share my library"
 
+#. Operation Log Viewer - screen title
+msgid "admin_operation_log_title"
+msgstr "Operation Log"
+
+#. Operation Log Viewer - stats
+msgid "admin_log_stat_total"
+msgstr "Total"
+
+msgid "admin_log_stat_today"
+msgstr "Today"
+
+msgid "admin_log_stat_pending"
+msgstr "Pending"
+
+msgid "admin_log_stat_errors"
+msgstr "Errors"
+
+#. Operation Log Viewer - filters
+msgid "admin_log_filter_entity"
+msgstr "Entity"
+
+msgid "admin_log_filter_operation"
+msgstr "Operation"
+
+msgid "admin_log_filter_status"
+msgstr "Status"
+
+msgid "admin_log_clear_filters"
+msgstr "Clear"
+
+#. Operation Log Viewer - empty state
+msgid "admin_log_empty_title"
+msgstr "No operations recorded"
+
+msgid "admin_log_empty_subtitle"
+msgstr "Mutations will appear here as you use the app"
+
+#. Operation Log Viewer - pagination
+msgid "admin_log_page_info"
+msgstr "Page %d of %d"
+
+#. Operation Log Viewer - tooltips
+msgid "tooltip_filter_entity_type"
+msgstr "Filter by entity type"
+
+msgid "tooltip_filter_operation"
+msgstr "Filter by operation"
+
+msgid "tooltip_filter_status"
+msgstr "Filter by status"
+
+msgid "tooltip_expand_details"
+msgstr "Show details"
+
+msgid "tooltip_collapse_details"
+msgstr "Hide details"
+
+msgid "tooltip_prev_page"
+msgstr "Previous page"
+
+msgid "tooltip_next_page"
+msgstr "Next page"
+
+#. Operation Log Viewer - module toggle
+msgid "module_operation_log_viewer"
+msgstr "Operation Log"
+
+msgid "module_operation_log_desc"
+msgstr "View database mutation history"
+
+#. Settings - developer tools section
+msgid "settings_developer_tools"
+msgstr "Developer Tools"
+
+#. Operation Log Viewer - search
+msgid "admin_log_search_hint"
+msgstr "Search logs..."
+
+msgid "admin_log_clear_search"
+msgstr "Clear search"
+
+#. Device Pairing
+msgid "pairing_title"
+msgstr "Linked Devices"
+
+msgid "pairing_code_title"
+msgstr "Pairing Code"
+
+msgid "pairing_enter_title"
+msgstr "Enter Code"
+
+msgid "pairing_empty_title"
+msgstr "No linked devices"
+
+msgid "pairing_empty_subtitle"
+msgstr "Pair another device to sync your library"
+
+msgid "pairing_generate_code"
+msgstr "Generate Code"
+
+msgid "pairing_enter_code"
+msgstr "Enter Code"
+
+msgid "pairing_code_instruction"
+msgstr "Share this code with the other device"
+
+msgid "pairing_code_expires"
+msgstr "%s remaining"
+
+msgid "pairing_code_expired"
+msgstr "Code expired"
+
+msgid "pairing_enter_instruction"
+msgstr "Enter the 6-digit code from the other device"
+
+msgid "pairing_button_pair"
+msgstr "Pair"
+
+msgid "pairing_success"
+msgstr "Device paired successfully"
+
+msgid "pairing_error"
+msgstr "Pairing failed"
+
+msgid "pairing_remove_confirm"
+msgstr "Remove this device?"
+
+msgid "pairing_remove_success"
+msgstr "Device removed"
+
+msgid "pairing_paired_on"
+msgstr "Paired on %s"
+
+msgid "pairing_cancel"
+msgstr "Cancel"
+
+msgid "tooltip_remove_device"
+msgstr "Remove device"
+
+msgid "tooltip_generate_pairing"
+msgstr "Generate a pairing code"
+
+msgid "tooltip_enter_pairing"
+msgstr "Enter a pairing code"
+
+msgid "tooltip_cancel_pairing"
+msgstr "Cancel pairing"
+
+msgid "settings_linked_devices"
+msgstr "Linked Devices"
+
+msgid "settings_linked_devices_desc"
+msgstr "Manage paired devices for library sync"
+
+#. Sync Review
+msgid "sync_review_title"
+msgstr "Sync Review"
+
+msgid "sync_review_banner"
+msgstr "%d operations received. Review before applying."
+
+msgid "sync_review_approve_all"
+msgstr "Approve all"
+
+msgid "sync_review_reject_all"
+msgstr "Reject all"
+
+msgid "sync_review_approve"
+msgstr "Approve"
+
+msgid "sync_review_reject"
+msgstr "Reject"
+
+msgid "sync_review_empty_title"
+msgstr "All clear"
+
+msgid "sync_review_empty_subtitle"
+msgstr "No operations to review"
+
+msgid "sync_review_approved"
+msgstr "%d operations approved"
+
+msgid "sync_review_rejected"
+msgstr "%d operations rejected"
+
+msgid "sync_review_from"
+msgstr "From:"
+
+msgid "sync_trigger_button"
+msgstr "Sync"
+
+msgid "sync_result_message"
+msgstr "Sent %d, received %d operations"
+
+msgid "sync_pending_review_action"
+msgstr "Review"
+
+msgid "sync_pending_review_count"
+msgstr "%d pending review"
+
+msgid "sync_safety_title"
+msgstr "Sync Safety"
+
+msgid "sync_safety_subtitle"
+msgstr "Review changes before applying"
+
+msgid "tooltip_sync_device"
+msgstr "Sync with this device"
+
+msgid "tooltip_approve_op"
+msgstr "Approve this operation"
+
+msgid "tooltip_reject_op"
+msgstr "Reject this operation"
+

@@ -482,6 +482,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   (value) => themeProvider.setDigitalFormatsEnabled(value),
                 ),
                 _buildMcpModuleToggle(),
+                // Linked Devices section
+                const SizedBox(height: 16),
+                Semantics(
+                  header: true,
+                  child: Text(
+                    TranslationService.translate(
+                        context, 'settings_linked_devices'),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: const Icon(Icons.devices_rounded),
+                    title: Text(
+                      TranslationService.translate(
+                          context, 'settings_linked_devices'),
+                    ),
+                    subtitle: Text(
+                      TranslationService.translate(
+                          context, 'settings_linked_devices_desc'),
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.go('/device-pairing'),
+                  ),
+                ),
+                _buildModuleToggle(
+                  context,
+                  'sync_safety_title',
+                  'sync_safety_subtitle',
+                  Icons.verified_user_rounded,
+                  themeProvider.syncSafetyEnabled,
+                  (value) => themeProvider.setSyncSafetyEnabled(value),
+                ),
+                // Developer Tools section
+                const SizedBox(height: 16),
+                Semantics(
+                  header: true,
+                  child: Text(
+                    TranslationService.translate(
+                            context, 'settings_developer_tools') ??
+                        'Developer Tools',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _buildModuleToggle(
+                  context,
+                  'module_operation_log_viewer',
+                  'module_operation_log_desc',
+                  Icons.receipt_long_rounded,
+                  themeProvider.operationLogViewerEnabled,
+                  (value) =>
+                      themeProvider.setOperationLogViewerEnabled(value),
+                ),
+                if (themeProvider.operationLogViewerEnabled)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
+                    child: Card(
+                      child: ListTile(
+                        leading: const Icon(Icons.terminal_rounded),
+                        title: Text(
+                          TranslationService.translate(
+                                  context, 'admin_operation_log_title') ??
+                              'Operation Log',
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.go('/operation-log'),
+                      ),
+                    ),
+                  ),
                 Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   child: SwitchListTile(

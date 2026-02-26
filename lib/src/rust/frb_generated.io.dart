@@ -43,6 +43,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int dco_decode_box_autoadd_i_32(dynamic raw);
 
   @protected
+  BigInt dco_decode_box_autoadd_u_64(dynamic raw);
+
+  @protected
   double dco_decode_f_32(dynamic raw);
 
   @protected
@@ -76,6 +79,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FrbLeaderboardResponse dco_decode_frb_leaderboard_response(dynamic raw);
 
   @protected
+  FrbLinkedDevice dco_decode_frb_linked_device(dynamic raw);
+
+  @protected
   FrbLoan dco_decode_frb_loan(dynamic raw);
 
   @protected
@@ -90,6 +96,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FrbMemoryScore dco_decode_frb_memory_score(dynamic raw);
 
   @protected
+  FrbOperationLogEntry dco_decode_frb_operation_log_entry(dynamic raw);
+
+  @protected
+  FrbOperationLogStats dco_decode_frb_operation_log_stats(dynamic raw);
+
+  @protected
+  FrbPairingConfirmation dco_decode_frb_pairing_confirmation(dynamic raw);
+
+  @protected
+  FrbPairingOffer dco_decode_frb_pairing_offer(dynamic raw);
+
+  @protected
+  FrbPendingReviewOp dco_decode_frb_pending_review_op(dynamic raw);
+
+  @protected
   FrbPuzzleBoard dco_decode_frb_puzzle_board(dynamic raw);
 
   @protected
@@ -102,6 +123,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   FrbStreakInfo dco_decode_frb_streak_info(dynamic raw);
+
+  @protected
+  FrbSyncResult dco_decode_frb_sync_result(dynamic raw);
 
   @protected
   FrbTag dco_decode_frb_tag(dynamic raw);
@@ -134,6 +158,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<FrbLeaderboardEntry> dco_decode_list_frb_leaderboard_entry(dynamic raw);
 
   @protected
+  List<FrbLinkedDevice> dco_decode_list_frb_linked_device(dynamic raw);
+
+  @protected
   List<FrbLoan> dco_decode_list_frb_loan(dynamic raw);
 
   @protected
@@ -146,6 +173,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<FrbMemoryScore> dco_decode_list_frb_memory_score(dynamic raw);
+
+  @protected
+  List<FrbOperationLogEntry> dco_decode_list_frb_operation_log_entry(
+    dynamic raw,
+  );
+
+  @protected
+  List<FrbPendingReviewOp> dco_decode_list_frb_pending_review_op(dynamic raw);
 
   @protected
   List<FrbPuzzleLeaderboardEntry> dco_decode_list_frb_puzzle_leaderboard_entry(
@@ -165,6 +200,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Int32List dco_decode_list_prim_i_32_strict(dynamic raw);
 
   @protected
+  List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
@@ -181,6 +219,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
+
+  @protected
+  BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw);
 
   @protected
   List<String>? dco_decode_opt_list_String(dynamic raw);
@@ -225,6 +266,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int sse_decode_box_autoadd_i_32(SseDeserializer deserializer);
+
+  @protected
+  BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_32(SseDeserializer deserializer);
@@ -272,6 +316,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  FrbLinkedDevice sse_decode_frb_linked_device(SseDeserializer deserializer);
+
+  @protected
   FrbLoan sse_decode_frb_loan(SseDeserializer deserializer);
 
   @protected
@@ -286,6 +333,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FrbMemoryScore sse_decode_frb_memory_score(SseDeserializer deserializer);
 
   @protected
+  FrbOperationLogEntry sse_decode_frb_operation_log_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbOperationLogStats sse_decode_frb_operation_log_stats(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbPairingConfirmation sse_decode_frb_pairing_confirmation(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbPairingOffer sse_decode_frb_pairing_offer(SseDeserializer deserializer);
+
+  @protected
+  FrbPendingReviewOp sse_decode_frb_pending_review_op(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   FrbPuzzleBoard sse_decode_frb_puzzle_board(SseDeserializer deserializer);
 
   @protected
@@ -298,6 +368,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   FrbStreakInfo sse_decode_frb_streak_info(SseDeserializer deserializer);
+
+  @protected
+  FrbSyncResult sse_decode_frb_sync_result(SseDeserializer deserializer);
 
   @protected
   FrbTag sse_decode_frb_tag(SseDeserializer deserializer);
@@ -336,6 +409,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<FrbLinkedDevice> sse_decode_list_frb_linked_device(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<FrbLoan> sse_decode_list_frb_loan(SseDeserializer deserializer);
 
   @protected
@@ -350,6 +428,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<FrbMemoryScore> sse_decode_list_frb_memory_score(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbOperationLogEntry> sse_decode_list_frb_operation_log_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbPendingReviewOp> sse_decode_list_frb_pending_review_op(
     SseDeserializer deserializer,
   );
 
@@ -373,6 +461,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Int32List sse_decode_list_prim_i_32_strict(SseDeserializer deserializer);
 
   @protected
+  List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
@@ -391,6 +482,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
+
+  @protected
+  BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer);
 
   @protected
   List<String>? sse_decode_opt_list_String(SseDeserializer deserializer);
@@ -439,6 +533,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer);
 
   @protected
   void sse_encode_f_32(double self, SseSerializer serializer);
@@ -495,6 +592,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_frb_linked_device(
+    FrbLinkedDevice self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_frb_loan(FrbLoan self, SseSerializer serializer);
 
   @protected
@@ -509,6 +612,36 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_frb_memory_score(
     FrbMemoryScore self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_operation_log_entry(
+    FrbOperationLogEntry self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_operation_log_stats(
+    FrbOperationLogStats self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_pairing_confirmation(
+    FrbPairingConfirmation self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_pairing_offer(
+    FrbPairingOffer self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_pending_review_op(
+    FrbPendingReviewOp self,
     SseSerializer serializer,
   );
 
@@ -532,6 +665,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_frb_streak_info(FrbStreakInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_frb_sync_result(FrbSyncResult self, SseSerializer serializer);
 
   @protected
   void sse_encode_frb_tag(FrbTag self, SseSerializer serializer);
@@ -579,6 +715,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_frb_linked_device(
+    List<FrbLinkedDevice> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_frb_loan(List<FrbLoan> self, SseSerializer serializer);
 
   @protected
@@ -596,6 +738,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_frb_memory_score(
     List<FrbMemoryScore> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_operation_log_entry(
+    List<FrbOperationLogEntry> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_pending_review_op(
+    List<FrbPendingReviewOp> self,
     SseSerializer serializer,
   );
 
@@ -627,6 +781,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
     SseSerializer serializer,
@@ -649,6 +806,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_list_String(List<String>? self, SseSerializer serializer);

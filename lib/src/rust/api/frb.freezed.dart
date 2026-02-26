@@ -1706,6 +1706,541 @@ as String,
 }
 
 /// @nodoc
+mixin _$FrbOperationLogEntry {
+
+ int get id; String get entityType; int get entityId; String get operation; String? get payload; String get status; String? get errorMessage; bool get pinned; String get createdAt;
+/// Create a copy of FrbOperationLogEntry
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$FrbOperationLogEntryCopyWith<FrbOperationLogEntry> get copyWith => _$FrbOperationLogEntryCopyWithImpl<FrbOperationLogEntry>(this as FrbOperationLogEntry, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbOperationLogEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.entityType, entityType) || other.entityType == entityType)&&(identical(other.entityId, entityId) || other.entityId == entityId)&&(identical(other.operation, operation) || other.operation == operation)&&(identical(other.payload, payload) || other.payload == payload)&&(identical(other.status, status) || other.status == status)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.pinned, pinned) || other.pinned == pinned)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,id,entityType,entityId,operation,payload,status,errorMessage,pinned,createdAt);
+
+@override
+String toString() {
+  return 'FrbOperationLogEntry(id: $id, entityType: $entityType, entityId: $entityId, operation: $operation, payload: $payload, status: $status, errorMessage: $errorMessage, pinned: $pinned, createdAt: $createdAt)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $FrbOperationLogEntryCopyWith<$Res>  {
+  factory $FrbOperationLogEntryCopyWith(FrbOperationLogEntry value, $Res Function(FrbOperationLogEntry) _then) = _$FrbOperationLogEntryCopyWithImpl;
+@useResult
+$Res call({
+ int id, String entityType, int entityId, String operation, String? payload, String status, String? errorMessage, bool pinned, String createdAt
+});
+
+
+
+
+}
+/// @nodoc
+class _$FrbOperationLogEntryCopyWithImpl<$Res>
+    implements $FrbOperationLogEntryCopyWith<$Res> {
+  _$FrbOperationLogEntryCopyWithImpl(this._self, this._then);
+
+  final FrbOperationLogEntry _self;
+  final $Res Function(FrbOperationLogEntry) _then;
+
+/// Create a copy of FrbOperationLogEntry
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? entityType = null,Object? entityId = null,Object? operation = null,Object? payload = freezed,Object? status = null,Object? errorMessage = freezed,Object? pinned = null,Object? createdAt = null,}) {
+  return _then(_self.copyWith(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,entityType: null == entityType ? _self.entityType : entityType // ignore: cast_nullable_to_non_nullable
+as String,entityId: null == entityId ? _self.entityId : entityId // ignore: cast_nullable_to_non_nullable
+as int,operation: null == operation ? _self.operation : operation // ignore: cast_nullable_to_non_nullable
+as String,payload: freezed == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
+as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,pinned: null == pinned ? _self.pinned : pinned // ignore: cast_nullable_to_non_nullable
+as bool,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [FrbOperationLogEntry].
+extension FrbOperationLogEntryPatterns on FrbOperationLogEntry {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _FrbOperationLogEntry value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _FrbOperationLogEntry() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _FrbOperationLogEntry value)  $default,){
+final _that = this;
+switch (_that) {
+case _FrbOperationLogEntry():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _FrbOperationLogEntry value)?  $default,){
+final _that = this;
+switch (_that) {
+case _FrbOperationLogEntry() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String entityType,  int entityId,  String operation,  String? payload,  String status,  String? errorMessage,  bool pinned,  String createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _FrbOperationLogEntry() when $default != null:
+return $default(_that.id,_that.entityType,_that.entityId,_that.operation,_that.payload,_that.status,_that.errorMessage,_that.pinned,_that.createdAt);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String entityType,  int entityId,  String operation,  String? payload,  String status,  String? errorMessage,  bool pinned,  String createdAt)  $default,) {final _that = this;
+switch (_that) {
+case _FrbOperationLogEntry():
+return $default(_that.id,_that.entityType,_that.entityId,_that.operation,_that.payload,_that.status,_that.errorMessage,_that.pinned,_that.createdAt);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String entityType,  int entityId,  String operation,  String? payload,  String status,  String? errorMessage,  bool pinned,  String createdAt)?  $default,) {final _that = this;
+switch (_that) {
+case _FrbOperationLogEntry() when $default != null:
+return $default(_that.id,_that.entityType,_that.entityId,_that.operation,_that.payload,_that.status,_that.errorMessage,_that.pinned,_that.createdAt);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _FrbOperationLogEntry implements FrbOperationLogEntry {
+  const _FrbOperationLogEntry({required this.id, required this.entityType, required this.entityId, required this.operation, this.payload, required this.status, this.errorMessage, required this.pinned, required this.createdAt});
+  
+
+@override final  int id;
+@override final  String entityType;
+@override final  int entityId;
+@override final  String operation;
+@override final  String? payload;
+@override final  String status;
+@override final  String? errorMessage;
+@override final  bool pinned;
+@override final  String createdAt;
+
+/// Create a copy of FrbOperationLogEntry
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$FrbOperationLogEntryCopyWith<_FrbOperationLogEntry> get copyWith => __$FrbOperationLogEntryCopyWithImpl<_FrbOperationLogEntry>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FrbOperationLogEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.entityType, entityType) || other.entityType == entityType)&&(identical(other.entityId, entityId) || other.entityId == entityId)&&(identical(other.operation, operation) || other.operation == operation)&&(identical(other.payload, payload) || other.payload == payload)&&(identical(other.status, status) || other.status == status)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.pinned, pinned) || other.pinned == pinned)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,id,entityType,entityId,operation,payload,status,errorMessage,pinned,createdAt);
+
+@override
+String toString() {
+  return 'FrbOperationLogEntry(id: $id, entityType: $entityType, entityId: $entityId, operation: $operation, payload: $payload, status: $status, errorMessage: $errorMessage, pinned: $pinned, createdAt: $createdAt)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$FrbOperationLogEntryCopyWith<$Res> implements $FrbOperationLogEntryCopyWith<$Res> {
+  factory _$FrbOperationLogEntryCopyWith(_FrbOperationLogEntry value, $Res Function(_FrbOperationLogEntry) _then) = __$FrbOperationLogEntryCopyWithImpl;
+@override @useResult
+$Res call({
+ int id, String entityType, int entityId, String operation, String? payload, String status, String? errorMessage, bool pinned, String createdAt
+});
+
+
+
+
+}
+/// @nodoc
+class __$FrbOperationLogEntryCopyWithImpl<$Res>
+    implements _$FrbOperationLogEntryCopyWith<$Res> {
+  __$FrbOperationLogEntryCopyWithImpl(this._self, this._then);
+
+  final _FrbOperationLogEntry _self;
+  final $Res Function(_FrbOperationLogEntry) _then;
+
+/// Create a copy of FrbOperationLogEntry
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? entityType = null,Object? entityId = null,Object? operation = null,Object? payload = freezed,Object? status = null,Object? errorMessage = freezed,Object? pinned = null,Object? createdAt = null,}) {
+  return _then(_FrbOperationLogEntry(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,entityType: null == entityType ? _self.entityType : entityType // ignore: cast_nullable_to_non_nullable
+as String,entityId: null == entityId ? _self.entityId : entityId // ignore: cast_nullable_to_non_nullable
+as int,operation: null == operation ? _self.operation : operation // ignore: cast_nullable_to_non_nullable
+as String,payload: freezed == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
+as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,pinned: null == pinned ? _self.pinned : pinned // ignore: cast_nullable_to_non_nullable
+as bool,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$FrbOperationLogStats {
+
+ BigInt get total; BigInt get today; BigInt get pending; BigInt get failed;
+/// Create a copy of FrbOperationLogStats
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$FrbOperationLogStatsCopyWith<FrbOperationLogStats> get copyWith => _$FrbOperationLogStatsCopyWithImpl<FrbOperationLogStats>(this as FrbOperationLogStats, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbOperationLogStats&&(identical(other.total, total) || other.total == total)&&(identical(other.today, today) || other.today == today)&&(identical(other.pending, pending) || other.pending == pending)&&(identical(other.failed, failed) || other.failed == failed));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,total,today,pending,failed);
+
+@override
+String toString() {
+  return 'FrbOperationLogStats(total: $total, today: $today, pending: $pending, failed: $failed)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $FrbOperationLogStatsCopyWith<$Res>  {
+  factory $FrbOperationLogStatsCopyWith(FrbOperationLogStats value, $Res Function(FrbOperationLogStats) _then) = _$FrbOperationLogStatsCopyWithImpl;
+@useResult
+$Res call({
+ BigInt total, BigInt today, BigInt pending, BigInt failed
+});
+
+
+
+
+}
+/// @nodoc
+class _$FrbOperationLogStatsCopyWithImpl<$Res>
+    implements $FrbOperationLogStatsCopyWith<$Res> {
+  _$FrbOperationLogStatsCopyWithImpl(this._self, this._then);
+
+  final FrbOperationLogStats _self;
+  final $Res Function(FrbOperationLogStats) _then;
+
+/// Create a copy of FrbOperationLogStats
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? total = null,Object? today = null,Object? pending = null,Object? failed = null,}) {
+  return _then(_self.copyWith(
+total: null == total ? _self.total : total // ignore: cast_nullable_to_non_nullable
+as BigInt,today: null == today ? _self.today : today // ignore: cast_nullable_to_non_nullable
+as BigInt,pending: null == pending ? _self.pending : pending // ignore: cast_nullable_to_non_nullable
+as BigInt,failed: null == failed ? _self.failed : failed // ignore: cast_nullable_to_non_nullable
+as BigInt,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [FrbOperationLogStats].
+extension FrbOperationLogStatsPatterns on FrbOperationLogStats {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _FrbOperationLogStats value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _FrbOperationLogStats() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _FrbOperationLogStats value)  $default,){
+final _that = this;
+switch (_that) {
+case _FrbOperationLogStats():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _FrbOperationLogStats value)?  $default,){
+final _that = this;
+switch (_that) {
+case _FrbOperationLogStats() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( BigInt total,  BigInt today,  BigInt pending,  BigInt failed)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _FrbOperationLogStats() when $default != null:
+return $default(_that.total,_that.today,_that.pending,_that.failed);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( BigInt total,  BigInt today,  BigInt pending,  BigInt failed)  $default,) {final _that = this;
+switch (_that) {
+case _FrbOperationLogStats():
+return $default(_that.total,_that.today,_that.pending,_that.failed);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( BigInt total,  BigInt today,  BigInt pending,  BigInt failed)?  $default,) {final _that = this;
+switch (_that) {
+case _FrbOperationLogStats() when $default != null:
+return $default(_that.total,_that.today,_that.pending,_that.failed);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _FrbOperationLogStats implements FrbOperationLogStats {
+  const _FrbOperationLogStats({required this.total, required this.today, required this.pending, required this.failed});
+  
+
+@override final  BigInt total;
+@override final  BigInt today;
+@override final  BigInt pending;
+@override final  BigInt failed;
+
+/// Create a copy of FrbOperationLogStats
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$FrbOperationLogStatsCopyWith<_FrbOperationLogStats> get copyWith => __$FrbOperationLogStatsCopyWithImpl<_FrbOperationLogStats>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FrbOperationLogStats&&(identical(other.total, total) || other.total == total)&&(identical(other.today, today) || other.today == today)&&(identical(other.pending, pending) || other.pending == pending)&&(identical(other.failed, failed) || other.failed == failed));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,total,today,pending,failed);
+
+@override
+String toString() {
+  return 'FrbOperationLogStats(total: $total, today: $today, pending: $pending, failed: $failed)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$FrbOperationLogStatsCopyWith<$Res> implements $FrbOperationLogStatsCopyWith<$Res> {
+  factory _$FrbOperationLogStatsCopyWith(_FrbOperationLogStats value, $Res Function(_FrbOperationLogStats) _then) = __$FrbOperationLogStatsCopyWithImpl;
+@override @useResult
+$Res call({
+ BigInt total, BigInt today, BigInt pending, BigInt failed
+});
+
+
+
+
+}
+/// @nodoc
+class __$FrbOperationLogStatsCopyWithImpl<$Res>
+    implements _$FrbOperationLogStatsCopyWith<$Res> {
+  __$FrbOperationLogStatsCopyWithImpl(this._self, this._then);
+
+  final _FrbOperationLogStats _self;
+  final $Res Function(_FrbOperationLogStats) _then;
+
+/// Create a copy of FrbOperationLogStats
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? total = null,Object? today = null,Object? pending = null,Object? failed = null,}) {
+  return _then(_FrbOperationLogStats(
+total: null == total ? _self.total : total // ignore: cast_nullable_to_non_nullable
+as BigInt,today: null == today ? _self.today : today // ignore: cast_nullable_to_non_nullable
+as BigInt,pending: null == pending ? _self.pending : pending // ignore: cast_nullable_to_non_nullable
+as BigInt,failed: null == failed ? _self.failed : failed // ignore: cast_nullable_to_non_nullable
+as BigInt,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$FrbTag {
 
  int get id; String get name; int? get parentId; PlatformInt64 get count;

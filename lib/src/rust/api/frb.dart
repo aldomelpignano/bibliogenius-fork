@@ -8,7 +8,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'frb.freezed.dart';
 
-// These functions are ignored because they are not marked as `pub`: `db`, `entries_to_frb`, `install_panic_hook`, `load_google_books_api_key`, `runtime`, `track_to_frb`
+// These functions are ignored because they are not marked as `pub`: `db`, `device_pairing_svc`, `device_sync_svc`, `entries_to_frb`, `install_panic_hook`, `load_google_books_api_key`, `runtime`, `track_to_frb`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Initialize the FFI backend with database at the given path
@@ -415,6 +415,100 @@ Future<List<String>> gamificationCheckAchievements() =>
 Future<FrbStreakInfo> gamificationUpdateStreak() =>
     RustLib.instance.api.crateApiFrbGamificationUpdateStreak();
 
+/// List operation log entries with optional filters
+Future<List<FrbOperationLogEntry>> operationLogList({
+  String? entityType,
+  String? operation,
+  String? status,
+  String? query,
+  BigInt? page,
+  BigInt? limit,
+}) => RustLib.instance.api.crateApiFrbOperationLogList(
+  entityType: entityType,
+  operation: operation,
+  status: status,
+  query: query,
+  page: page,
+  limit: limit,
+);
+
+/// Get operation log stats
+Future<FrbOperationLogStats> operationLogStats() =>
+    RustLib.instance.api.crateApiFrbOperationLogStats();
+
+/// Get distinct entity types for filter dropdowns
+Future<List<String>> operationLogEntityTypes() =>
+    RustLib.instance.api.crateApiFrbOperationLogEntityTypes();
+
+/// Generate a 6-digit pairing offer for multi-device linking
+Future<FrbPairingOffer> deviceGeneratePairingOffer({
+  required String deviceName,
+  required String libraryUuid,
+  String? relayUrl,
+  String? mailboxId,
+  String? relayWriteToken,
+}) => RustLib.instance.api.crateApiFrbDeviceGeneratePairingOffer(
+  deviceName: deviceName,
+  libraryUuid: libraryUuid,
+  relayUrl: relayUrl,
+  mailboxId: mailboxId,
+  relayWriteToken: relayWriteToken,
+);
+
+/// Accept a pairing offer by entering the 6-digit code.
+/// Returns the offerer's crypto keys and library info.
+Future<FrbPairingConfirmation> deviceAcceptPairing({
+  required String code,
+  required String deviceName,
+  required List<int> ed25519PublicKey,
+  required List<int> x25519PublicKey,
+  String? relayUrl,
+  String? mailboxId,
+  String? relayWriteToken,
+}) => RustLib.instance.api.crateApiFrbDeviceAcceptPairing(
+  code: code,
+  deviceName: deviceName,
+  ed25519PublicKey: ed25519PublicKey,
+  x25519PublicKey: x25519PublicKey,
+  relayUrl: relayUrl,
+  mailboxId: mailboxId,
+  relayWriteToken: relayWriteToken,
+);
+
+/// List all linked devices
+Future<List<FrbLinkedDevice>> deviceListLinked() =>
+    RustLib.instance.api.crateApiFrbDeviceListLinked();
+
+/// Remove a linked device by ID
+Future<void> deviceRemoveLinked({required int deviceId}) =>
+    RustLib.instance.api.crateApiFrbDeviceRemoveLinked(deviceId: deviceId);
+
+/// Trigger sync with a specific linked device.
+/// This is a simplified version - full sync uses the HTTP trigger_sync endpoint
+/// which handles E2EE transport. This FFI function delegates to it.
+Future<FrbSyncResult> deviceTriggerSync({required int deviceId}) =>
+    RustLib.instance.api.crateApiFrbDeviceTriggerSync(deviceId: deviceId);
+
+/// List operations pending review (sync safety mode)
+Future<List<FrbPendingReviewOp>> deviceSyncPendingReview() =>
+    RustLib.instance.api.crateApiFrbDeviceSyncPendingReview();
+
+/// Approve specific pending review operations
+Future<int> deviceSyncApprove({required List<int> ids}) =>
+    RustLib.instance.api.crateApiFrbDeviceSyncApprove(ids: ids);
+
+/// Reject specific pending review operations
+Future<int> deviceSyncReject({required List<int> ids}) =>
+    RustLib.instance.api.crateApiFrbDeviceSyncReject(ids: ids);
+
+/// Approve all pending review operations at once
+Future<int> deviceSyncApproveAll() =>
+    RustLib.instance.api.crateApiFrbDeviceSyncApproveAll();
+
+/// Reject all pending review operations at once
+Future<int> deviceSyncRejectAll() =>
+    RustLib.instance.api.crateApiFrbDeviceSyncRejectAll();
+
 /// Simplified book structure for FFI
 @freezed
 sealed class FrbBook with _$FrbBook {
@@ -672,6 +766,54 @@ class FrbLeaderboardResponse {
           lastRefreshed == other.lastRefreshed;
 }
 
+/// FFI struct for linked device info
+class FrbLinkedDevice {
+  final int id;
+  final String name;
+  final Uint8List ed25519PublicKey;
+  final Uint8List x25519PublicKey;
+  final String? relayUrl;
+  final String? mailboxId;
+  final String? lastSynced;
+  final String? createdAt;
+
+  const FrbLinkedDevice({
+    required this.id,
+    required this.name,
+    required this.ed25519PublicKey,
+    required this.x25519PublicKey,
+    this.relayUrl,
+    this.mailboxId,
+    this.lastSynced,
+    this.createdAt,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      name.hashCode ^
+      ed25519PublicKey.hashCode ^
+      x25519PublicKey.hashCode ^
+      relayUrl.hashCode ^
+      mailboxId.hashCode ^
+      lastSynced.hashCode ^
+      createdAt.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbLinkedDevice &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name &&
+          ed25519PublicKey == other.ed25519PublicKey &&
+          x25519PublicKey == other.x25519PublicKey &&
+          relayUrl == other.relayUrl &&
+          mailboxId == other.mailboxId &&
+          lastSynced == other.lastSynced &&
+          createdAt == other.createdAt;
+}
+
 /// Simplified loan structure for FFI
 @freezed
 sealed class FrbLoan with _$FrbLoan {
@@ -805,6 +947,134 @@ class FrbMemoryScore {
           normalizedScore == other.normalizedScore &&
           playedAt == other.playedAt &&
           newAchievements == other.newAchievements;
+}
+
+@freezed
+sealed class FrbOperationLogEntry with _$FrbOperationLogEntry {
+  const factory FrbOperationLogEntry({
+    required int id,
+    required String entityType,
+    required int entityId,
+    required String operation,
+    String? payload,
+    required String status,
+    String? errorMessage,
+    required bool pinned,
+    required String createdAt,
+  }) = _FrbOperationLogEntry;
+}
+
+@freezed
+sealed class FrbOperationLogStats with _$FrbOperationLogStats {
+  const factory FrbOperationLogStats({
+    required BigInt total,
+    required BigInt today,
+    required BigInt pending,
+    required BigInt failed,
+  }) = _FrbOperationLogStats;
+}
+
+/// FFI struct for pairing confirmation
+class FrbPairingConfirmation {
+  final int deviceId;
+  final String libraryUuid;
+  final Uint8List offererEd25519;
+  final Uint8List offererX25519;
+  final String? offererRelayUrl;
+  final String? offererMailboxId;
+
+  const FrbPairingConfirmation({
+    required this.deviceId,
+    required this.libraryUuid,
+    required this.offererEd25519,
+    required this.offererX25519,
+    this.offererRelayUrl,
+    this.offererMailboxId,
+  });
+
+  @override
+  int get hashCode =>
+      deviceId.hashCode ^
+      libraryUuid.hashCode ^
+      offererEd25519.hashCode ^
+      offererX25519.hashCode ^
+      offererRelayUrl.hashCode ^
+      offererMailboxId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbPairingConfirmation &&
+          runtimeType == other.runtimeType &&
+          deviceId == other.deviceId &&
+          libraryUuid == other.libraryUuid &&
+          offererEd25519 == other.offererEd25519 &&
+          offererX25519 == other.offererX25519 &&
+          offererRelayUrl == other.offererRelayUrl &&
+          offererMailboxId == other.offererMailboxId;
+}
+
+/// FFI struct for pairing offer response
+class FrbPairingOffer {
+  final String code;
+  final BigInt expiresIn;
+
+  const FrbPairingOffer({required this.code, required this.expiresIn});
+
+  @override
+  int get hashCode => code.hashCode ^ expiresIn.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbPairingOffer &&
+          runtimeType == other.runtimeType &&
+          code == other.code &&
+          expiresIn == other.expiresIn;
+}
+
+/// FFI struct for pending review operation
+class FrbPendingReviewOp {
+  final int id;
+  final String entityType;
+  final int entityId;
+  final String operation;
+  final String? payload;
+  final String source;
+  final String createdAt;
+
+  const FrbPendingReviewOp({
+    required this.id,
+    required this.entityType,
+    required this.entityId,
+    required this.operation,
+    this.payload,
+    required this.source,
+    required this.createdAt,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      entityType.hashCode ^
+      entityId.hashCode ^
+      operation.hashCode ^
+      payload.hashCode ^
+      source.hashCode ^
+      createdAt.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbPendingReviewOp &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          entityType == other.entityType &&
+          entityId == other.entityId &&
+          operation == other.operation &&
+          payload == other.payload &&
+          source == other.source &&
+          createdAt == other.createdAt;
 }
 
 /// A generated puzzle board (FFI-safe)
@@ -962,6 +1232,32 @@ class FrbStreakInfo {
           runtimeType == other.runtimeType &&
           current == other.current &&
           longest == other.longest;
+}
+
+/// FFI struct for sync result
+class FrbSyncResult {
+  final int sentCount;
+  final int receivedCount;
+  final int pendingReviewCount;
+
+  const FrbSyncResult({
+    required this.sentCount,
+    required this.receivedCount,
+    required this.pendingReviewCount,
+  });
+
+  @override
+  int get hashCode =>
+      sentCount.hashCode ^ receivedCount.hashCode ^ pendingReviewCount.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbSyncResult &&
+          runtimeType == other.runtimeType &&
+          sentCount == other.sentCount &&
+          receivedCount == other.receivedCount &&
+          pendingReviewCount == other.pendingReviewCount;
 }
 
 /// Simplified tag structure for FFI

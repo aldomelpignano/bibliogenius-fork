@@ -25,6 +25,8 @@ import 'providers/book_refresh_notifier.dart';
 import 'providers/pending_peers_provider.dart';
 import 'audio/audio_module.dart'; // Audio module (decoupled)
 import 'providers/memory_game_provider.dart';
+import 'providers/device_sync_provider.dart';
+import 'providers/operation_log_provider.dart';
 import 'providers/sliding_puzzle_provider.dart';
 import 'data/repositories/book_repository.dart';
 import 'data/repositories/tag_repository.dart';
@@ -57,6 +59,7 @@ import 'screens/peer_book_list_screen.dart';
 import 'screens/shelf_management_screen.dart';
 import 'screens/search_peer_screen.dart';
 import 'screens/memory_game_screen.dart';
+import 'screens/operation_log_screen.dart';
 import 'screens/sliding_puzzle_screen.dart';
 import 'screens/games_hub_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -71,6 +74,8 @@ import 'screens/settings_screen.dart';
 import 'screens/migration_wizard_screen.dart';
 
 import 'screens/link_device_screen.dart';
+import 'screens/device_pairing_screen.dart';
+import 'screens/sync_review_screen.dart';
 import 'screens/external_search_screen.dart';
 import 'screens/invite_acceptance_screen.dart';
 import 'package:app_links/app_links.dart';
@@ -369,6 +374,12 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<SlidingPuzzleProvider>(
           create: (_) => SlidingPuzzleProvider(),
         ),
+        ChangeNotifierProvider<OperationLogProvider>(
+          create: (_) => OperationLogProvider(),
+        ),
+        ChangeNotifierProvider<DeviceSyncProvider>(
+          create: (_) => DeviceSyncProvider(),
+        ),
       ],
       child: const AppRouter(),
     );
@@ -513,6 +524,23 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
                 return null;
               },
               builder: (context, state) => const SlidingPuzzleScreen(),
+            ),
+            GoRoute(
+              path: '/operation-log',
+              redirect: (context, state) {
+                final tp = Provider.of<ThemeProvider>(context, listen: false);
+                if (!tp.operationLogViewerEnabled) return '/settings';
+                return null;
+              },
+              builder: (context, state) => const OperationLogScreen(),
+            ),
+            GoRoute(
+              path: '/device-pairing',
+              builder: (context, state) => const DevicePairingScreen(),
+            ),
+            GoRoute(
+              path: '/sync-review',
+              builder: (context, state) => const SyncReviewScreen(),
             ),
             GoRoute(
               path: '/books',

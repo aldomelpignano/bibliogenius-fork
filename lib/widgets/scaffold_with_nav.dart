@@ -146,6 +146,7 @@ class ScaffoldWithNav extends StatelessWidget {
         ),
       _NavItem(
         route: '/settings',
+        matchPrefixes: ['/settings', '/operation-log', '/device-pairing', '/sync-review'],
         destination: NavigationRailDestination(
           icon: const Icon(Icons.settings),
           label: Text(TranslationService.translate(context, 'nav_settings')),

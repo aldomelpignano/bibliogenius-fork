@@ -114,6 +114,14 @@ class ThemeProvider with ChangeNotifier {
   // Network Module (Alias for network discovery for UI consistency)
   bool get networkEnabled => _networkDiscoveryEnabled;
 
+  // Operation Log Viewer (developer tool, disabled by default)
+  bool _operationLogViewerEnabled = false;
+  bool get operationLogViewerEnabled => _operationLogViewerEnabled;
+
+  // Sync Safety: review incoming changes before applying (ON by default)
+  bool _syncSafetyEnabled = true;
+  bool get syncSafetyEnabled => _syncSafetyEnabled;
+
   // Peer Offline Caching: allows viewing cached peer libraries when they're offline
   // Disabled by default for privacy (peer's books are cached locally)
   bool _peerOfflineCachingEnabled = false;
@@ -294,6 +302,8 @@ class ThemeProvider with ChangeNotifier {
     _gamesEnabled = prefs.getBool('gamesEnabled') ?? true;
     _memoryGameEnabled = prefs.getBool('memoryGameEnabled') ?? true;
     _slidingPuzzleEnabled = prefs.getBool('slidingPuzzleEnabled') ?? true;
+    _operationLogViewerEnabled = prefs.getBool('operationLogViewerEnabled') ?? false;
+    _syncSafetyEnabled = prefs.getBool('syncSafetyEnabled') ?? true;
 
     // Load gamification setting (default based on profile type)
     final savedGamification = prefs.getBool('gamificationEnabled');
@@ -422,6 +432,22 @@ class ThemeProvider with ChangeNotifier {
     _slidingPuzzleEnabled = enabled;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('slidingPuzzleEnabled', enabled);
+    await _updateEnabledModules();
+    notifyListeners();
+  }
+
+  Future<void> setOperationLogViewerEnabled(bool enabled) async {
+    _operationLogViewerEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('operationLogViewerEnabled', enabled);
+    await _updateEnabledModules();
+    notifyListeners();
+  }
+
+  Future<void> setSyncSafetyEnabled(bool enabled) async {
+    _syncSafetyEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('syncSafetyEnabled', enabled);
     await _updateEnabledModules();
     notifyListeners();
   }
@@ -964,6 +990,12 @@ class ThemeProvider with ChangeNotifier {
     }
     if (shareGamificationStats) {
       enabledModules.add('share_gamification_stats');
+    }
+    if (operationLogViewerEnabled) {
+      enabledModules.add('operation_log_viewer');
+    }
+    if (syncSafetyEnabled) {
+      enabledModules.add('sync_safety');
     }
 
     try {

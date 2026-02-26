@@ -6250,3 +6250,218 @@ msgstr "Rejoins {name} sur BiblioGenius pour partager des livres : {link}"
 msgid "profile_share_invite"
 msgstr "Partager ma bibliotheque"
 
+#. Operation Log Viewer - screen title
+msgid "admin_operation_log_title"
+msgstr "Journal des operations"
+
+#. Operation Log Viewer - stats
+msgid "admin_log_stat_total"
+msgstr "Total"
+
+msgid "admin_log_stat_today"
+msgstr "Aujourd'hui"
+
+msgid "admin_log_stat_pending"
+msgstr "En attente"
+
+msgid "admin_log_stat_errors"
+msgstr "Erreurs"
+
+#. Operation Log Viewer - filters
+msgid "admin_log_filter_entity"
+msgstr "Entite"
+
+msgid "admin_log_filter_operation"
+msgstr "Operation"
+
+msgid "admin_log_filter_status"
+msgstr "Statut"
+
+msgid "admin_log_clear_filters"
+msgstr "Effacer"
+
+#. Operation Log Viewer - empty state
+msgid "admin_log_empty_title"
+msgstr "Aucune operation enregistree"
+
+msgid "admin_log_empty_subtitle"
+msgstr "Les mutations apparaitront ici au fil de l'utilisation"
+
+#. Operation Log Viewer - pagination
+msgid "admin_log_page_info"
+msgstr "Page %d sur %d"
+
+#. Operation Log Viewer - tooltips
+msgid "tooltip_filter_entity_type"
+msgstr "Filtrer par type d'entite"
+
+msgid "tooltip_filter_operation"
+msgstr "Filtrer par operation"
+
+msgid "tooltip_filter_status"
+msgstr "Filtrer par statut"
+
+msgid "tooltip_expand_details"
+msgstr "Afficher les details"
+
+msgid "tooltip_collapse_details"
+msgstr "Masquer les details"
+
+msgid "tooltip_prev_page"
+msgstr "Page precedente"
+
+msgid "tooltip_next_page"
+msgstr "Page suivante"
+
+#. Operation Log Viewer - module toggle
+msgid "module_operation_log_viewer"
+msgstr "Journal des operations"
+
+msgid "module_operation_log_desc"
+msgstr "Consulter l'historique des mutations"
+
+#. Settings - developer tools section
+msgid "settings_developer_tools"
+msgstr "Outils developpeur"
+
+#. Operation Log Viewer - search
+msgid "admin_log_search_hint"
+msgstr "Rechercher dans les logs..."
+
+msgid "admin_log_clear_search"
+msgstr "Effacer la recherche"
+
+#. Device Pairing
+msgid "pairing_title"
+msgstr "Appareils lies"
+
+msgid "pairing_code_title"
+msgstr "Code d'appairage"
+
+msgid "pairing_enter_title"
+msgstr "Saisir un code"
+
+msgid "pairing_empty_title"
+msgstr "Aucun appareil lie"
+
+msgid "pairing_empty_subtitle"
+msgstr "Appairez un autre appareil pour synchroniser votre bibliotheque"
+
+msgid "pairing_generate_code"
+msgstr "Generer un code"
+
+msgid "pairing_enter_code"
+msgstr "Saisir un code"
+
+msgid "pairing_code_instruction"
+msgstr "Partagez ce code avec l'autre appareil"
+
+msgid "pairing_code_expires"
+msgstr "%s restant"
+
+msgid "pairing_code_expired"
+msgstr "Code expire"
+
+msgid "pairing_enter_instruction"
+msgstr "Entrez le code a 6 chiffres de l'autre appareil"
+
+msgid "pairing_button_pair"
+msgstr "Appairer"
+
+msgid "pairing_success"
+msgstr "Appareil appaire avec succes"
+
+msgid "pairing_error"
+msgstr "Echec de l'appairage"
+
+msgid "pairing_remove_confirm"
+msgstr "Retirer cet appareil ?"
+
+msgid "pairing_remove_success"
+msgstr "Appareil retire"
+
+msgid "pairing_paired_on"
+msgstr "Appaire le %s"
+
+msgid "pairing_cancel"
+msgstr "Annuler"
+
+msgid "tooltip_remove_device"
+msgstr "Retirer l'appareil"
+
+msgid "tooltip_generate_pairing"
+msgstr "Generer un code d'appairage"
+
+msgid "tooltip_enter_pairing"
+msgstr "Saisir un code d'appairage"
+
+msgid "tooltip_cancel_pairing"
+msgstr "Annuler l'appairage"
+
+msgid "settings_linked_devices"
+msgstr "Appareils lies"
+
+msgid "settings_linked_devices_desc"
+msgstr "Gerer les appareils appaires pour la synchronisation"
+
+#. Sync Review
+msgid "sync_review_title"
+msgstr "Revue de synchronisation"
+
+msgid "sync_review_banner"
+msgstr "%d operations recues. Verifiez avant d'appliquer."
+
+msgid "sync_review_approve_all"
+msgstr "Tout approuver"
+
+msgid "sync_review_reject_all"
+msgstr "Tout rejeter"
+
+msgid "sync_review_approve"
+msgstr "Approuver"
+
+msgid "sync_review_reject"
+msgstr "Rejeter"
+
+msgid "sync_review_empty_title"
+msgstr "Tout est en ordre"
+
+msgid "sync_review_empty_subtitle"
+msgstr "Aucune operation a valider"
+
+msgid "sync_review_approved"
+msgstr "%d operations approuvees"
+
+msgid "sync_review_rejected"
+msgstr "%d operations rejetees"
+
+msgid "sync_review_from"
+msgstr "Source :"
+
+msgid "sync_trigger_button"
+msgstr "Synchroniser"
+
+msgid "sync_result_message"
+msgstr "%d envoyees, %d recues"
+
+msgid "sync_pending_review_action"
+msgstr "Voir"
+
+msgid "sync_pending_review_count"
+msgstr "%d en attente de validation"
+
+msgid "sync_safety_title"
+msgstr "Securite de synchronisation"
+
+msgid "sync_safety_subtitle"
+msgstr "Valider les modifications avant application"
+
+msgid "tooltip_sync_device"
+msgstr "Synchroniser avec cet appareil"
+
+msgid "tooltip_approve_op"
+msgstr "Approuver cette operation"
+
+msgid "tooltip_reject_op"
+msgstr "Rejeter cette operation"
+
