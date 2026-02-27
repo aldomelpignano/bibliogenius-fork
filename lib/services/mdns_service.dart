@@ -54,6 +54,10 @@ class DiscoveredPeer {
 
 /// Native mDNS service for local network discovery
 class MdnsService {
+  /// Maximum number of discovered peers to keep in memory.
+  /// Matches the Rust-side MAX_DISCOVERED_PEERS limit.
+  static const int _maxPeers = 50;
+
   static BonsoirBroadcast? _broadcast;
   static BonsoirDiscovery? _discovery;
   static final Map<String, DiscoveredPeer> _peers = {};
@@ -196,8 +200,9 @@ class MdnsService {
       // Include device hostname for .local mDNS resolution fallback
       // (on macOS, ServiceResolvedEvent may not fire, so discovery
       // can resolve hostname.local via InternetAddress.lookup instead)
+      // Note: iOS returns "localhost" which is useless for resolution.
       final hostname = Platform.localHostname;
-      if (hostname.isNotEmpty) {
+      if (hostname.isNotEmpty && hostname != 'localhost') {
         attributes['hostname'] = hostname;
       }
       // E2EE public keys (64-char hex each, well within mDNS TXT limit)
@@ -309,6 +314,18 @@ class MdnsService {
       x25519PublicKey: service.attributes['x25519'],
       discoveredAt: DateTime.now(),
     );
+
+    // Evict oldest peer if at capacity (before inserting, unless key already exists)
+    if (_peers.length >= _maxPeers && !_peers.containsKey(peerKey)) {
+      final oldestKey = _peers.entries
+          .reduce((a, b) =>
+              a.value.discoveredAt.isBefore(b.value.discoveredAt) ? a : b)
+          .key;
+      _peers.remove(oldestKey);
+      debugPrint(
+        '⚠️ mDNS: Peer limit ($_maxPeers) reached, evicted oldest entry',
+      );
+    }
 
     _peers[peerKey] = peer;
     debugPrint('📚 mDNS: Discovered "$cleanName" at $peerKey');

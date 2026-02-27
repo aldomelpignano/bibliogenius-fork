@@ -841,6 +841,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           );
+          // Refresh leaderboard with the new name to avoid stale/duplicate entries
+          _fetchLeaderboard(api, result);
         }
       } catch (e) {
         if (mounted) {

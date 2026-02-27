@@ -441,6 +441,10 @@ msgstr "Disponible"
 msgid "availability_borrowed"
 msgstr "Emprunté"
 
+#. Votre exemplaire est-il disponible ou prêté ?
+msgid "availability_helper"
+msgstr "Votre exemplaire est-il disponible ou prêté ?"
+
 #. Availability
 msgid "availability_label"
 msgstr "Disponibilité"
@@ -952,9 +956,17 @@ msgstr "Collections"
 msgid "collections"
 msgstr "Collections"
 
+#. Regroupez vos livres, ex. : Lectures d'été, Club de lecture
+msgid "collections_helper"
+msgstr "Regroupez vos livres, ex. : Lectures d'été, Club de lecture"
+
 #. Collections
 msgid "collections_label"
 msgstr "Collections"
+
+#. A venir
+msgid "coming_soon"
+msgstr "À venir"
 
 #. Collections
 msgid "collections_module"
@@ -1276,6 +1288,22 @@ msgstr "Recherche par titre..."
 msgid "cover_updated"
 msgstr "Couverture mise à jour"
 
+#. Cover photo error
+msgid "cover_photo_error"
+msgstr "Impossible de prendre la photo"
+
+#. Cover photo saved
+msgid "cover_photo_saved"
+msgstr "Photo de couverture enregistree"
+
+#. Take a photo
+msgid "cover_take_photo"
+msgstr "Prendre une photo"
+
+#. Take a photo of the cover
+msgid "cover_take_photo_tooltip"
+msgstr "Photographier la couverture"
+
 #. Use
 msgid "cover_use_button"
 msgstr "Utiliser"
@@ -1457,6 +1485,10 @@ msgstr "Voulez-vous vraiment supprimer cette bibliothèque de votre réseau ?"
 #. Remove Library
 msgid "dialog_remove_library_title"
 msgstr "Supprimer la bibliothèque"
+
+#. Sélectionnez les formats que vous possédez
+msgid "digital_formats_helper"
+msgstr "Sélectionnez les formats que vous possédez"
 
 #. Formats
 msgid "digital_formats_label"
@@ -2146,6 +2178,10 @@ msgstr "J'ai"
 #. Finished on
 msgid "finished_on"
 msgstr "Terminé le"
+
+#. Quand vous avez terminé ce livre
+msgid "finished_reading_helper"
+msgstr "Quand vous avez terminé ce livre"
 
 #. Finished Reading
 msgid "finished_reading_label"
@@ -4062,6 +4098,10 @@ msgstr "Cette bibliothèque est actuellement indisponible. Le contact doit être
 msgid "peer_online"
 msgstr "En ligne"
 
+#. Short library ID for peer disambiguation
+msgid "peer_short_id"
+msgstr "ID : %s"
+
 #. Ex: Thomas
 msgid "peer_search_hint"
 msgstr "Ex: Bibliothèque de Thomas"
@@ -5139,6 +5179,10 @@ msgstr "Large couverture, surtout pour les livres en anglais"
 msgid "start_reading"
 msgstr "Commencer la lecture"
 
+#. Quand vous avez commencé ce livre
+msgid "started_reading_helper"
+msgstr "Quand vous avez commencé ce livre"
+
 #. Started Reading
 msgid "started_reading_label"
 msgstr "Commencé le"
@@ -5230,6 +5274,10 @@ msgstr "Endommagé/Réparation"
 #. Inactive
 msgid "status_inactive"
 msgstr "Inactif"
+
+#. Suivez votre avancement de lecture
+msgid "status_helper"
+msgstr "Suivez votre avancement de lecture"
 
 #. Status
 msgid "status_label"
@@ -5474,6 +5522,10 @@ msgstr "Nom de l'étagère"
 #. Shelves
 msgid "tags"
 msgstr "Étagères"
+
+#. Classez vos livres, ex. : Salon, Fiction > SF
+msgid "tags_helper"
+msgstr "Classez vos livres, ex. : Salon, Fiction > SF"
 
 msgid "tags_label"
 msgstr "Étagères"
@@ -6206,7 +6258,7 @@ msgid "invite_error"
 msgstr "Échec de la connexion"
 
 msgid "invite_self_error"
-msgstr "Vous ne pouvez pas vous connecter a votre propre bibliotheque"
+msgstr "Vous ne pouvez pas vous connecter à votre propre bibliothèque"
 
 msgid "invite_encrypted"
 msgstr "Chiffré"
@@ -6225,13 +6277,13 @@ msgid "invite_card_title"
 msgstr "Partagez votre lien d'invitation"
 
 msgid "invite_card_subtitle"
-msgstr "Invitez des contacts a se connecter"
+msgstr "Invitez des contacts à se connecter"
 
 msgid "copy_invite_link"
 msgstr "Copier le lien"
 
 msgid "invite_link_copied"
-msgstr "Lien d'invitation copie !"
+msgstr "Lien d'invitation copié !"
 
 msgid "tooltip_copy_invite"
 msgstr "Copier le lien d'invitation"
@@ -6248,7 +6300,7 @@ msgstr "Rejoins {name} sur BiblioGenius pour partager des livres : {link}"
 
 #. Profile screen - share invite link
 msgid "profile_share_invite"
-msgstr "Partager ma bibliotheque"
+msgstr "Partager ma bibliothèque"
 
 #. Operation Log Viewer - screen title
 msgid "admin_operation_log_title"
@@ -6464,4 +6516,27 @@ msgstr "Approuver cette operation"
 
 msgid "tooltip_reject_op"
 msgstr "Rejeter cette operation"
+
+#. Relay Library Sync (ADR-012)
+msgid "syncing_via_relay"
+msgstr "Synchronisation par relais"
+
+msgid "loading_via_relay"
+msgstr "Chargement par relais"
+
+msgid "connecting_via_relay"
+msgstr "Connexion par relais..."
+
+msgid "toggle_view"
+msgstr "Changer la vue"
+
+#. 404 error page
+msgid "page_not_found_title"
+msgstr "Page introuvable"
+
+msgid "page_not_found_message"
+msgstr "La page que vous recherchez n'existe pas."
+
+msgid "back_to_library"
+msgstr "Retour à la bibliothèque"
 

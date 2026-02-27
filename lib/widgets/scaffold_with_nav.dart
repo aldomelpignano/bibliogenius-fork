@@ -104,7 +104,7 @@ class ScaffoldWithNav extends StatelessWidget {
       ),
       _NavItem(
         route: '/network',
-        matchPrefixes: ['/network', '/contacts', '/peers', '/requests'],
+        matchPrefixes: ['/network', '/contacts', '/peers'],
         destination: NavigationRailDestination(
           icon: Consumer<PendingPeersProvider>(
             builder: (context, provider, child) {
@@ -117,6 +117,14 @@ class ScaffoldWithNav extends StatelessWidget {
             },
           ),
           label: Text(TranslationService.translate(context, 'network')),
+        ),
+      ),
+      _NavItem(
+        route: '/requests',
+        matchPrefixes: ['/requests'],
+        destination: NavigationRailDestination(
+          icon: const Icon(Icons.swap_horiz),
+          label: Text(TranslationService.translate(context, 'nav_loans')),
         ),
       ),
       _NavItem(

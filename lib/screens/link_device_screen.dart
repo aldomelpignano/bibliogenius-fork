@@ -263,6 +263,11 @@ class _LinkDeviceScreenState extends State<LinkDeviceScreen>
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: TranslationService.translate(context, 'back'),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
         title: Text(TranslationService.translate(context, 'link_device_title')),
         bottom: TabBar(
           controller: _tabController,

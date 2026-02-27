@@ -9,6 +9,8 @@ import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+import '../utils/cover_camera_helper.dart';
+
 import '../audio/audio_module.dart';
 import '../data/repositories/book_repository.dart';
 import '../data/repositories/contact_repository.dart';
@@ -208,6 +210,17 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                   style: TextStyle(color: Colors.grey[400]),
                 ),
               ),
+            if (CoverCameraHelper.isCameraAvailable)
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: Text(
+                    TranslationService.translate(context, 'cover_take_photo') ??
+                        'Take a photo'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _takeCoverPhoto(book);
+                },
+              ),
             ListTile(
               leading: const Icon(Icons.photo_library),
               title: Text(
@@ -387,6 +400,41 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  Future<void> _takeCoverPhoto(Book book) async {
+    if (book.id == null) return;
+
+    try {
+      final path = await CoverCameraHelper.takePhotoAndSave(bookId: book.id);
+      if (path == null || !mounted) return;
+
+      final bookRepo = Provider.of<BookRepository>(context, listen: false);
+      await bookRepo.updateBook(book.id!, {'cover_url': path});
+      await _fetchBookDetails(forceRefresh: true);
+      _hasChanges = true;
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              TranslationService.translate(context, 'cover_photo_saved') ??
+                  'Cover photo saved',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            TranslationService.translate(context, 'cover_photo_error') ??
+                'Could not take photo',
+          ),
+        ),
       );
     }
   }

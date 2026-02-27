@@ -441,6 +441,10 @@ msgstr "Available"
 msgid "availability_borrowed"
 msgstr "Borrowed"
 
+#. Is your copy available or lent out?
+msgid "availability_helper"
+msgstr "Is your copy available or lent out?"
+
 #. Availability
 msgid "availability_label"
 msgstr "Availability"
@@ -952,9 +956,17 @@ msgstr "Collections"
 msgid "collections"
 msgstr "Collections"
 
+#. Group books together, e.g. Summer reads, Book club
+msgid "collections_helper"
+msgstr "Group books together, e.g. Summer reads, Book club"
+
 #. Collections
 msgid "collections_label"
 msgstr "Collections"
+
+#. Coming soon
+msgid "coming_soon"
+msgstr "Coming soon"
 
 #. Collections
 msgid "collections_module"
@@ -1276,6 +1288,22 @@ msgstr "Searching by title..."
 msgid "cover_updated"
 msgstr "Cover updated"
 
+#. Cover photo error
+msgid "cover_photo_error"
+msgstr "Could not take photo"
+
+#. Cover photo saved
+msgid "cover_photo_saved"
+msgstr "Cover photo saved"
+
+#. Take a photo
+msgid "cover_take_photo"
+msgstr "Take a photo"
+
+#. Take a photo of the cover
+msgid "cover_take_photo_tooltip"
+msgstr "Take a photo of the cover"
+
 #. Use
 msgid "cover_use_button"
 msgstr "Use"
@@ -1457,6 +1485,10 @@ msgstr "Are you sure you want to remove this library from your network?"
 #. Remove Library
 msgid "dialog_remove_library_title"
 msgstr "Remove Library"
+
+#. Select which formats you own
+msgid "digital_formats_helper"
+msgstr "Select which formats you own"
 
 #. Formats
 msgid "digital_formats_label"
@@ -2146,6 +2178,10 @@ msgstr "Owned"
 #. Finished on
 msgid "finished_on"
 msgstr "Finished on"
+
+#. When you finished this book
+msgid "finished_reading_helper"
+msgstr "When you finished this book"
 
 #. Finished Reading
 msgid "finished_reading_label"
@@ -4062,6 +4098,10 @@ msgstr "This library is currently unavailable. The contact must be online to vie
 msgid "peer_online"
 msgstr "Online"
 
+#. Short library ID for peer disambiguation
+msgid "peer_short_id"
+msgstr "ID: %s"
+
 #. Ex: Thomas
 msgid "peer_search_hint"
 msgstr "Ex: Thomas"
@@ -5139,6 +5179,10 @@ msgstr "Great coverage, especially for English books"
 msgid "start_reading"
 msgstr "Start Reading"
 
+#. When you started this book
+msgid "started_reading_helper"
+msgstr "When you started this book"
+
 #. Started Reading
 msgid "started_reading_label"
 msgstr "Started Reading"
@@ -5230,6 +5274,10 @@ msgstr "Damaged/Repair"
 #. Inactive
 msgid "status_inactive"
 msgstr "Inactive"
+
+#. Track your reading progress
+msgid "status_helper"
+msgstr "Track your reading progress"
 
 #. Status
 msgid "status_label"
@@ -5474,6 +5522,10 @@ msgstr "Shelf name"
 #. Shelves
 msgid "tags"
 msgstr "Shelves"
+
+#. Classify your books, e.g. Living room, Fiction > Sci-Fi
+msgid "tags_helper"
+msgstr "Classify your books, e.g. Living room, Fiction > Sci-Fi"
 
 msgid "tags_label"
 msgstr "Shelves"
@@ -6464,4 +6516,27 @@ msgstr "Approve this operation"
 
 msgid "tooltip_reject_op"
 msgstr "Reject this operation"
+
+#. Relay Library Sync (ADR-012)
+msgid "syncing_via_relay"
+msgstr "Syncing via relay"
+
+msgid "loading_via_relay"
+msgstr "Loading via relay"
+
+msgid "connecting_via_relay"
+msgstr "Connecting via relay..."
+
+msgid "toggle_view"
+msgstr "Toggle view"
+
+#. 404 error page
+msgid "page_not_found_title"
+msgstr "Page not found"
+
+msgid "page_not_found_message"
+msgstr "The page you're looking for doesn't exist."
+
+msgid "back_to_library"
+msgstr "Back to library"
 

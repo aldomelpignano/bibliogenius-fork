@@ -40,6 +40,8 @@ class NetworkMember {
   final String? lastSeen;
   /// Whether E2EE key exchange is complete with this peer
   final bool keyExchangeDone;
+  /// UUID of the peer's library (for disambiguation)
+  final String? libraryUuid;
 
   // V4 Future: Association link
   final int? linkedPeerId;
@@ -66,6 +68,7 @@ class NetworkMember {
     this.status,
     this.lastSeen,
     this.keyExchangeDone = false,
+    this.libraryUuid,
     this.linkedPeerId,
     this.linkedContactId,
   });
@@ -120,6 +123,7 @@ class NetworkMember {
       lastSeen: peer['last_seen'] as String?,
       keyExchangeDone: peer['key_exchange_done'] == true ||
           peer['key_exchange_done'] == 1,
+      libraryUuid: peer['library_uuid'] as String?,
     );
   }
 

@@ -417,6 +417,10 @@ msgstr "Verfügbar"
 msgid "availability_borrowed"
 msgstr "Ausgeliehen"
 
+#. Ist dein Exemplar verfuegbar oder verliehen?
+msgid "availability_helper"
+msgstr "Ist dein Exemplar verfügbar oder verliehen?"
+
 #. Availability
 msgid "availability_label"
 msgstr "Verfügbarkeit"
@@ -924,9 +928,17 @@ msgstr "Sammlungsstatistiken"
 msgid "collections"
 msgstr "Sammlungen"
 
+#. Buecher gruppieren, z.B. Sommerlektuere, Buchclub
+msgid "collections_helper"
+msgstr "Bücher gruppieren, z.B. Sommerlektüre, Buchclub"
+
 #. Collections
 msgid "collections_label"
 msgstr "Sammlungen"
+
+#. Demnächst verfügbar
+msgid "coming_soon"
+msgstr "Demnächst"
 
 #. Collections
 msgid "collections_module"
@@ -1212,6 +1224,22 @@ msgstr "Suche Cover nach Titel..."
 msgid "cover_updated"
 msgstr "Cover aktualisiert"
 
+#. Cover photo error
+msgid "cover_photo_error"
+msgstr "Foto konnte nicht aufgenommen werden"
+
+#. Cover photo saved
+msgid "cover_photo_saved"
+msgstr "Coverfoto gespeichert"
+
+#. Take a photo
+msgid "cover_take_photo"
+msgstr "Foto aufnehmen"
+
+#. Take a photo of the cover
+msgid "cover_take_photo_tooltip"
+msgstr "Foto vom Cover aufnehmen"
+
 #. Use
 msgid "cover_use_button"
 msgstr "Dieses Cover verwenden"
@@ -1394,6 +1422,10 @@ msgstr "Möchten Sie diese Bibliothek wirklich aus Ihrem Netzwerk entfernen?"
 msgid "dialog_remove_library_title"
 msgstr "Bibliothek entfernen"
 
+#. Waehle die Formate aus, die du besitzt
+msgid "digital_formats_helper"
+msgstr "Wähle die Formate aus, die du besitzt"
+
 #. Formats
 msgid "digital_formats_label"
 msgstr "Digitale Formate"
@@ -1436,27 +1468,27 @@ msgstr "Sammlungen entdecken"
 
 #. %d book
 msgid "displayed_books_count"
-msgstr "{count} Buch angezeigt"
+msgstr "%d Buch angezeigt"
 
 #. %d books
 msgid "displayed_books_count_plural"
-msgstr "{count} Bücher angezeigt"
+msgstr "%d Bücher angezeigt"
 
 #. %d collection
 msgid "displayed_collections_count"
-msgstr "{count} Sammlung angezeigt"
+msgstr "%d Sammlung angezeigt"
 
 #. %d collections
 msgid "displayed_collections_count_plural"
-msgstr "{count} Sammlungen angezeigt"
+msgstr "%d Sammlungen angezeigt"
 
 #. %d shelf
 msgid "displayed_shelves_count"
-msgstr "{count} Regal angezeigt"
+msgstr "%d Regal angezeigt"
 
 #. %d shelves
 msgid "displayed_shelves_count_plural"
-msgstr "{count} Regale angezeigt"
+msgstr "%d Regale angezeigt"
 
 #. Keep exploring new genres!
 msgid "diversity_encouragement"
@@ -2050,6 +2082,10 @@ msgstr "Nur eigene"
 #. Finished on
 msgid "finished_on"
 msgstr "Beendet am"
+
+#. Wann du dieses Buch beendet hast
+msgid "finished_reading_helper"
+msgstr "Wann du dieses Buch beendet hast"
 
 #. Finished Reading
 msgid "finished_reading_label"
@@ -4979,6 +5015,10 @@ msgstr "Open Library"
 msgid "start_reading"
 msgstr "Anfangen zu lesen"
 
+#. Wann du dieses Buch begonnen hast
+msgid "started_reading_helper"
+msgstr "Wann du dieses Buch begonnen hast"
+
 #. Started Reading
 msgid "started_reading_label"
 msgstr "Angefangen zu lesen"
@@ -5070,6 +5110,10 @@ msgstr "Beschädigt/Reparatur"
 #. Inactive
 msgid "status_inactive"
 msgstr "Inaktiv"
+
+#. Verfolge deinen Lesefortschritt
+msgid "status_helper"
+msgstr "Verfolge deinen Lesefortschritt"
 
 #. Status
 msgid "status_label"
@@ -5314,6 +5358,10 @@ msgstr "Regalname"
 #. Shelves
 msgid "tags"
 msgstr "Tags"
+
+#. Buecher einordnen, z.B. Wohnzimmer, Belletristik > Sci-Fi
+msgid "tags_helper"
+msgstr "Bücher einordnen, z.B. Wohnzimmer, Belletristik > Sci-Fi"
 
 msgid "tags_label"
 msgstr "Regale"
@@ -5794,4 +5842,75 @@ msgstr "#%s in deinen Top-Ergebnissen"
 #. Memory Game - Rank column header
 msgid "memory_rank_header"
 msgstr "Rang"
+
+#. Share invite link
+msgid "share_invite_link"
+msgstr "Einladungslink teilen"
+
+#. Invite acceptance screen
+msgid "invite_title"
+msgstr "Einladung von"
+
+msgid "invite_description"
+msgstr "möchte sich mit dir verbinden, um Bücher zu teilen."
+
+msgid "invite_connect"
+msgstr "Verbinden"
+
+msgid "invite_decline"
+msgstr "Ablehnen"
+
+msgid "invite_connecting"
+msgstr "Verbindung wird hergestellt..."
+
+msgid "invite_success"
+msgstr "Verbunden mit"
+
+msgid "invite_error"
+msgstr "Verbindung fehlgeschlagen"
+
+msgid "invite_self_error"
+msgstr "Du kannst dich nicht mit deiner eigenen Bibliothek verbinden"
+
+msgid "invite_encrypted"
+msgstr "Verschlüsselt"
+
+msgid "invite_remote_ready"
+msgstr "Fernzugriff bereit"
+
+msgid "invite_library_icon"
+msgstr "Bibliothekssymbol"
+
+#. Invite share sheet
+msgid "invite_share_title"
+msgstr "Dein Einladungslink"
+
+msgid "invite_card_title"
+msgstr "Teile deinen Einladungslink"
+
+msgid "invite_card_subtitle"
+msgstr "Lade Kontakte ein, sich zu verbinden"
+
+msgid "copy_invite_link"
+msgstr "Link kopieren"
+
+msgid "invite_link_copied"
+msgstr "Einladungslink kopiert!"
+
+msgid "tooltip_copy_invite"
+msgstr "Einladungslink kopieren"
+
+msgid "tooltip_share_invite"
+msgstr "Einladungslink teilen"
+
+msgid "share_invite_empty_state"
+msgstr "Einladungslink teilen"
+
+#. Invite share message (used when sharing via SMS/messaging)
+msgid "invite_share_message"
+msgstr "Tritt {name} auf BiblioGenius bei, um Bücher zu teilen: {link}"
+
+#. Profile screen - share invite link
+msgid "profile_share_invite"
+msgstr "Meine Bibliothek teilen"
 

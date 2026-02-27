@@ -73,6 +73,13 @@ class _CollectionSelectorState extends State<CollectionSelector> {
             context,
           ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
+        const SizedBox(height: 2),
+        Text(
+          TranslationService.translate(context, 'collections_helper'),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+          ),
+        ),
         const SizedBox(height: 8),
 
         // Selected Chips

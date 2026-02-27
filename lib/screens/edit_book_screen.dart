@@ -1,11 +1,18 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
+
 import '../data/repositories/book_repository.dart';
 import '../data/repositories/collection_repository.dart';
 import '../data/repositories/copy_repository.dart';
 import '../services/api_service.dart';
 import '../services/translation_service.dart';
+import '../utils/cover_camera_helper.dart';
+import '../widgets/cached_book_cover.dart';
 import '../providers/theme_provider.dart';
 import '../utils/book_status.dart';
 import '../models/book.dart';
@@ -838,6 +845,10 @@ class _EditBookScreenState extends State<EditBookScreen> {
               ),
               const SizedBox(height: 24),
 
+              // Cover
+              _buildCoverSection(),
+              const SizedBox(height: 24),
+
               // Publisher & Year
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -974,6 +985,13 @@ class _EditBookScreenState extends State<EditBookScreen> {
                                 'Formats',
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
+                          const SizedBox(height: 4),
+                          Text(
+                            TranslationService.translate(context, 'digital_formats_helper'),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                            ),
+                          ),
                           const SizedBox(height: 12),
                           Wrap(
                             spacing: 12,
@@ -1061,6 +1079,7 @@ class _EditBookScreenState extends State<EditBookScreen> {
               // Status
               _buildLabel(
                 TranslationService.translate(context, 'status_label'),
+                helperText: TranslationService.translate(context, 'status_helper'),
               ),
               Builder(
                 builder: (context) {
@@ -1111,6 +1130,7 @@ class _EditBookScreenState extends State<EditBookScreen> {
                 _buildLabel(
                   TranslationService.translate(context, 'availability_label') ??
                       'Availability',
+                  helperText: TranslationService.translate(context, 'availability_helper'),
                 ),
                 DropdownButtonFormField<String>(
                   value: _copyStatus,
@@ -1210,6 +1230,7 @@ class _EditBookScreenState extends State<EditBookScreen> {
                     context,
                     'started_reading_label',
                   ),
+                  helperText: TranslationService.translate(context, 'started_reading_helper'),
                 ),
                 GestureDetector(
                   onTap: () => _selectDate(context, _startedDateController),
@@ -1240,6 +1261,7 @@ class _EditBookScreenState extends State<EditBookScreen> {
                     context,
                     'finished_reading_label',
                   ),
+                  helperText: TranslationService.translate(context, 'finished_reading_helper'),
                 ),
                 GestureDetector(
                   onTap: () => _selectDate(context, _finishedDateController),
@@ -1317,16 +1339,220 @@ class _EditBookScreenState extends State<EditBookScreen> {
     );
   }
 
-  Widget _buildLabel(String label) {
+  Future<void> _takePhoto() async {
+    try {
+      final path = await CoverCameraHelper.takePhotoAndSave(
+        bookId: widget.book.id,
+      );
+      if (path == null || !mounted) return;
+
+      final bookRepo = Provider.of<BookRepository>(context, listen: false);
+      await bookRepo.updateBook(widget.book.id!, {'cover_url': path});
+
+      if (!mounted) return;
+      setState(() => _coverUrl = path);
+      _hasChanges = true;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            TranslationService.translate(context, 'cover_photo_saved') ??
+                'Cover photo saved',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            TranslationService.translate(context, 'cover_photo_error') ??
+                'Could not take photo',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _pickCoverFromFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+      if (result == null || result.files.isEmpty) return;
+
+      final pickedFile = result.files.first;
+      if (pickedFile.path == null) return;
+
+      final appDir = await getApplicationSupportDirectory();
+      final coversDir = Directory('${appDir.path}/covers');
+      if (!await coversDir.exists()) {
+        await coversDir.create(recursive: true);
+      }
+
+      final extension = pickedFile.extension ?? 'jpg';
+      final targetPath = '${coversDir.path}/${widget.book.id}.$extension';
+      final sourceFile = File(pickedFile.path!);
+      await sourceFile.copy(targetPath);
+
+      if (!mounted) return;
+      final bookRepo = Provider.of<BookRepository>(context, listen: false);
+      await bookRepo.updateBook(widget.book.id!, {'cover_url': targetPath});
+
+      if (!mounted) return;
+      setState(() => _coverUrl = targetPath);
+      _hasChanges = true;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            TranslationService.translate(context, 'cover_updated') ??
+                'Cover updated',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            TranslationService.translate(context, 'cover_photo_error') ??
+                'Could not take photo',
+          ),
+        ),
+      );
+    }
+  }
+
+  Widget _buildCoverSection() {
+    final hasCover = _coverUrl != null && _coverUrl!.isNotEmpty;
+    final borderColor = hasCover ? Colors.green : Colors.grey;
+    final bgColor = hasCover
+        ? Colors.green.withValues(alpha: 0.05)
+        : Colors.grey.withValues(alpha: 0.05);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 60,
+            height: 90,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: hasCover
+                  ? _coverUrl!.startsWith('/')
+                      ? Image.file(
+                          File(_coverUrl!),
+                          key: ValueKey(_coverUrl),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.broken_image,
+                                color: Colors.grey),
+                          ),
+                        )
+                      : CachedBookCover(
+                          key: ValueKey(_coverUrl),
+                          imageUrl: _coverUrl!,
+                          fit: BoxFit.cover,
+                          placeholder: Container(
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.image, color: Colors.grey),
+                          ),
+                          errorWidget: Container(
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.broken_image,
+                                color: Colors.grey),
+                          ),
+                        )
+                  : Container(
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.image_not_supported,
+                          color: Colors.grey),
+                    ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  hasCover
+                      ? TranslationService.translate(
+                              context, 'cover_found') ??
+                          'Cover found!'
+                      : TranslationService.translate(
+                              context, 'no_cover_available') ??
+                          'No cover',
+                  style: TextStyle(
+                    color: hasCover
+                        ? Colors.green.shade700
+                        : Colors.grey.shade600,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    if (CoverCameraHelper.isCameraAvailable)
+                      IconButton(
+                        icon: const Icon(Icons.camera_alt, size: 20),
+                        tooltip: TranslationService.translate(
+                                context, 'cover_take_photo_tooltip') ??
+                            'Take a photo of the cover',
+                        onPressed: _takePhoto,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    IconButton(
+                      icon: const Icon(Icons.photo_library, size: 20),
+                      tooltip: TranslationService.translate(
+                              context, 'cover_choose_file') ??
+                          'Choose from files',
+                      onPressed: _pickCoverFromFile,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLabel(String label, {String? helperText}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 14,
-          color: Theme.of(context).textTheme.bodyLarge?.color,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
+          ),
+          if (helperText != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              helperText,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

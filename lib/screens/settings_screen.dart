@@ -289,14 +289,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 16),
             Column(
               children: [
-                // Simplified Mode toggle (replaces kid profile)
+                // Simplified Mode toggle (coming soon)
                 _buildModuleToggle(
                   context,
                   'simplified_mode',
                   'simplified_mode_desc',
                   Icons.child_care,
-                  themeProvider.simplifiedMode,
-                  (value) => themeProvider.setSimplifiedMode(value),
+                  false,
+                  null,
+                  tag: TranslationService.translate(context, 'coming_soon'),
                 ),
                 _buildModuleToggle(
                   context,
@@ -1354,7 +1355,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String descKey,
     IconData icon,
     bool value,
-    ValueChanged<bool> onChanged, {
+    ValueChanged<bool>? onChanged, {
     String? tag,
   }) {
     return Card(

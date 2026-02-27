@@ -79,6 +79,13 @@ class _HierarchicalTagSelectorState extends State<HierarchicalTagSelector> {
             context,
           ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
+        const SizedBox(height: 2),
+        Text(
+          TranslationService.translate(context, 'tags_helper'),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+          ),
+        ),
         const SizedBox(height: 8),
 
         // Selected Tags Chips
@@ -269,6 +276,7 @@ class _TagSelectionDialogState extends State<_TagSelectionDialog> {
                     isDense: true,
                     border: const OutlineInputBorder(),
                   ),
+                  onSubmitted: (_) => _createNewTag(),
                 ),
                 const SizedBox(height: 8),
                 Row(

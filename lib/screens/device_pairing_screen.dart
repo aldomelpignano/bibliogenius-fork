@@ -336,7 +336,11 @@ class _DevicePairingScreenState extends State<DevicePairingScreen> {
                     context, 'tooltip_cancel_pairing'),
                 onPressed: _cancelPairing,
               )
-            : null,
+            : IconButton(
+                icon: const Icon(Icons.arrow_back),
+                tooltip: TranslationService.translate(context, 'back'),
+                onPressed: () => context.go('/settings'),
+              ),
         title: Semantics(header: true, child: Text(title)),
       ),
       body: AnimatedSwitcher(

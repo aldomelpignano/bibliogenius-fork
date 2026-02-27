@@ -2662,6 +2662,148 @@ class ApiService {
   }
 
   // ============================================
+  // Relay Library Sync (ADR-012)
+  // ============================================
+
+  /// Trigger an immediate relay poll cycle to check for pending responses.
+  /// Used in adaptive polling when awaiting relay responses.
+  Future<Response> pollRelayNow() async {
+    try {
+      final localDio = Dio(
+        BaseOptions(
+          baseUrl: 'http://127.0.0.1:$httpPort',
+          connectTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 10),
+        ),
+      );
+      return await localDio.post('/api/relay/poll_now');
+    } catch (e) {
+      debugPrint('pollRelayNow error: $e');
+      rethrow;
+    }
+  }
+
+  /// Send a library sync request to a peer via relay (ADR-012).
+  /// Returns the response directly if peer is on LAN, or { status: "relay_pending" }
+  /// if sent via relay (response arrives asynchronously).
+  ///
+  /// [requestType]: "manifest", "page", or "search"
+  Future<Response> relayLibraryRequest({
+    required int peerId,
+    required String requestType,
+    int? cursor,
+    int? limit,
+    String? query,
+  }) async {
+    try {
+      // Relay requests may block up to ~35s on the Rust side:
+      // 10s direct transport timeout + 25s relay await with polling.
+      // Use 45s receiveTimeout to accommodate this plus network overhead.
+      final localDio = Dio(
+        BaseOptions(
+          baseUrl: 'http://127.0.0.1:$httpPort',
+          connectTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 45),
+        ),
+      );
+      final data = <String, dynamic>{
+        'peer_id': peerId,
+        'request_type': requestType,
+      };
+      if (cursor != null) data['cursor'] = cursor;
+      if (limit != null) data['limit'] = limit;
+      if (query != null) data['query'] = query;
+
+      return await localDio.post(
+        '/api/peers/relay/library_request',
+        data: data,
+      );
+    } catch (e) {
+      if (e is DioException && e.response?.data != null) {
+        debugPrint('relayLibraryRequest error: HTTP ${e.response?.statusCode} - ${e.response?.data}');
+      } else {
+        debugPrint('relayLibraryRequest error: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// Request peer library manifest (book count + catalog hash).
+  /// If LAN: returns immediately. If relay: starts async flow.
+  Future<Map<String, dynamic>?> requestPeerManifest(int peerId) async {
+    try {
+      final response = await relayLibraryRequest(
+        peerId: peerId,
+        requestType: 'manifest',
+      );
+      if (response.statusCode == 200) {
+        return response.data is Map<String, dynamic>
+            ? response.data
+            : null;
+      }
+      // 202 = relay_pending, response will come via polling
+      return null;
+    } catch (e) {
+      if (e is DioException && e.response?.data != null) {
+        debugPrint('requestPeerManifest error: HTTP ${e.response?.statusCode} - ${e.response?.data}');
+      } else {
+        debugPrint('requestPeerManifest error: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Request a page of peer's library (paginated, 50 books/page).
+  Future<Map<String, dynamic>?> requestPeerPage(
+    int peerId, {
+    int? cursor,
+    int limit = 50,
+  }) async {
+    try {
+      final response = await relayLibraryRequest(
+        peerId: peerId,
+        requestType: 'page',
+        cursor: cursor,
+        limit: limit,
+      );
+      if (response.statusCode == 200) {
+        return response.data is Map<String, dynamic>
+            ? response.data
+            : null;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('requestPeerPage error: $e');
+      return null;
+    }
+  }
+
+  /// Search a peer's library remotely (relay or direct).
+  Future<Map<String, dynamic>?> searchPeerLibrary(
+    int peerId,
+    String query, {
+    int limit = 20,
+  }) async {
+    try {
+      final response = await relayLibraryRequest(
+        peerId: peerId,
+        requestType: 'search',
+        query: query,
+        limit: limit,
+      );
+      if (response.statusCode == 200) {
+        return response.data is Map<String, dynamic>
+            ? response.data
+            : null;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('searchPeerLibrary error: $e');
+      return null;
+    }
+  }
+
+  // ============================================
   // mDNS Local Discovery
   // ============================================
 
@@ -2731,6 +2873,39 @@ class ApiService {
         String myName = 'BiblioGenius User';
         final myUrl = await _getMyUrl();
         if (myUrl == null) {
+          // No LAN available - try relay-only connection if invite has relay info
+          // (per ADR-004: relay fallback when direct LAN is unavailable)
+          if (relayUrl != null && mailboxId != null) {
+            debugPrint('P2P: No LAN IP - using relay-only connection');
+            try {
+              final localDio = Dio(BaseOptions(
+                baseUrl: 'http://localhost:${ApiService.httpPort}',
+              ));
+              final saveResponse = await localDio.post(
+                '/api/peers/connect',
+                data: {
+                  'name': name,
+                  'url': url,
+                  if (ed25519PublicKey != null)
+                    'ed25519_public_key': ed25519PublicKey,
+                  if (x25519PublicKey != null)
+                    'x25519_public_key': x25519PublicKey,
+                  'relay_url': relayUrl,
+                  'mailbox_id': mailboxId,
+                  if (relayWriteToken != null)
+                    'relay_write_token': relayWriteToken,
+                },
+              );
+              return saveResponse;
+            } catch (e) {
+              return Response(
+                requestOptions: RequestOptions(path: '/api/peers/connect'),
+                statusCode: 502,
+                data: {'error': 'Failed to save peer via relay path: $e'},
+              );
+            }
+          }
+          // No LAN AND no relay info - genuinely cannot connect
           return Response(
             requestOptions: RequestOptions(path: '/api/peers/connect'),
             statusCode: 503,

@@ -228,14 +228,11 @@ void main([List<String>? args]) async {
           }
         }
 
-        // Include device hostname for network disambiguation
-        final baseName = themeProvider.libraryName.isNotEmpty
+        // Use clean library name for mDNS (no hostname suffix).
+        // Disambiguation is handled by short library_id in the UI.
+        final libraryName = themeProvider.libraryName.isNotEmpty
             ? themeProvider.libraryName
             : 'BiblioGenius Library';
-        final deviceName = Platform.localHostname;
-        final libraryName = deviceName.isNotEmpty
-            ? '$baseName ($deviceName)'
-            : baseName;
         await MdnsService.startAnnouncing(
           libraryName,
           httpPort,
@@ -412,6 +409,32 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
     _router = GoRouter(
       initialLocation: '/books',
       refreshListenable: themeProvider,
+      errorBuilder: (context, state) => Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 64),
+              const SizedBox(height: 16),
+              Text(
+                TranslationService.translate(context, 'page_not_found_title'),
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                TranslationService.translate(context, 'page_not_found_message'),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: () => context.go('/books'),
+                icon: const Icon(Icons.home),
+                label: Text(TranslationService.translate(context, 'back_to_library')),
+              ),
+            ],
+          ),
+        ),
+      ),
       redirect: (context, state) async {
         final isOnboardingRoute = state.uri.path == '/onboarding';
         final isLoginRoute = state.uri.path == '/login';

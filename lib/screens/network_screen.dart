@@ -1115,6 +1115,11 @@ class _ContactsListViewState extends State<ContactsListView> {
     const defaultNames = {'My Library', 'Ma Bibliothèque', 'BiblioGenius Library'};
     final showDeviceName = hasDeviceName && defaultNames.contains(displayName);
 
+    // Short library ID for disambiguation (last 4 chars of UUID)
+    final shortId = peer.libraryId != null && peer.libraryId!.length >= 4
+        ? peer.libraryId!.substring(peer.libraryId!.length - 4)
+        : null;
+
     // Title for peer library screen: only append device name for default library names
     final peerTitle = showDeviceName
         ? '$displayName (${peer.deviceName})'
@@ -1314,6 +1319,18 @@ class _ContactsListViewState extends State<ContactsListView> {
                   ),
                 ),
               statusBadge,
+              if (shortId != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    TranslationService.translate(context, 'peer_short_id')
+                        .replaceFirst('%s', shortId),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
               if (isActiveOnly)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
@@ -1327,7 +1344,7 @@ class _ContactsListViewState extends State<ContactsListView> {
                 ),
             ],
           ),
-          isThreeLine: showDeviceName,
+          isThreeLine: showDeviceName || shortId != null,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: actionButtons,
@@ -1383,6 +1400,18 @@ class _ContactsListViewState extends State<ContactsListView> {
                           ),
                         const SizedBox(height: 4),
                         statusBadge,
+                        if (shortId != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              TranslationService.translate(context, 'peer_short_id')
+                                  .replaceFirst('%s', shortId),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
                         if (isActiveOnly)
                           Padding(
                             padding: const EdgeInsets.only(top: 2),
@@ -1534,6 +1563,12 @@ class _ContactsListViewState extends State<ContactsListView> {
         ? TranslationService.translate(context, 'status_active')
         : TranslationService.translate(context, 'status_offline');
     final statusColor = isOnline ? Colors.green : Colors.grey;
+
+    // Short library ID for disambiguation (last 4 chars of UUID)
+    final shortId = member.libraryUuid != null && member.libraryUuid!.length >= 4
+        ? member.libraryUuid!.substring(member.libraryUuid!.length - 4)
+        : null;
+
     final statusBadge = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1629,7 +1664,26 @@ class _ContactsListViewState extends State<ContactsListView> {
             child: const Icon(Icons.store, color: Colors.white),
           ),
           title: Text(member.displayName),
-          subtitle: statusBadge,
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              statusBadge,
+              if (shortId != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    TranslationService.translate(context, 'peer_short_id')
+                        .replaceFirst('%s', shortId),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          isThreeLine: shortId != null,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: actionButtons,
@@ -1675,6 +1729,18 @@ class _ContactsListViewState extends State<ContactsListView> {
                         ),
                         const SizedBox(height: 4),
                         statusBadge,
+                        if (shortId != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              TranslationService.translate(context, 'peer_short_id')
+                                  .replaceFirst('%s', shortId),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
