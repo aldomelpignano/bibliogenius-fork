@@ -888,9 +888,11 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
 
     // app_links plugin (works on iOS/Android, not reliable on macOS)
     _appLinks.getInitialLink().then((uri) {
+      debugPrint('Deep link: getInitialLink returned ${uri ?? "null"}');
       if (uri != null) _handleDeepLink(uri);
     });
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+      debugPrint('Deep link: uriLinkStream received $uri');
       _handleDeepLink(uri);
     });
 
@@ -942,13 +944,21 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
   }
 
   void _handleDeepLink(Uri uri) {
+    debugPrint('Deep link: _handleDeepLink called with $uri');
     // Dedup: avoid processing the same link twice
     final key = uri.toString();
-    if (_lastHandledDeepLink == key) return;
+    if (_lastHandledDeepLink == key) {
+      debugPrint('Deep link: skipped (duplicate)');
+      return;
+    }
     _lastHandledDeepLink = key;
 
     final payload = _parseInviteUri(uri);
-    if (payload == null) return;
+    if (payload == null) {
+      debugPrint('Deep link: _parseInviteUri returned null for $uri');
+      return;
+    }
+    debugPrint('Deep link: parsed invite for "${payload['name']}"');
 
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {

@@ -5287,9 +5287,13 @@ msgstr "Types d'entites suivis"
 msgid "stat_oplog_health_ok"
 msgstr "Toutes les operations effectuees"
 
+#. Operation log: pending (not yet synced)
+msgid "stat_oplog_pending"
+msgstr "Non synchronisees"
+
 #. Operation log: health warning
 msgid "stat_oplog_health_warning"
-msgstr "%1 operations en attente"
+msgstr "%1 operations non synchronisees"
 
 #. Operation log: health error
 msgid "stat_oplog_health_error"
@@ -6603,4 +6607,8 @@ msgstr "La page que vous recherchez n'existe pas."
 
 msgid "back_to_library"
 msgstr "Retour à la bibliothèque"
+
+#. Peer library background refresh
+msgid "refreshing_library"
+msgstr "Actualisation..."
 

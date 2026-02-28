@@ -276,6 +276,17 @@ class _ContactsListViewState extends State<ContactsListView> {
     }
   }
 
+  /// Pull-to-refresh: trigger immediate relay poll, then reload members.
+  Future<void> _pullToRefresh() async {
+    final api = Provider.of<ApiService>(context, listen: false);
+    try {
+      await api.pollRelayNow();
+    } catch (_) {
+      // Poll may fail if relay not configured - that's fine
+    }
+    await _loadAllMembers();
+  }
+
   Future<void> _loadAllMembers() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
@@ -350,12 +361,18 @@ class _ContactsListViewState extends State<ContactsListView> {
         return a.name.toLowerCase().compareTo(b.name.toLowerCase());
       });
 
-      // Load mDNS discovered peers if network discovery is enabled
+      // Load mDNS discovered peers if network discovery is enabled AND on WiFi.
+      // Without a valid WiFi IP, mDNS peers are stale (from a previous WiFi session).
       List<DiscoveredPeer> localPeers = [];
       final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
       if (themeProvider.networkDiscoveryEnabled && MdnsService.isActive) {
-        localPeers = MdnsService.peers;
-        debugPrint('🔍 NetworkScreen: Found ${localPeers.length} mDNS peers');
+        final wifiIp = await MdnsService.getValidLanIp();
+        if (wifiIp != null) {
+          localPeers = MdnsService.peers;
+          debugPrint('🔍 NetworkScreen: Found ${localPeers.length} mDNS peers (WiFi: $wifiIp)');
+        } else {
+          debugPrint('🔍 NetworkScreen: No WiFi - hiding mDNS peers');
+        }
       }
 
       // Build merged peers map: mDNS peers that match a DB peer by URL
@@ -607,67 +624,74 @@ class _ContactsListViewState extends State<ContactsListView> {
         Expanded(
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : (_filteredMembers.isEmpty && _localPeers.isEmpty)
-              ? _buildEmptyState(context)
-              : Builder(
-                  builder: (context) {
-                    final pendingMembers = _filteredMembers
-                        .where((m) => m.isPending)
-                        .toList();
-                    final regularMembers = _filteredMembers
-                        .where((m) => !m.isPending)
-                        .toList();
+              : RefreshIndicator(
+                  onRefresh: _pullToRefresh,
+                  child: (_filteredMembers.isEmpty && _localPeers.isEmpty)
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [_buildEmptyState(context)],
+                        )
+                      : Builder(
+                          builder: (context) {
+                            final pendingMembers = _filteredMembers
+                                .where((m) => m.isPending)
+                                .toList();
+                            final regularMembers = _filteredMembers
+                                .where((m) => !m.isPending)
+                                .toList();
 
-                    return ListView(
-                      key: const Key('networkMemberList'),
-                      children: [
-                        // Invite card - always visible as first element
-                        _buildInviteCard(context),
-                        // Pending connections section
-                        if (pendingMembers.isNotEmpty) ...[
-                          _buildSectionHeader(
-                            context,
-                            TranslationService.translate(
-                              context,
-                              'pending_requests_section',
-                            ),
-                            Icons.person_add,
-                            key: const Key('pendingConnectionsSection'),
-                          ),
-                          ...pendingMembers.map(
-                            (member) => _buildPendingPeerCard(member),
-                          ),
-                          const Divider(),
-                        ],
-                        // Local Network section (mDNS discovered peers)
-                        if (_localPeers.isNotEmpty &&
-                            _filter != NetworkFilter.contacts) ...[
-                          _buildSectionHeader(
-                            context,
-                            TranslationService.translate(
-                              context,
-                              'local_network_title',
-                            ),
-                            Icons.wifi,
-                            key: const Key('localNetworkSection'),
-                            subtitle: TranslationService.translate(
-                              context,
-                              'local_network_hint',
-                            ),
-                          ),
-                          ..._localPeers.map(
-                            (peer) => _buildLocalPeerTile(peer),
-                          ),
-                        ],
-                        // Regular members section
-                        ...regularMembers.map((member) {
-                          final isOnline =
-                              _peerConnectivity[member.id] ?? false;
-                          return _buildMemberTile(member, isOnline);
-                        }),
-                      ],
-                    );
-                  },
+                            return ListView(
+                              key: const Key('networkMemberList'),
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [
+                                // Invite card - always visible as first element
+                                _buildInviteCard(context),
+                                // Pending connections section
+                                if (pendingMembers.isNotEmpty) ...[
+                                  _buildSectionHeader(
+                                    context,
+                                    TranslationService.translate(
+                                      context,
+                                      'pending_requests_section',
+                                    ),
+                                    Icons.person_add,
+                                    key: const Key('pendingConnectionsSection'),
+                                  ),
+                                  ...pendingMembers.map(
+                                    (member) => _buildPendingPeerCard(member),
+                                  ),
+                                  const Divider(),
+                                ],
+                                // Local Network section (mDNS discovered peers)
+                                if (_localPeers.isNotEmpty &&
+                                    _filter != NetworkFilter.contacts) ...[
+                                  _buildSectionHeader(
+                                    context,
+                                    TranslationService.translate(
+                                      context,
+                                      'local_network_title',
+                                    ),
+                                    Icons.wifi,
+                                    key: const Key('localNetworkSection'),
+                                    subtitle: TranslationService.translate(
+                                      context,
+                                      'local_network_hint',
+                                    ),
+                                  ),
+                                  ..._localPeers.map(
+                                    (peer) => _buildLocalPeerTile(peer),
+                                  ),
+                                ],
+                                // Regular members section
+                                ...regularMembers.map((member) {
+                                  final isOnline =
+                                      _peerConnectivity[member.id] ?? false;
+                                  return _buildMemberTile(member, isOnline);
+                                }),
+                              ],
+                            );
+                          },
+                        ),
                 ),
         ),
       ],

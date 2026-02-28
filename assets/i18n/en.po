@@ -5287,9 +5287,13 @@ msgstr "Entity types tracked"
 msgid "stat_oplog_health_ok"
 msgstr "All operations completed"
 
+#. Operation log: pending (not yet synced)
+msgid "stat_oplog_pending"
+msgstr "Pending sync"
+
 #. Operation log: health warning
 msgid "stat_oplog_health_warning"
-msgstr "%1 pending operations"
+msgstr "%1 operations not yet synced"
 
 #. Operation log: health error
 msgid "stat_oplog_health_error"
@@ -6603,4 +6607,8 @@ msgstr "The page you're looking for doesn't exist."
 
 msgid "back_to_library"
 msgstr "Back to library"
+
+#. Peer library background refresh
+msgid "refreshing_library"
+msgstr "Refreshing..."
 

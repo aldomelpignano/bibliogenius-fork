@@ -758,88 +758,85 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     Gradient? gradient,
     Color textColor = Colors.white,
   }) {
+    // Extract accent color from gradient or fall back to backgroundColor
+    final Color accentColor = gradient is LinearGradient
+        ? gradient.colors.first
+        : (backgroundColor == Colors.transparent
+            ? Theme.of(context).colorScheme.primary
+            : backgroundColor);
+    final theme = Theme.of(context);
+
     return Semantics(
       label: '$label: $value',
       child: Container(
       height: 140,
       decoration: BoxDecoration(
-        color: gradient != null ? null : backgroundColor,
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: backgroundColor.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
+        boxShadow: AppDesign.cardShadow,
       ),
-      child: Stack(
-        children: [
-          // Decorative background icon
-          Positioned(
-            right: -15,
-            top: -15,
-            child: ExcludeSemantics(
-              child: ShaderMask(
-                shaderCallback: (rect) => LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.4),
-                    Colors.white.withValues(alpha: 0.1),
-                  ],
-                ).createShader(rect),
-                child: Icon(icon, size: 100, color: Colors.white),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
+        child: Stack(
+          children: [
+            // Left accent bar
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: 4,
+                decoration: BoxDecoration(
+                  gradient: gradient ?? LinearGradient(colors: [accentColor, accentColor]),
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Icon wrapper
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: textColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: textColor.withValues(alpha: 0.1)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Icon with gradient background
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: gradient ?? LinearGradient(colors: [accentColor, accentColor.withValues(alpha: 0.8)]),
+                      borderRadius: BorderRadius.circular(AppDesign.radiusMedium),
+                    ),
+                    child: Icon(icon, color: Colors.white, size: 20),
                   ),
-                  child: Icon(icon, color: textColor, size: 20),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      value,
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                        height: 1.0,
-                        letterSpacing: -0.5,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        value,
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: accentColor,
+                          height: 1.0,
+                          letterSpacing: -0.5,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: textColor.withValues(alpha: 0.8),
+                      const SizedBox(height: 4),
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       ),
     );
@@ -1545,37 +1542,48 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   ) {
     final isDesktop = MediaQuery.of(context).size.width > 900;
 
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.all(isDesktop ? 12 : 8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+    return Container(
+      padding: EdgeInsets.symmetric(
+        vertical: isDesktop ? 16 : 12,
+        horizontal: isDesktop ? 12 : 8,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(AppDesign.radiusMedium),
+        border: Border.all(color: color.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(isDesktop ? 10 : 8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppDesign.radiusSmall),
+            ),
+            child: Icon(icon, size: isDesktop ? 24 : 18, color: color),
           ),
-          child: Icon(icon, size: isDesktop ? 28 : 18, color: color),
-        ),
-        SizedBox(height: isDesktop ? 12 : 8),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: isDesktop ? 24 : 20,
-            fontWeight: FontWeight.bold,
-            color: color,
+          SizedBox(height: isDesktop ? 10 : 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: isDesktop ? 22 : 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
-        ),
-        SizedBox(height: isDesktop ? 4 : 2),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: isDesktop ? 13 : 10,
-            color: Colors.grey[700],
+          SizedBox(height: isDesktop ? 4 : 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: isDesktop ? 12 : 10,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -2145,7 +2153,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: _buildMiniStat(
-                  TranslationService.translate(context, 'active_loans'),
+                  TranslationService.translate(context, 'stat_oplog_pending'),
                   stats.pending.toString(),
                   Icons.pending_actions,
                   Colors.orange,
@@ -3528,9 +3536,9 @@ class _StatisticsContentState extends State<StatisticsContent>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
+        boxShadow: AppDesign.cardShadow,
       ),
       child: Stack(
         children: [
@@ -3866,34 +3874,45 @@ class _StatisticsContentState extends State<StatisticsContent>
     IconData icon,
     Color color,
   ) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(AppDesign.radiusMedium),
+        border: Border.all(color: color.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppDesign.radiusSmall),
+            ),
+            child: Icon(icon, size: 18, color: color),
           ),
-          child: Icon(icon, size: 18, color: color),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: color,
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(fontSize: 10, color: Colors.grey[700]),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 
@@ -4128,7 +4147,7 @@ class _StatisticsContentState extends State<StatisticsContent>
               const SizedBox(width: 12),
               Expanded(
                 child: _buildMiniStat(
-                  TranslationService.translate(context, 'active_loans'),
+                  TranslationService.translate(context, 'stat_oplog_pending'),
                   stats.pending.toString(),
                   Icons.pending_actions,
                   Colors.orange,
@@ -4267,81 +4286,85 @@ class _StatisticsContentState extends State<StatisticsContent>
     Gradient? gradient,
     Color textColor = const Color(0xFF1E293B),
   }) {
+    // Extract accent color from gradient or fall back to backgroundColor
+    final Color accentColor = gradient is LinearGradient
+        ? gradient.colors.first
+        : (backgroundColor == Colors.transparent
+            ? Theme.of(context).colorScheme.primary
+            : backgroundColor);
+    final theme = Theme.of(context);
+
     return Semantics(
       label: '$label: $value',
       child: Container(
       height: 140,
       decoration: BoxDecoration(
-        color: gradient != null ? null : backgroundColor,
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: backgroundColor.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
+        boxShadow: AppDesign.cardShadow,
       ),
-      child: Stack(
-        children: [
-          // Decorative background icon
-          Positioned(
-            right: -15,
-            top: -15,
-            child: ExcludeSemantics(
-              child: Icon(
-                icon,
-                size: 100,
-                color: Colors.white.withValues(alpha: 0.3),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
+        child: Stack(
+          children: [
+            // Left accent bar
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: 4,
+                decoration: BoxDecoration(
+                  gradient: gradient ?? LinearGradient(colors: [accentColor, accentColor]),
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Icon wrapper
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(12),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Icon with gradient background
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: gradient ?? LinearGradient(colors: [accentColor, accentColor.withValues(alpha: 0.8)]),
+                      borderRadius: BorderRadius.circular(AppDesign.radiusMedium),
+                    ),
+                    child: Icon(icon, color: Colors.white, size: 20),
                   ),
-                  child: Icon(icon, color: textColor, size: 20),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      value,
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                        height: 1.0,
-                        letterSpacing: -0.5,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        value,
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: accentColor,
+                          height: 1.0,
+                          letterSpacing: -0.5,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: textColor.withValues(alpha: 0.7),
+                      const SizedBox(height: 4),
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       ),
     );

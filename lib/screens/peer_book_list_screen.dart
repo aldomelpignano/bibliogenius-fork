@@ -35,6 +35,9 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
 
+  /// Background refresh state (cache-first pattern)
+  bool _isRefreshing = false;
+
   /// Relay sync state (ADR-012)
   bool _isRelayLoading = false;
   int _relayBooksLoaded = 0;
@@ -64,12 +67,42 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
     }
   }
 
-  /// Load books: fetch live when online, fall back to cache, then try relay
+  /// Load books: show cache instantly if available, then refresh in background
   Future<void> _loadCachedBooksFirst() async {
     final api = Provider.of<ApiService>(context, listen: false);
+    bool cacheDisplayed = false;
 
     try {
-      // 1. Check connectivity first (quick 3s timeout)
+      // 1. Try loading from cache FIRST (instant display, no network)
+      if (_offlineCachingEnabled) {
+        debugPrint('Loading cached books for ${widget.peerUrl}');
+        try {
+          final cachedRes = await api.getCachedPeerBooks(widget.peerUrl);
+          if (mounted) {
+            final data = cachedRes.data;
+            List<dynamic> booksData = data['books'] ?? [];
+
+            if (booksData.isNotEmpty) {
+              setState(() {
+                _books =
+                    booksData.map((json) => Book.fromJson(json)).toList();
+                _filteredBooks = _books;
+                _lastSynced = data['last_synced'];
+                _isLoading = false;
+                _isRefreshing = true;
+              });
+              cacheDisplayed = true;
+              debugPrint(
+                'Loaded ${_books.length} cached books, last_synced: $_lastSynced',
+              );
+            }
+          }
+        } catch (e) {
+          debugPrint('Cache load failed: $e');
+        }
+      }
+
+      // 2. Check connectivity (3s timeout) - runs after cache display
       debugPrint('Checking connectivity for ${widget.peerUrl}');
       final isOnline = await api.checkPeerConnectivity(
         widget.peerUrl,
@@ -79,7 +112,7 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
       if (!mounted) return;
       setState(() => _isPeerOnline = isOnline);
 
-      // 2. If ONLINE: fetch books directly from peer (no caching consent needed)
+      // 3. If ONLINE: fetch live (background refresh if cache was shown)
       if (isOnline) {
         debugPrint('Peer online - fetching books live from ${widget.peerUrl}');
         try {
@@ -98,6 +131,7 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
             _books = booksData.map((json) => Book.fromJson(json)).toList();
             _filteredBooks = _books;
             _isLoading = false;
+            _isRefreshing = false;
           });
 
           debugPrint('Loaded ${_books.length} books live from peer');
@@ -112,54 +146,34 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
           }
           return;
         } catch (e) {
-          debugPrint('Live fetch failed, falling back to cache: $e');
-          // Fall through to cache logic below
-        }
-      }
-
-      // 3. Try loading from cache first (instant display)
-      if (_offlineCachingEnabled) {
-        debugPrint('Loading cached books for ${widget.peerUrl}');
-        try {
-          final cachedRes = await api.getCachedPeerBooks(widget.peerUrl);
-          if (mounted) {
-            final data = cachedRes.data;
-            List<dynamic> booksData = data['books'] ?? [];
-
-            if (booksData.isNotEmpty) {
-              setState(() {
-                _books =
-                    booksData.map((json) => Book.fromJson(json)).toList();
-                _filteredBooks = _books;
-                _lastSynced = data['last_synced'];
-                _isLoading = false;
-              });
-              debugPrint(
-                'Loaded ${_books.length} cached books, last_synced: $_lastSynced',
-              );
-              // Cache found - try relay in background for updates
-              _tryRelaySync();
-              return;
-            }
+          debugPrint('Live fetch failed: $e');
+          // If cache was displayed, stop refreshing indicator
+          if (cacheDisplayed && mounted) {
+            setState(() => _isRefreshing = false);
+            return;
           }
-        } catch (e) {
-          debugPrint('Cache load failed: $e');
+          // Fall through to relay
         }
       }
 
-      // 4. No cache available - try relay sync (ADR-012)
-      if (!isOnline) {
-        setState(() => _isLoading = false);
+      // 4. Offline (or live fetch failed without cache) - try relay
+      if (cacheDisplayed) {
+        // Cache is already shown - try relay in background for updates
+        if (mounted) setState(() => _isRefreshing = false);
         _tryRelaySync();
         return;
       }
 
-      // 5. Offline, no cache, no relay
+      // 5. No cache available - try relay sync (ADR-012)
       setState(() => _isLoading = false);
+      _tryRelaySync();
     } catch (e) {
       debugPrint('Error loading books: $e');
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _isRefreshing = false;
+        });
       }
     }
   }
@@ -205,6 +219,27 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
     if (totalBooks == 0) {
       if (mounted) setState(() => _isRelayLoading = false);
       return;
+    }
+
+    // Show preview books from manifest instantly (before pages arrive)
+    final previewList = manifest['preview_books'] as List?;
+    if (previewList != null && previewList.isNotEmpty && _books.isEmpty) {
+      final previewBooks = previewList
+          .map(
+            (json) =>
+                Book.fromJson(json is Map<String, dynamic> ? json : {}),
+          )
+          .toList();
+      if (mounted) {
+        setState(() {
+          _books = previewBooks;
+          _filteredBooks = _books;
+          _isLoading = false;
+        });
+        debugPrint(
+          'Relay: showing ${previewBooks.length} preview books from manifest',
+        );
+      }
     }
 
     int? cursor;
@@ -550,7 +585,12 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
               ),
             ),
           ),
-          if (_isRelayLoading && _relayBooksTotal > 0)
+          if (_isRefreshing)
+            Text(
+              TranslationService.translate(context, 'refreshing_library'),
+              style: TextStyle(fontSize: 12, color: Colors.blue[600]),
+            )
+          else if (_isRelayLoading && _relayBooksTotal > 0)
             Text(
               '$_relayBooksLoaded/$_relayBooksTotal',
               style: TextStyle(fontSize: 12, color: Colors.blue[600]),
@@ -602,7 +642,7 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
           if (!_isSearching)
             Builder(
               builder: (context) => IconButton(
-                icon: (_isSyncing || _isRelayLoading)
+                icon: (_isSyncing || _isRelayLoading || _isRefreshing)
                     ? const SizedBox(
                         width: 20,
                         height: 20,
@@ -615,7 +655,7 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
                 tooltip:
                     TranslationService.translate(context, 'sync_library'),
                 onPressed:
-                    (_isSyncing || _isRelayLoading)
+                    (_isSyncing || _isRelayLoading || _isRefreshing)
                         ? null
                         : () => _syncBooks(),
               ),

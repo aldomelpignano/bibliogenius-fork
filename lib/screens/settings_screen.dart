@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../widgets/genie_app_bar.dart';
 import '../widgets/contextual_help_sheet.dart';
@@ -31,6 +32,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Map<String, dynamic>? _userStatus;
   Map<String, bool> _searchPrefs = {};
   String _googleBooksApiKey = '';
+  String _appVersion = '';
   final _apiKeyController = TextEditingController();
   // Relay Hub state
   String? _relayMailboxUuid;
@@ -42,6 +44,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _fetchSettings();
+    _initPackageInfo();
+  }
+
+  Future<void> _initPackageInfo() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() {
+          _appVersion = '${info.version} (${info.buildNumber})';
+        });
+      }
+    } catch (e) {
+      debugPrint('Error getting package info: $e');
+    }
   }
 
   @override
@@ -713,6 +729,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 foregroundColor: Colors.red,
               ),
             ),
+            if (_appVersion.isNotEmpty) ...[
+              const SizedBox(height: 32),
+              Center(
+                child: Text(
+                  'BiblioGenius v$_appVersion',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 100),
           ],
         ),
