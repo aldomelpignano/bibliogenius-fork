@@ -136,12 +136,12 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
 
           debugPrint('Loaded ${_books.length} books live from peer');
 
-          // Background sync to update cache (if peer allows caching)
+          // Cache displayed books locally (avoids redundant re-fetch from syncPeer)
           if (_offlineCachingEnabled) {
-            api.syncPeer(widget.peerUrl).then((_) {
-              debugPrint('Background cache sync completed');
+            api.cachePeerBooks(widget.peerId, _books).then((_) {
+              debugPrint('Cached ${_books.length} live books for peer ${widget.peerId}');
             }).catchError((e) {
-              debugPrint('Background cache sync failed: $e');
+              debugPrint('Failed to cache live books: $e');
             });
           }
           return;
@@ -297,6 +297,15 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
       if (nextCursor == null || books.isEmpty) break;
       cursor = nextCursor is int ? nextCursor : null;
       if (cursor == null) break;
+    }
+
+    // Save relay-fetched books to local cache for instant display next visit
+    if (_offlineCachingEnabled && allBooks.isNotEmpty) {
+      api.cachePeerBooks(widget.peerId, allBooks).then((_) {
+        debugPrint('Cached ${allBooks.length} relay books for peer ${widget.peerId}');
+      }).catchError((e) {
+        debugPrint('Failed to cache relay books: $e');
+      });
     }
 
     if (mounted) {

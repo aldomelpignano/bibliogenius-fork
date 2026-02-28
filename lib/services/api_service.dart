@@ -2314,6 +2314,27 @@ class ApiService {
     }
   }
 
+  /// Save pre-fetched books to local peer_books cache.
+  /// Called after relay or live WiFi fetch to avoid redundant re-fetches.
+  Future<void> cachePeerBooks(int peerId, List<Book> books) async {
+    try {
+      final localDio = Dio(
+        BaseOptions(
+          baseUrl: 'http://localhost:$httpPort',
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 30),
+        ),
+      );
+      await localDio.post(
+        '/api/peers/$peerId/cache_books',
+        data: {'books': books.map((b) => b.toJson()).toList()},
+      );
+    } catch (e) {
+      debugPrint('Error caching peer books: $e');
+      rethrow;
+    }
+  }
+
   /// Cleanup peer_books cache entries older than 30 days (privacy TTL)
   /// Call this on app startup to auto-purge stale caches
   Future<void> cleanupStalePeerBooksCache() async {
