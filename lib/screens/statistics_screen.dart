@@ -19,6 +19,7 @@ import '../widgets/genie_app_bar.dart';
 import '../widgets/goal_reached_animation.dart';
 import '../theme/app_design.dart';
 import '../providers/theme_provider.dart';
+import '../src/rust/api/frb.dart' as frb;
 import 'package:intl/intl.dart';
 
 class StatisticsScreen extends StatefulWidget {
@@ -36,6 +37,8 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   List<Tag> _tags = [];
   List<Collection> _collections = [];
   Map<String, dynamic>? _salesStats;
+  frb.FrbOperationLogStats? _opLogStats;
+  List<String>? _opLogEntityTypes;
   // Yearly reading goal
   int _yearlyGoal = 12;
   int _booksReadThisYear = 0;
@@ -175,6 +178,18 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         }
       }
 
+      // Fetch operation log stats if module is enabled
+      frb.FrbOperationLogStats? opLogStats;
+      List<String>? opLogEntityTypes;
+      if (Provider.of<ThemeProvider>(context, listen: false).operationLogViewerEnabled) {
+        try {
+          opLogStats = await frb.operationLogStats();
+          opLogEntityTypes = await frb.operationLogEntityTypes();
+        } catch (e) {
+          debugPrint('Error fetching operation log stats: $e');
+        }
+      }
+
       if (mounted) {
         setState(() {
           _books = books;
@@ -185,6 +200,8 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           _yearlyGoal = yearlyGoal;
           _booksReadThisYear = booksReadThisYear;
           _salesStats = salesStats;
+          _opLogStats = opLogStats;
+          _opLogEntityTypes = opLogEntityTypes;
           _isLoading = false;
         });
         _animController.forward();
@@ -210,6 +227,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         leading: isMobile
             ? IconButton(
                 icon: const Icon(Icons.menu, color: Colors.white),
+                tooltip: TranslationService.translate(context, 'tooltip_open_menu'),
                 onPressed: () => Scaffold.of(context).openDrawer(),
               )
             : null,
@@ -341,6 +359,17 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                       const SizedBox(height: 16),
                       _buildCollectionStatisticsSection(),
                     ],
+                    // Operation Log Stats - only if module enabled
+                    if (Provider.of<ThemeProvider>(context, listen: false).operationLogViewerEnabled && _opLogStats != null) ...[
+                      const SizedBox(height: 32),
+                      _buildSectionTitle(
+                        TranslationService.translate(context, 'stat_operation_log_title'),
+                        Icons.sync,
+                        AppDesign.primaryGradient,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildOperationLogStatsSection(),
+                    ],
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -384,20 +413,25 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   Widget _buildSectionTitle(String title, IconData icon, Gradient gradient) {
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            gradient: gradient,
-            borderRadius: BorderRadius.circular(8),
+        ExcludeSemantics(
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: gradient,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 18, color: Colors.white),
           ),
-          child: Icon(icon, size: 18, color: Colors.white),
         ),
         const SizedBox(width: 16),
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+        Semantics(
+          header: true,
+          child: Text(
+            title,
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     );
@@ -508,47 +542,52 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Progress bar
-                    Stack(
-                      children: [
-                        Container(
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: isGoalReached
-                                ? Colors.white.withValues(alpha: 0.3)
-                                : Colors.grey[200],
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
-                        FractionallySizedBox(
-                          widthFactor: progress,
-                          child: Container(
-                            height: 12,
-                            decoration: BoxDecoration(
-                              gradient: isGoalReached
-                                  ? const LinearGradient(
-                                      colors: [Colors.white, Color(0xFFFFF8DC)],
-                                    )
-                                  : const LinearGradient(
-                                      colors: [
-                                        Color(0xFFF59E0B),
-                                        Color(0xFFD97706),
-                                      ],
-                                    ),
-                              borderRadius: BorderRadius.circular(6),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      (isGoalReached
-                                              ? Colors.white
-                                              : const Color(0xFFF59E0B))
-                                          .withValues(alpha: 0.4),
-                                  blurRadius: 4,
-                                ),
-                              ],
+                    Semantics(
+                      label: '${TranslationService.translate(context, 'stat_a11y_yearly_goal_progress')}: $_booksReadThisYear / $_yearlyGoal, ${(progress * 100).toInt()}%',
+                      child: ExcludeSemantics(
+                        child: Stack(
+                          children: [
+                            Container(
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: isGoalReached
+                                    ? Colors.white.withValues(alpha: 0.3)
+                                    : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(6),
+                              ),
                             ),
-                          ),
+                            FractionallySizedBox(
+                              widthFactor: progress,
+                              child: Container(
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  gradient: isGoalReached
+                                      ? const LinearGradient(
+                                          colors: [Colors.white, Color(0xFFFFF8DC)],
+                                        )
+                                      : const LinearGradient(
+                                          colors: [
+                                            Color(0xFFF59E0B),
+                                            Color(0xFFD97706),
+                                          ],
+                                        ),
+                                  borderRadius: BorderRadius.circular(6),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color:
+                                          (isGoalReached
+                                                  ? Colors.white
+                                                  : const Color(0xFFF59E0B))
+                                              .withValues(alpha: 0.4),
+                                      blurRadius: 4,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                     const SizedBox(height: 12),
 
@@ -719,7 +758,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     Gradient? gradient,
     Color textColor = Colors.white,
   }) {
-    return Container(
+    return Semantics(
+      label: '$label: $value',
+      child: Container(
       height: 140,
       decoration: BoxDecoration(
         color: gradient != null ? null : backgroundColor,
@@ -739,16 +780,18 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           Positioned(
             right: -15,
             top: -15,
-            child: ShaderMask(
-              shaderCallback: (rect) => LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: 0.4),
-                  Colors.white.withValues(alpha: 0.1),
-                ],
-              ).createShader(rect),
-              child: Icon(icon, size: 100, color: Colors.white),
+            child: ExcludeSemantics(
+              child: ShaderMask(
+                shaderCallback: (rect) => LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.4),
+                    Colors.white.withValues(alpha: 0.1),
+                  ],
+                ).createShader(rect),
+                child: Icon(icon, size: 100, color: Colors.white),
+              ),
             ),
           ),
           Padding(
@@ -798,6 +841,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -838,6 +882,10 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       );
     });
 
+    final chartDescription = statusCounts.entries
+        .map((e) => '${_formatStatusLabel(e.key)}: ${e.value}')
+        .join(', ');
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -847,13 +895,18 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       ),
       child: Column(
         children: [
-          SizedBox(
-            height: 200,
-            child: PieChart(
-              PieChartData(
-                sections: sections,
-                centerSpaceRadius: 50,
-                sectionsSpace: 3,
+          Semantics(
+            label: '${TranslationService.translate(context, 'stat_a11y_reading_status_chart')}: $chartDescription',
+            child: ExcludeSemantics(
+              child: SizedBox(
+                height: 200,
+                child: PieChart(
+                  PieChartData(
+                    sections: sections,
+                    centerSpaceRadius: 50,
+                    sectionsSpace: 3,
+                  ),
+                ),
               ),
             ),
           ),
@@ -949,18 +1002,25 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       );
     }
 
-    return Container(
-      height: 280,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
-        boxShadow: AppDesign.cardShadow,
-      ),
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.spaceAround,
-          maxY: sortedAuthors.first.value.toDouble() + 1,
+    final authorsDescription = sortedAuthors
+        .map((e) => '${e.key}: ${e.value}')
+        .join(', ');
+
+    return Semantics(
+      label: '${TranslationService.translate(context, 'stat_a11y_top_authors_chart')}: $authorsDescription',
+      child: ExcludeSemantics(
+        child: Container(
+          height: 280,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
+            boxShadow: AppDesign.cardShadow,
+          ),
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: sortedAuthors.first.value.toDouble() + 1,
           barTouchData: BarTouchData(
             enabled: true,
             touchTooltipData: BarTouchTooltipData(
@@ -975,7 +1035,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                   ),
                   children: [
                     TextSpan(
-                      text: '${rod.toY.toInt()} books',
+                      text: '${rod.toY.toInt()} ${TranslationService.translate(context, 'stat_chart_books_count')}',
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 11,
@@ -1039,6 +1099,8 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           }).toList(),
         ),
       ),
+        ),
+      ),
     );
   }
 
@@ -1070,15 +1132,22 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       );
     }
 
-    return Container(
-      height: 280,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
-        boxShadow: AppDesign.cardShadow,
-      ),
-      child: LineChart(
+    final timelineDescription = sortedYears
+        .map((e) => '${e.key}s: ${e.value}')
+        .join(', ');
+
+    return Semantics(
+      label: '${TranslationService.translate(context, 'stat_a11y_publication_timeline')}: $timelineDescription',
+      child: ExcludeSemantics(
+        child: Container(
+          height: 280,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
+            boxShadow: AppDesign.cardShadow,
+          ),
+          child: LineChart(
         LineChartData(
           gridData: FlGridData(
             show: true,
@@ -1171,7 +1240,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                     ),
                     children: [
                       TextSpan(
-                        text: '${spot.y.toInt()} books',
+                        text: '${spot.y.toInt()} ${TranslationService.translate(context, 'stat_chart_books_count')}',
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 11,
@@ -1183,6 +1252,8 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               },
             ),
           ),
+        ),
+      ),
         ),
       ),
     );
@@ -1215,7 +1286,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     // Top borrowers (contacts)
     final borrowerCounts = <String, int>{};
     for (var loan in _loans) {
-      String contactName = 'Unknown';
+      String contactName = TranslationService.translate(context, 'stat_unknown_contact');
 
       if (_contactsMap.containsKey(loan.contactId)) {
         final contact = _contactsMap[loan.contactId]!;
@@ -1233,7 +1304,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     // Most lent books
     final bookCounts = <String, int>{};
     for (var loan in _loans) {
-      final bookTitle = loan.bookTitle.isNotEmpty ? loan.bookTitle : 'Unknown';
+      final bookTitle = loan.bookTitle.isNotEmpty ? loan.bookTitle : TranslationService.translate(context, 'stat_unknown_contact');
       bookCounts[bookTitle] = (bookCounts[bookTitle] ?? 0) + 1;
     }
     var mostLentBooks = bookCounts.entries.toList()
@@ -1292,7 +1363,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                   TranslationService.translate(context, 'avg_duration'),
                   '${avgDuration.toStringAsFixed(0)}j',
                   Icons.timer,
-                  const Color(0xFFD4A855), // Bronze instead of blue
+                  const Color(0xFFA16207), // Bronze instead of blue
                 ),
               ),
             ],
@@ -1346,7 +1417,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                           (e) => _buildMetricRow(
                             e,
                             Icons.menu_book,
-                            const Color(0xFFD4A855),
+                            const Color(0xFFA16207),
                           ),
                         ),
                       ],
@@ -1381,7 +1452,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                 (e) => _buildMetricRow(
                   e,
                   Icons.menu_book,
-                  const Color(0xFFD4A855),
+                  const Color(0xFFA16207),
                 ),
               ),
             ],
@@ -1498,7 +1569,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           label,
           style: TextStyle(
             fontSize: isDesktop ? 13 : 10,
-            color: Colors.grey[600],
+            color: Colors.grey[700],
           ),
           textAlign: TextAlign.center,
           maxLines: 2,
@@ -1812,14 +1883,14 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               vertical: isDesktop ? 4 : 2,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+              color: const Color(0xFFB45309).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               '${tag.count}',
               style: TextStyle(
                 fontSize: isDesktop ? 13 : 11,
-                color: const Color(0xFFF59E0B),
+                color: const Color(0xFFB45309),
               ),
             ),
           ),
@@ -2020,6 +2091,139 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     );
   }
 
+  Widget _buildOperationLogStatsSection() {
+    final stats = _opLogStats!;
+    final entityTypes = _opLogEntityTypes ?? [];
+    final isDesktop = MediaQuery.of(context).size.width > 900;
+
+    // Health status
+    final hasFailed = stats.failed > BigInt.zero;
+    final hasPending = stats.pending > BigInt.zero;
+    Color healthColor;
+    String healthMessage;
+    if (hasFailed) {
+      healthColor = Colors.red;
+      healthMessage = TranslationService.translate(context, 'stat_oplog_health_error').replaceAll('%1', stats.failed.toString());
+    } else if (hasPending) {
+      healthColor = Colors.orange;
+      healthMessage = TranslationService.translate(context, 'stat_oplog_health_warning').replaceAll('%1', stats.pending.toString());
+    } else {
+      healthColor = Colors.green;
+      healthMessage = TranslationService.translate(context, 'stat_oplog_health_ok');
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
+        boxShadow: AppDesign.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Mini stats row
+          Row(
+            children: [
+              Expanded(
+                child: _buildMiniStat(
+                  'Total',
+                  stats.total.toString(),
+                  Icons.sync,
+                  const Color(0xFF6366F1),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMiniStat(
+                  TranslationService.translate(context, 'today'),
+                  stats.today.toString(),
+                  Icons.today,
+                  const Color(0xFF0EA5E9),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMiniStat(
+                  TranslationService.translate(context, 'active_loans'),
+                  stats.pending.toString(),
+                  Icons.pending_actions,
+                  Colors.orange,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMiniStat(
+                  TranslationService.translate(context, 'errors'),
+                  stats.failed.toString(),
+                  Icons.error_outline,
+                  Colors.red,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          // Health indicator
+          Row(
+            children: [
+              Container(
+                width: isDesktop ? 12 : 10,
+                height: isDesktop ? 12 : 10,
+                decoration: BoxDecoration(
+                  color: healthColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  healthMessage,
+                  style: TextStyle(
+                    fontSize: isDesktop ? 14 : 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (entityTypes.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${entityTypes.length} ${TranslationService.translate(context, 'stat_oplog_entity_types')}',
+              style: TextStyle(
+                fontSize: isDesktop ? 13 : 12,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          // Link to operation log
+          InkWell(
+            onTap: () => context.push('/operation-log'),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.arrow_forward, size: 16, color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    TranslationService.translate(context, 'stat_oplog_view_details'),
+                    style: TextStyle(
+                      fontSize: isDesktop ? 14 : 13,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSalesStatisticsSection() {
     if (_salesStats == null) return const SizedBox.shrink();
 
@@ -2039,7 +2243,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                 TranslationService.translate(context, 'total_revenue'),
                 currencyFormat.format(totalRevenue),
                 Icons.euro,
-                AppDesign.pastelGreen,
+                Colors.transparent,
+                gradient: AppDesign.refinedSuccessGradient,
+                textColor: Colors.white,
               ),
             ),
             const SizedBox(width: 12),
@@ -2048,7 +2254,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                 TranslationService.translate(context, 'sales_count'),
                 totalSales.toString(),
                 Icons.shopping_cart,
-                AppDesign.pastelBlue,
+                Colors.transparent,
+                gradient: AppDesign.refinedOceanGradient,
+                textColor: Colors.white,
               ),
             ),
             const SizedBox(width: 12),
@@ -2057,7 +2265,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                 TranslationService.translate(context, 'average_price'),
                 currencyFormat.format(avgPrice),
                 Icons.price_check,
-                AppDesign.pastelCyan,
+                Colors.transparent,
+                gradient: AppDesign.primaryGradient,
+                textColor: Colors.white,
               ),
             ),
           ],
@@ -2084,6 +2294,8 @@ class _StatisticsContentState extends State<StatisticsContent>
   List<Tag> _tags = [];
   List<Collection> _collections = [];
   Map<String, dynamic>? _salesStats;
+  frb.FrbOperationLogStats? _opLogStats;
+  List<String>? _opLogEntityTypes;
   bool _isLoading = true;
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -2168,6 +2380,18 @@ class _StatisticsContentState extends State<StatisticsContent>
         }
       }
 
+      // Fetch operation log stats if module is enabled
+      frb.FrbOperationLogStats? opLogStats;
+      List<String>? opLogEntityTypes;
+      if (Provider.of<ThemeProvider>(context, listen: false).operationLogViewerEnabled) {
+        try {
+          opLogStats = await frb.operationLogStats();
+          opLogEntityTypes = await frb.operationLogEntityTypes();
+        } catch (e) {
+          debugPrint('Error fetching operation log stats: $e');
+        }
+      }
+
       if (mounted) {
         setState(() {
           _books = books;
@@ -2176,6 +2400,8 @@ class _StatisticsContentState extends State<StatisticsContent>
           _tags = tags;
           _collections = collections;
           _salesStats = salesStats;
+          _opLogStats = opLogStats;
+          _opLogEntityTypes = opLogEntityTypes;
           _isLoading = false;
         });
         _animController.forward();
@@ -2375,6 +2601,17 @@ class _StatisticsContentState extends State<StatisticsContent>
                 const SizedBox(height: 16),
                 _buildCollectionStatisticsSection(),
               ],
+              // Operation Log Stats - only if module enabled
+              if (Provider.of<ThemeProvider>(context, listen: false).operationLogViewerEnabled && _opLogStats != null) ...[
+                const SizedBox(height: 32),
+                _buildSectionTitle(
+                  TranslationService.translate(context, 'stat_operation_log_title'),
+                  Icons.sync,
+                  AppDesign.primaryGradient,
+                ),
+                const SizedBox(height: 16),
+                _buildOperationLogStatsSection(),
+              ],
               const SizedBox(height: 40),
             ],
           ),
@@ -2391,20 +2628,25 @@ class _StatisticsContentState extends State<StatisticsContent>
   }) {
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            gradient: gradient,
-            borderRadius: BorderRadius.circular(8),
+        ExcludeSemantics(
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: gradient,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 18, color: Colors.white),
           ),
-          child: Icon(icon, size: 18, color: Colors.white),
         ),
         const SizedBox(width: 16),
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+        Semantics(
+          header: true,
+          child: Text(
+            title,
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
         ),
         if (helpText != null) ...[
           const SizedBox(width: 8),
@@ -2568,6 +2810,10 @@ class _StatisticsContentState extends State<StatisticsContent>
       );
     });
 
+    final chartDescription = statusCounts.entries
+        .map((e) => '${_formatStatusLabel(e.key)}: ${e.value}')
+        .join(', ');
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -2577,13 +2823,18 @@ class _StatisticsContentState extends State<StatisticsContent>
       ),
       child: Column(
         children: [
-          SizedBox(
-            height: 200,
-            child: PieChart(
-              PieChartData(
-                sections: sections,
-                centerSpaceRadius: 50,
-                sectionsSpace: 3,
+          Semantics(
+            label: '${TranslationService.translate(context, 'stat_a11y_reading_status_chart')}: $chartDescription',
+            child: ExcludeSemantics(
+              child: SizedBox(
+                height: 200,
+                child: PieChart(
+                  PieChartData(
+                    sections: sections,
+                    centerSpaceRadius: 50,
+                    sectionsSpace: 3,
+                  ),
+                ),
               ),
             ),
           ),
@@ -2679,18 +2930,25 @@ class _StatisticsContentState extends State<StatisticsContent>
       );
     }
 
-    return Container(
-      height: 280,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
-        boxShadow: AppDesign.cardShadow,
-      ),
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.spaceAround,
-          maxY: sortedAuthors.first.value.toDouble() + 1,
+    final authorsDescription = sortedAuthors
+        .map((e) => '${e.key}: ${e.value}')
+        .join(', ');
+
+    return Semantics(
+      label: '${TranslationService.translate(context, 'stat_a11y_top_authors_chart')}: $authorsDescription',
+      child: ExcludeSemantics(
+        child: Container(
+          height: 280,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
+            boxShadow: AppDesign.cardShadow,
+          ),
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: sortedAuthors.first.value.toDouble() + 1,
           barTouchData: BarTouchData(
             enabled: true,
             touchTooltipData: BarTouchTooltipData(
@@ -2705,7 +2963,7 @@ class _StatisticsContentState extends State<StatisticsContent>
                   ),
                   children: [
                     TextSpan(
-                      text: '${rod.toY.toInt()} books',
+                      text: '${rod.toY.toInt()} ${TranslationService.translate(context, 'stat_chart_books_count')}',
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 11,
@@ -2769,6 +3027,8 @@ class _StatisticsContentState extends State<StatisticsContent>
           }).toList(),
         ),
       ),
+        ),
+      ),
     );
   }
 
@@ -2800,15 +3060,22 @@ class _StatisticsContentState extends State<StatisticsContent>
       );
     }
 
-    return Container(
-      height: 280,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
-        boxShadow: AppDesign.cardShadow,
-      ),
-      child: LineChart(
+    final timelineDescription = sortedYears
+        .map((e) => '${e.key}s: ${e.value}')
+        .join(', ');
+
+    return Semantics(
+      label: '${TranslationService.translate(context, 'stat_a11y_publication_timeline')}: $timelineDescription',
+      child: ExcludeSemantics(
+        child: Container(
+          height: 280,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
+            boxShadow: AppDesign.cardShadow,
+          ),
+          child: LineChart(
         LineChartData(
           gridData: FlGridData(
             show: true,
@@ -2901,7 +3168,7 @@ class _StatisticsContentState extends State<StatisticsContent>
                     ),
                     children: [
                       TextSpan(
-                        text: '${spot.y.toInt()} books',
+                        text: '${spot.y.toInt()} ${TranslationService.translate(context, 'stat_chart_books_count')}',
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 11,
@@ -2913,6 +3180,8 @@ class _StatisticsContentState extends State<StatisticsContent>
               },
             ),
           ),
+        ),
+      ),
         ),
       ),
     );
@@ -2955,18 +3224,26 @@ class _StatisticsContentState extends State<StatisticsContent>
         .map((e) => e.value)
         .reduce((a, b) => a > b ? a : b);
 
-    return Container(
-      height: 220,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
-        boxShadow: AppDesign.cardShadow,
-      ),
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.spaceAround,
-          maxY: (maxValue + 1).toDouble(),
+    final monthlyDescription = sortedData
+        .where((e) => e.value > 0)
+        .map((e) => '${e.key}: ${e.value}')
+        .join(', ');
+
+    return Semantics(
+      label: '${TranslationService.translate(context, 'stat_a11y_monthly_progress_chart')}: $monthlyDescription',
+      child: ExcludeSemantics(
+        child: Container(
+          height: 220,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
+            boxShadow: AppDesign.cardShadow,
+          ),
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: (maxValue + 1).toDouble(),
           barTouchData: BarTouchData(
             enabled: true,
             touchTooltipData: BarTouchTooltipData(
@@ -3032,6 +3309,8 @@ class _StatisticsContentState extends State<StatisticsContent>
               ],
             );
           }).toList(),
+        ),
+      ),
         ),
       ),
     );
@@ -3119,7 +3398,7 @@ class _StatisticsContentState extends State<StatisticsContent>
                   Icons.star_rate,
                   avgRating > 0 ? avgRating.toStringAsFixed(1) : '-',
                   TranslationService.translate(context, 'avg_rating'),
-                  avgRating > 0 ? ' stars' : '',
+                  avgRating > 0 ? ' ${TranslationService.translate(context, 'stat_chart_stars')}' : '',
                   const Color(0xFFF59E0B),
                   useStarDisplay: avgRating > 0,
                 ),
@@ -3154,7 +3433,7 @@ class _StatisticsContentState extends State<StatisticsContent>
                   Icons.workspace_premium,
                   highestRatedBook?.userRating?.toString() ?? '-',
                   TranslationService.translate(context, 'best_rated'),
-                  highestRatedBook != null ? ' stars' : '',
+                  highestRatedBook != null ? ' ${TranslationService.translate(context, 'stat_chart_stars')}' : '',
                   const Color(0xFFEC4899),
                   useStarDisplay: highestRatedBook != null,
                 ),
@@ -3197,10 +3476,13 @@ class _StatisticsContentState extends State<StatisticsContent>
     int? bookId,
     required Color color,
   }) {
-    return InkWell(
-      onTap: bookId != null ? () => context.push('/books/$bookId') : null,
-      borderRadius: BorderRadius.circular(4),
-      child: Padding(
+    return Semantics(
+      button: bookId != null,
+      label: TranslationService.translate(context, 'stat_a11y_view_book').replaceAll('%1', bookTitle),
+      child: InkWell(
+        onTap: bookId != null ? () => context.push('/books/$bookId') : null,
+        borderRadius: BorderRadius.circular(4),
+        child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: Row(
           children: [
@@ -3224,6 +3506,7 @@ class _StatisticsContentState extends State<StatisticsContent>
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -3257,19 +3540,23 @@ class _StatisticsContentState extends State<StatisticsContent>
               Icon(icon, color: color, size: 24),
               const SizedBox(height: 12),
               if (useStarDisplay && ratingValue != null)
-                Row(
-                  children: List.generate(5, (index) {
-                    final starIndex = index + 1;
-                    IconData iconData;
-                    if (starIndex <= starRating) {
-                      iconData = Icons.star;
-                    } else if (starIndex - 0.5 <= starRating) {
-                      iconData = Icons.star_half;
-                    } else {
-                      iconData = Icons.star_outline;
-                    }
-                    return Icon(iconData, size: 16, color: color);
-                  }),
+                Semantics(
+                  label: TranslationService.translate(context, 'stat_a11y_star_rating').replaceAll('%1', starRating.toStringAsFixed(1)),
+                  excludeSemantics: true,
+                  child: Row(
+                    children: List.generate(5, (index) {
+                      final starIndex = index + 1;
+                      IconData iconData;
+                      if (starIndex <= starRating) {
+                        iconData = Icons.star;
+                      } else if (starIndex - 0.5 <= starRating) {
+                        iconData = Icons.star_half;
+                      } else {
+                        iconData = Icons.star_outline;
+                      }
+                      return Icon(iconData, size: 16, color: color);
+                    }),
+                  ),
                 )
               else
                 Row(
@@ -3354,7 +3641,9 @@ class _StatisticsContentState extends State<StatisticsContent>
             TranslationService.translate(context, 'stat_total_collections'),
             totalCollections.toString(),
             Icons.collections_bookmark,
-            AppDesign.pastelPurple,
+            Colors.transparent,
+            gradient: AppDesign.darkGradient,
+            textColor: Colors.white,
           ),
         ),
         const SizedBox(width: 12),
@@ -3366,7 +3655,9 @@ class _StatisticsContentState extends State<StatisticsContent>
             ),
             '${avgCompletion.toStringAsFixed(1)}%',
             Icons.pie_chart_outline,
-            AppDesign.pastelBlue,
+            Colors.transparent,
+            gradient: AppDesign.refinedOceanGradient,
+            textColor: Colors.white,
           ),
         ),
       ],
@@ -3397,7 +3688,7 @@ class _StatisticsContentState extends State<StatisticsContent>
 
     final borrowerCounts = <String, int>{};
     for (var loan in _loans) {
-      String contactName = 'Unknown';
+      String contactName = TranslationService.translate(context, 'stat_unknown_contact');
 
       if (_contactsMap.containsKey(loan.contactId)) {
         final contact = _contactsMap[loan.contactId]!;
@@ -3414,7 +3705,7 @@ class _StatisticsContentState extends State<StatisticsContent>
 
     final bookCounts = <String, int>{};
     for (var loan in _loans) {
-      final bookTitle = loan.bookTitle.isNotEmpty ? loan.bookTitle : 'Unknown';
+      final bookTitle = loan.bookTitle.isNotEmpty ? loan.bookTitle : TranslationService.translate(context, 'stat_unknown_contact');
       bookCounts[bookTitle] = (bookCounts[bookTitle] ?? 0) + 1;
     }
     var mostLentBooks = bookCounts.entries.toList()
@@ -3469,7 +3760,7 @@ class _StatisticsContentState extends State<StatisticsContent>
                   TranslationService.translate(context, 'avg_duration'),
                   '${avgDuration.toStringAsFixed(0)}j',
                   Icons.timer,
-                  const Color(0xFFD4A855),
+                  const Color(0xFFA16207),
                 ),
               ),
             ],
@@ -3548,14 +3839,14 @@ class _StatisticsContentState extends State<StatisticsContent>
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFD4A855).withValues(alpha: 0.1),
+                        color: const Color(0xFFA16207).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         '${e.value}x',
                         style: const TextStyle(
                           fontSize: 11,
-                          color: Color(0xFFD4A855),
+                          color: Color(0xFFA16207),
                         ),
                       ),
                     ),
@@ -3597,7 +3888,7 @@ class _StatisticsContentState extends State<StatisticsContent>
         const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+          style: TextStyle(fontSize: 10, color: Colors.grey[700]),
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -3763,14 +4054,14 @@ class _StatisticsContentState extends State<StatisticsContent>
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                        color: const Color(0xFFB45309).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         '${tag.count}',
                         style: const TextStyle(
                           fontSize: 11,
-                          color: Color(0xFFF59E0B),
+                          color: Color(0xFFB45309),
                         ),
                       ),
                     ),
@@ -3779,6 +4070,138 @@ class _StatisticsContentState extends State<StatisticsContent>
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOperationLogStatsSection() {
+    final stats = _opLogStats!;
+    final entityTypes = _opLogEntityTypes ?? [];
+
+    // Health status
+    final hasFailed = stats.failed > BigInt.zero;
+    final hasPending = stats.pending > BigInt.zero;
+    Color healthColor;
+    String healthMessage;
+    if (hasFailed) {
+      healthColor = Colors.red;
+      healthMessage = TranslationService.translate(context, 'stat_oplog_health_error').replaceAll('%1', stats.failed.toString());
+    } else if (hasPending) {
+      healthColor = Colors.orange;
+      healthMessage = TranslationService.translate(context, 'stat_oplog_health_warning').replaceAll('%1', stats.pending.toString());
+    } else {
+      healthColor = Colors.green;
+      healthMessage = TranslationService.translate(context, 'stat_oplog_health_ok');
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(AppDesign.radiusLarge),
+        boxShadow: AppDesign.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Mini stats row
+          Row(
+            children: [
+              Expanded(
+                child: _buildMiniStat(
+                  'Total',
+                  stats.total.toString(),
+                  Icons.sync,
+                  const Color(0xFF6366F1),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMiniStat(
+                  TranslationService.translate(context, 'today'),
+                  stats.today.toString(),
+                  Icons.today,
+                  const Color(0xFF0EA5E9),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMiniStat(
+                  TranslationService.translate(context, 'active_loans'),
+                  stats.pending.toString(),
+                  Icons.pending_actions,
+                  Colors.orange,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMiniStat(
+                  TranslationService.translate(context, 'errors'),
+                  stats.failed.toString(),
+                  Icons.error_outline,
+                  Colors.red,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          // Health indicator
+          Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: healthColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  healthMessage,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (entityTypes.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${entityTypes.length} ${TranslationService.translate(context, 'stat_oplog_entity_types')}',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          // Link to operation log
+          InkWell(
+            onTap: () => context.push('/operation-log'),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.arrow_forward, size: 16, color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    TranslationService.translate(context, 'stat_oplog_view_details'),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -3803,7 +4226,9 @@ class _StatisticsContentState extends State<StatisticsContent>
                 TranslationService.translate(context, 'total_revenue'),
                 currencyFormat.format(totalRevenue),
                 Icons.euro,
-                AppDesign.pastelGreen,
+                Colors.transparent,
+                gradient: AppDesign.refinedSuccessGradient,
+                textColor: Colors.white,
               ),
             ),
             const SizedBox(width: 12),
@@ -3842,7 +4267,9 @@ class _StatisticsContentState extends State<StatisticsContent>
     Gradient? gradient,
     Color textColor = const Color(0xFF1E293B),
   }) {
-    return Container(
+    return Semantics(
+      label: '$label: $value',
+      child: Container(
       height: 140,
       decoration: BoxDecoration(
         color: gradient != null ? null : backgroundColor,
@@ -3862,10 +4289,12 @@ class _StatisticsContentState extends State<StatisticsContent>
           Positioned(
             right: -15,
             top: -15,
-            child: Icon(
-              icon,
-              size: 100,
-              color: Colors.white.withValues(alpha: 0.3),
+            child: ExcludeSemantics(
+              child: Icon(
+                icon,
+                size: 100,
+                color: Colors.white.withValues(alpha: 0.3),
+              ),
             ),
           ),
           Padding(
@@ -3913,6 +4342,7 @@ class _StatisticsContentState extends State<StatisticsContent>
             ),
           ),
         ],
+      ),
       ),
     );
   }

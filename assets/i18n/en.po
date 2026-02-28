@@ -5235,6 +5235,70 @@ msgstr "Total Collections"
 msgid "stat_unique_authors"
 msgstr "Unique Authors"
 
+#. Chart accessibility: books count suffix
+msgid "stat_chart_books_count"
+msgstr "books"
+
+#. Chart accessibility: stars suffix
+msgid "stat_chart_stars"
+msgstr "stars"
+
+#. Contact fallback for unknown contact
+msgid "stat_unknown_contact"
+msgstr "Unknown"
+
+#. Accessibility: reading status chart
+msgid "stat_a11y_reading_status_chart"
+msgstr "Reading status distribution chart"
+
+#. Accessibility: top authors chart
+msgid "stat_a11y_top_authors_chart"
+msgstr "Top authors chart"
+
+#. Accessibility: publication timeline
+msgid "stat_a11y_publication_timeline"
+msgstr "Publication timeline chart"
+
+#. Accessibility: monthly progress chart
+msgid "stat_a11y_monthly_progress_chart"
+msgstr "Monthly reading progress chart"
+
+#. Accessibility: yearly goal progress
+msgid "stat_a11y_yearly_goal_progress"
+msgstr "Yearly reading goal progress"
+
+#. Accessibility: star rating with value
+msgid "stat_a11y_star_rating"
+msgstr "Average rating: %1 out of 5"
+
+#. Accessibility: view book link
+msgid "stat_a11y_view_book"
+msgstr "View book: %1"
+
+#. Operation log stats section title
+msgid "stat_operation_log_title"
+msgstr "Sync Activity"
+
+#. Operation log: entity types tracked
+msgid "stat_oplog_entity_types"
+msgstr "Entity types tracked"
+
+#. Operation log: health OK
+msgid "stat_oplog_health_ok"
+msgstr "All operations completed"
+
+#. Operation log: health warning
+msgid "stat_oplog_health_warning"
+msgstr "%1 pending operations"
+
+#. Operation log: health error
+msgid "stat_oplog_health_error"
+msgstr "%1 failed operations"
+
+#. Operation log: view details link
+msgid "stat_oplog_view_details"
+msgstr "View operation log"
+
 #. Status
 msgid "status"
 msgstr "Status"
@@ -6519,13 +6583,13 @@ msgstr "Reject this operation"
 
 #. Relay Library Sync (ADR-012)
 msgid "syncing_via_relay"
-msgstr "Syncing via relay"
+msgstr "Syncing"
 
 msgid "loading_via_relay"
-msgstr "Loading via relay"
+msgstr "Loading"
 
 msgid "connecting_via_relay"
-msgstr "Connecting via relay..."
+msgstr "Connecting..."
 
 msgid "toggle_view"
 msgstr "Toggle view"

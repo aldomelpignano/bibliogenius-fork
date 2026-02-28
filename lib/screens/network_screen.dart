@@ -410,6 +410,16 @@ class _ContactsListViewState extends State<ContactsListView> {
       if (member.source != NetworkMemberSource.network) continue;
       final url = member.url;
       if (url == null || url.isEmpty) continue;
+      // relay:// peers have no direct LAN URL.
+      // If they have relay credentials, they're reachable via the hub.
+      if (url.startsWith('relay://')) {
+        if (mounted) {
+          setState(() {
+            _peerConnectivity[member.id] = member.hasRelayCredentials;
+          });
+        }
+        continue;
+      }
 
       api
           .checkPeerConnectivity(url, timeoutMs: 4000)

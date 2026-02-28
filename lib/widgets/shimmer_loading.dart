@@ -168,3 +168,62 @@ class SearchLoadingSkeleton extends StatelessWidget {
     );
   }
 }
+
+/// Skeleton bookshelf mimicking BookSpine layout during relay loading.
+class BookshelfSkeleton extends StatelessWidget {
+  final int count;
+  final String? message;
+
+  const BookshelfSkeleton({super.key, this.count = 18, this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08);
+    return ShimmerLoading(
+      child: Column(
+        children: [
+          if (message != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 16, bottom: 8),
+              child: Text(
+                message!,
+                style: TextStyle(fontSize: 14, color: Colors.blue[600]),
+              ),
+            ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              physics: const NeverScrollableScrollPhysics(),
+              child: Wrap(
+                spacing: 0,
+                runSpacing: 20,
+                alignment: WrapAlignment.start,
+                crossAxisAlignment: WrapCrossAlignment.end,
+                children: List.generate(count, (i) {
+                  // Vary dimensions like the real BookSpine
+                  final h = 220.0 + (i % 4) * 12.0;
+                  final w = 60.0 + (i % 3) * 6.0;
+                  return Container(
+                    height: h,
+                    width: w,
+                    margin: const EdgeInsets.symmetric(horizontal: 1),
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(4),
+                        topRight: Radius.circular(4),
+                        bottomLeft: Radius.circular(2),
+                        bottomRight: Radius.circular(2),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

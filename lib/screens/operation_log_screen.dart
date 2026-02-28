@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -304,6 +305,19 @@ class _OperationLogScreenState extends State<OperationLogScreen> {
     );
   }
 
+  String _resolveEntityId(frb.FrbOperationLogEntry entry) {
+    if (entry.entityId == 0 && entry.payload != null) {
+      try {
+        final map = jsonDecode(entry.payload!) as Map<String, dynamic>;
+        final strId = map['_str_id'] as String?;
+        if (strId != null && strId.length >= 8) {
+          return strId.substring(0, 8);
+        }
+      } catch (_) {}
+    }
+    return '#${entry.entityId}';
+  }
+
   Widget _buildLogEntry(frb.FrbOperationLogEntry entry, ThemeData theme) {
     final isExpanded = _expandedIds.contains(entry.id);
     final time = _formatTime(entry.createdAt);
@@ -311,7 +325,7 @@ class _OperationLogScreenState extends State<OperationLogScreen> {
     return Semantics(
       button: true,
       label:
-          '${entry.operation} ${entry.entityType} number ${entry.entityId}, status ${entry.status}',
+          '${entry.operation} ${entry.entityType} ${_resolveEntityId(entry)}, status ${entry.status}',
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -352,7 +366,7 @@ class _OperationLogScreenState extends State<OperationLogScreen> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '#${entry.entityId}',
+                      _resolveEntityId(entry),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

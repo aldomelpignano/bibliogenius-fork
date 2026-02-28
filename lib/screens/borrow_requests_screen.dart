@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../widgets/genie_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -41,6 +42,10 @@ class _LoansScreenState extends State<LoansScreen>
   List<dynamic> _incomingRequests = [];
   List<dynamic> _outgoingRequests = [];
   List<dynamic> _connectionRequests = [];
+
+  /// Request IDs with a pending status update (optimistic UI).
+  /// While an ID is in this set, actions are disabled and a spinner is shown.
+  final Set<String> _pendingActions = {};
 
   // Loans data
   List<Loan> _activeLoans = []; // Books I lent to others
@@ -95,7 +100,7 @@ class _LoansScreenState extends State<LoansScreen>
   }
 
   Future<void> _fetchAllData({bool silent = false}) async {
-    if (!silent) setState(() => _isLoading = true);
+    if (!silent && mounted) setState(() => _isLoading = true);
     final api = Provider.of<ApiService>(context, listen: false);
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
@@ -152,15 +157,45 @@ class _LoansScreenState extends State<LoansScreen>
   }
 
   Future<void> _updateRequestStatus(String id, String status) async {
+    // Optimistic UI: mark this request as pending immediately
+    if (mounted) {
+      setState(() {
+        _pendingActions.add(id);
+        // Optimistically update the status in local lists
+        _optimisticallyUpdateStatus(id, status);
+      });
+    }
+
     final api = Provider.of<ApiService>(context, listen: false);
     try {
       await api.updateRequestStatus(id, status);
-      _fetchAllData();
+      if (mounted) {
+        setState(() => _pendingActions.remove(id));
+        _fetchAllData(silent: true);
+      }
     } catch (e) {
       if (mounted) {
+        setState(() => _pendingActions.remove(id));
+        _fetchAllData(silent: true); // Revert to real state
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(_getFriendlyErrorMessage(e))));
+      }
+    }
+  }
+
+  /// Optimistically update a request's status in the local lists.
+  void _optimisticallyUpdateStatus(String id, String newStatus) {
+    for (final req in _incomingRequests) {
+      if (req['id']?.toString() == id) {
+        req['status'] = newStatus;
+        return;
+      }
+    }
+    for (final req in _outgoingRequests) {
+      if (req['id']?.toString() == id) {
+        req['status'] = newStatus;
+        return;
       }
     }
   }
@@ -588,7 +623,8 @@ class _LoansScreenState extends State<LoansScreen>
   String _formatDate(String dateStr) {
     try {
       final date = DateTime.parse(dateStr);
-      return '${date.day}/${date.month}/${date.year}';
+      final locale = Localizations.localeOf(context).toString();
+      return DateFormat.yMMMd(locale).format(date);
     } catch (e) {
       return dateStr;
     }
@@ -932,6 +968,8 @@ class _LoansScreenState extends State<LoansScreen>
     final title = req['book_title'] ?? 'Unknown';
     final peerName = req['peer_name'] ?? 'Unknown';
     final status = req['status'] ?? 'pending';
+    final id = req['id']?.toString() ?? '';
+    final isPending = _pendingActions.contains(id);
 
     return Card(
       surfaceTintColor: Colors.transparent,
@@ -947,8 +985,16 @@ class _LoansScreenState extends State<LoansScreen>
               ? '${TranslationService.translate(context, 'request_from')}: $peerName'
               : '${TranslationService.translate(context, 'request_to')}: $peerName',
         ),
-        trailing: _buildStatusChip(status),
-        onTap: () => _showRequestActions(req, isIncoming: isIncoming),
+        trailing: isPending
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : _buildStatusChip(status),
+        onTap: isPending
+            ? null
+            : () => _showRequestActions(req, isIncoming: isIncoming),
       ),
     );
   }
@@ -1012,7 +1058,7 @@ class _LoansScreenState extends State<LoansScreen>
     final id = req['id']?.toString() ?? '';
     final status = req['status'] ?? 'pending';
 
-    if (status != 'pending') return;
+    if (status != 'pending' || _pendingActions.contains(id)) return;
 
     showModalBottomSheet(
       context: context,

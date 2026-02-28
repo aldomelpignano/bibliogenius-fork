@@ -42,6 +42,8 @@ class NetworkMember {
   final bool keyExchangeDone;
   /// UUID of the peer's library (for disambiguation)
   final String? libraryUuid;
+  /// Whether this peer has relay credentials (reachable via hub)
+  final bool hasRelayCredentials;
 
   // V4 Future: Association link
   final int? linkedPeerId;
@@ -69,6 +71,7 @@ class NetworkMember {
     this.lastSeen,
     this.keyExchangeDone = false,
     this.libraryUuid,
+    this.hasRelayCredentials = false,
     this.linkedPeerId,
     this.linkedContactId,
   });
@@ -124,6 +127,9 @@ class NetworkMember {
       keyExchangeDone: peer['key_exchange_done'] == true ||
           peer['key_exchange_done'] == 1,
       libraryUuid: peer['library_uuid'] as String?,
+      hasRelayCredentials: (peer['relay_url'] as String?)?.isNotEmpty == true &&
+          (peer['mailbox_id'] as String?)?.isNotEmpty == true &&
+          (peer['relay_write_token'] as String?)?.isNotEmpty == true,
     );
   }
 

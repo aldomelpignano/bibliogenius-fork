@@ -396,7 +396,6 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
   late final GoRouter _router;
   late final AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
-  Map<String, dynamic>? _pendingInvitePayload;
   String? _lastHandledDeepLink;
   Timer? _deepLinkTimer;
 
@@ -409,33 +408,52 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
     _router = GoRouter(
       initialLocation: '/books',
       refreshListenable: themeProvider,
-      errorBuilder: (context, state) => Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error_outline, size: 64),
-              const SizedBox(height: 16),
-              Text(
-                TranslationService.translate(context, 'page_not_found_title'),
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                TranslationService.translate(context, 'page_not_found_message'),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: () => context.go('/books'),
-                icon: const Icon(Icons.home),
-                label: Text(TranslationService.translate(context, 'back_to_library')),
-              ),
-            ],
+      errorBuilder: (context, state) {
+        debugPrint('GoRouter error: no route for uri=${state.uri} path=${state.uri.path} scheme=${state.uri.scheme} host=${state.uri.host} query=${state.uri.query}');
+        return Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, size: 64),
+                const SizedBox(height: 16),
+                Text(
+                  TranslationService.translate(context, 'page_not_found_title'),
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  TranslationService.translate(context, 'page_not_found_message'),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: () => context.go('/books'),
+                  icon: const Icon(Icons.home),
+                  label: Text(TranslationService.translate(context, 'back_to_library')),
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
       redirect: (context, state) async {
+        // Handle custom scheme deep links (bibliogenius://invite?d=...).
+        // On cold start, GoRouter receives the custom scheme URL as the
+        // initial route. Since the path is empty (host=invite, path=""),
+        // no route matches and the error page shows. Intercept here and
+        // redirect to the proper /invite path with the query parameter.
+        if (state.uri.scheme == 'bibliogenius' && state.uri.host == 'invite') {
+          final d = state.uri.queryParameters['d'];
+          debugPrint('GoRouter redirect: intercepted custom scheme invite (d=${d != null ? "present" : "missing"})');
+          if (d != null) return '/invite?d=$d';
+          return '/books';
+        }
+        // Fallback: GoRouter may strip the scheme, leaving empty path + d param
+        if (state.uri.path.isEmpty && state.uri.queryParameters.containsKey('d')) {
+          return '/invite?d=${state.uri.queryParameters['d']}';
+        }
+
         final isOnboardingRoute = state.uri.path == '/onboarding';
         final isLoginRoute = state.uri.path == '/login';
         final isInviteRoute = state.uri.path == '/invite';
@@ -507,7 +525,22 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
         GoRoute(
           path: '/invite',
           builder: (context, state) {
-            final payload = state.extra as Map<String, dynamic>?;
+            var payload = state.extra as Map<String, dynamic>?;
+            // Also decode d= query parameter (from GoRouter redirect on cold
+            // start via custom scheme, or from long-format invite URL).
+            if (payload == null) {
+              final d = state.uri.queryParameters['d'];
+              if (d != null) {
+                try {
+                  final decoded = base64Url.decode(base64Url.normalize(d));
+                  final jsonStr = utf8.decode(decoded);
+                  final raw = jsonDecode(jsonStr) as Map<String, dynamic>;
+                  payload = normalizeInvitePayload(raw);
+                } catch (e) {
+                  debugPrint('Invite query param decode error: $e');
+                }
+              }
+            }
             if (payload == null) return const LibraryScreen(initialIndex: 0);
             return InviteAcceptanceScreen(payload: payload);
           },

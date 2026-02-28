@@ -5235,6 +5235,70 @@ msgstr "Collections"
 msgid "stat_unique_authors"
 msgstr "Auteurs uniques"
 
+#. Chart accessibility: books count suffix
+msgid "stat_chart_books_count"
+msgstr "livres"
+
+#. Chart accessibility: stars suffix
+msgid "stat_chart_stars"
+msgstr "etoiles"
+
+#. Contact fallback for unknown contact
+msgid "stat_unknown_contact"
+msgstr "Inconnu"
+
+#. Accessibility: reading status chart
+msgid "stat_a11y_reading_status_chart"
+msgstr "Repartition par statut de lecture"
+
+#. Accessibility: top authors chart
+msgid "stat_a11y_top_authors_chart"
+msgstr "Classement des auteurs principaux"
+
+#. Accessibility: publication timeline
+msgid "stat_a11y_publication_timeline"
+msgstr "Chronologie des publications"
+
+#. Accessibility: monthly progress chart
+msgid "stat_a11y_monthly_progress_chart"
+msgstr "Progression mensuelle de lecture"
+
+#. Accessibility: yearly goal progress
+msgid "stat_a11y_yearly_goal_progress"
+msgstr "Progression de l'objectif annuel"
+
+#. Accessibility: star rating with value
+msgid "stat_a11y_star_rating"
+msgstr "Note moyenne : %1 sur 5"
+
+#. Accessibility: view book link
+msgid "stat_a11y_view_book"
+msgstr "Voir le livre : %1"
+
+#. Operation log stats section title
+msgid "stat_operation_log_title"
+msgstr "Activite de synchronisation"
+
+#. Operation log: entity types tracked
+msgid "stat_oplog_entity_types"
+msgstr "Types d'entites suivis"
+
+#. Operation log: health OK
+msgid "stat_oplog_health_ok"
+msgstr "Toutes les operations effectuees"
+
+#. Operation log: health warning
+msgid "stat_oplog_health_warning"
+msgstr "%1 operations en attente"
+
+#. Operation log: health error
+msgid "stat_oplog_health_error"
+msgstr "%1 operations en erreur"
+
+#. Operation log: view details link
+msgid "stat_oplog_view_details"
+msgstr "Voir le journal des operations"
+
 #. Status
 msgid "status"
 msgstr "Statut"
@@ -6519,13 +6583,13 @@ msgstr "Rejeter cette operation"
 
 #. Relay Library Sync (ADR-012)
 msgid "syncing_via_relay"
-msgstr "Synchronisation par relais"
+msgstr "Synchronisation en cours"
 
 msgid "loading_via_relay"
-msgstr "Chargement par relais"
+msgstr "Chargement en cours"
 
 msgid "connecting_via_relay"
-msgstr "Connexion par relais..."
+msgstr "Connexion en cours..."
 
 msgid "toggle_view"
 msgstr "Changer la vue"

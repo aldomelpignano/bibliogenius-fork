@@ -17,11 +17,14 @@ class CoverCameraHelper {
   /// When [bookId] is known (edit flow), the file is named `<bookId>.jpg`.
   /// When [bookId] is null (add flow), a temp UUID name is used.
   static Future<String?> takePhotoAndSave({int? bookId}) async {
+    // requestFullMetadata: false avoids PHPhotoLibrary access on iOS
+    // (prevents crash when tapping "Use Photo")
     final XFile? photo = await _picker.pickImage(
       source: ImageSource.camera,
       maxWidth: 1200,
       maxHeight: 1800,
       imageQuality: 85,
+      requestFullMetadata: false,
     );
     if (photo == null) return null;
 

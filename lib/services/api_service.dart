@@ -1372,10 +1372,14 @@ class ApiService {
   /// Refresh leaderboard by syncing gamification stats from all connected peers,
   /// then return the updated leaderboard data.
   /// Note: peer sync requires the HTTP endpoint, so this still uses HTTP.
+  /// Uses a longer timeout because the backend polls peers in parallel (up to 5s each).
   Future<Response> refreshLeaderboard() async {
     try {
       final dio = useFfi ? await _getLocalDio() : _dio;
-      return await dio.post('/api/gamification/refresh-leaderboard');
+      return await dio.post(
+        '/api/gamification/refresh-leaderboard',
+        options: Options(receiveTimeout: const Duration(seconds: 15)),
+      );
     } catch (e) {
       debugPrint('Refresh leaderboard failed, falling back to cached ($e)');
       return getLeaderboard();
@@ -2157,6 +2161,15 @@ class ApiService {
   }
 
   Future<Response> syncPeer(String peerUrl) async {
+    // relay:// URLs are relay-only peers - skip direct HTTP sync
+    if (peerUrl.startsWith('relay://')) {
+      return Response(
+        requestOptions: RequestOptions(path: '/api/peers/sync_by_url'),
+        statusCode: 200,
+        data: {'message': 'Relay-only peer, skipping direct sync'},
+      );
+    }
+
     // Ensure URL has http:// prefix
     final normalizedUrl = peerUrl.startsWith('http')
         ? peerUrl
@@ -2640,6 +2653,8 @@ class ApiService {
   /// Returns true if the peer responds within the timeout, false otherwise
   /// Returns true if the peer responds within the timeout, false otherwise
   Future<bool> checkPeerConnectivity(String url, {int timeoutMs = 3000}) async {
+    // relay:// URLs are relay-only peers - no direct HTTP connectivity
+    if (url.startsWith('relay://')) return false;
     try {
       final dio = Dio(
         BaseOptions(
@@ -2684,6 +2699,21 @@ class ApiService {
   }
 
   /// Send a library sync request to a peer via relay (ADR-012).
+  /// Diagnostic: log local relay configuration and mailbox status.
+  Future<void> logRelayStatus() async {
+    try {
+      final localDio = Dio(BaseOptions(
+        baseUrl: 'http://127.0.0.1:$httpPort',
+        connectTimeout: const Duration(seconds: 3),
+        receiveTimeout: const Duration(seconds: 10),
+      ));
+      final resp = await localDio.get('/api/relay/status');
+      debugPrint('Relay status (local): ${resp.data}');
+    } catch (e) {
+      debugPrint('Relay status check failed: $e');
+    }
+  }
+
   /// Returns the response directly if peer is on LAN, or { status: "relay_pending" }
   /// if sent via relay (response arrives asynchronously).
   ///
@@ -2696,14 +2726,15 @@ class ApiService {
     String? query,
   }) async {
     try {
-      // Relay requests may block up to ~35s on the Rust side:
-      // 10s direct transport timeout + 25s relay await with polling.
-      // Use 45s receiveTimeout to accommodate this plus network overhead.
+      // Relay requests may block up to ~75s on the Rust side:
+      // 10s direct transport timeout + 65s relay await with polling
+      // (65s covers one full remote poller cycle of 60s + jitter).
+      // Use 80s receiveTimeout to accommodate this plus network overhead.
       final localDio = Dio(
         BaseOptions(
           baseUrl: 'http://127.0.0.1:$httpPort',
           connectTimeout: const Duration(seconds: 5),
-          receiveTimeout: const Duration(seconds: 45),
+          receiveTimeout: const Duration(seconds: 80),
         ),
       );
       final data = <String, dynamic>{
@@ -2873,7 +2904,7 @@ class ApiService {
         String myName = 'BiblioGenius User';
         final myUrl = await _getMyUrl();
         if (myUrl == null) {
-          // No LAN available - try relay-only connection if invite has relay info
+          // No LAN available - relay-only connection
           // (per ADR-004: relay fallback when direct LAN is unavailable)
           if (relayUrl != null && mailboxId != null) {
             debugPrint('P2P: No LAN IP - using relay-only connection');
@@ -2881,6 +2912,7 @@ class ApiService {
               final localDio = Dio(BaseOptions(
                 baseUrl: 'http://localhost:${ApiService.httpPort}',
               ));
+              debugPrint('P2P relay-only: saving peer "$name" locally (mailbox=$mailboxId)');
               final saveResponse = await localDio.post(
                 '/api/peers/connect',
                 data: {
@@ -2896,6 +2928,21 @@ class ApiService {
                     'relay_write_token': relayWriteToken,
                 },
               );
+              debugPrint('P2P relay-only: peer saved HTTP ${saveResponse.statusCode}');
+
+              // Deposit connection_request in remote peer's relay mailbox
+              // via Dio (native HTTP stack). Rust's reqwest+rustls fails
+              // on iOS FFI, so Flutter handles the hub deposit directly.
+              final wt = relayWriteToken;
+              if (wt != null) {
+                await _depositConnectionRequest(
+                  localDio: localDio,
+                  peerRelayUrl: relayUrl,
+                  peerMailboxId: mailboxId,
+                  peerWriteToken: wt,
+                );
+              }
+
               return saveResponse;
             } catch (e) {
               return Response(
@@ -3061,6 +3108,76 @@ class ApiService {
       '/api/peers/connect',
       data: {'name': name, 'url': url},
     );
+  }
+
+  /// Deposit a connection_request in a remote peer's relay mailbox.
+  ///
+  /// Called from Flutter (Dio) instead of Rust (reqwest) because reqwest+rustls
+  /// fails on iOS FFI. Dio uses the native HTTP stack which works everywhere.
+  Future<void> _depositConnectionRequest({
+    required Dio localDio,
+    required String peerRelayUrl,
+    required String peerMailboxId,
+    required String peerWriteToken,
+  }) async {
+    try {
+      // 1. Load our own config (name, E2EE keys, relay credentials)
+      final configResp = await localDio.get('/api/config');
+      if (configResp.statusCode != 200 || configResp.data is! Map) {
+        debugPrint('Relay deposit: could not load local config');
+        return;
+      }
+      final config = configResp.data as Map<String, dynamic>;
+
+      // 2. Build the connection_request payload (same format as Rust)
+      final payload = <String, dynamic>{
+        'type': 'connection_request',
+        'name': config['library_name'] ?? 'BiblioGenius User',
+        'url': '', // No reliable URL without LAN
+      };
+      if (config['ed25519_public_key'] != null) {
+        payload['ed25519_public_key'] = config['ed25519_public_key'];
+      }
+      if (config['x25519_public_key'] != null) {
+        payload['x25519_public_key'] = config['x25519_public_key'];
+      }
+      // Include our relay credentials so remote peer can write back to us
+      if (config['relay_url'] != null) {
+        payload['relay_url'] = config['relay_url'];
+      }
+      if (config['mailbox_id'] != null) {
+        payload['mailbox_id'] = config['mailbox_id'];
+      }
+      if (config['relay_write_token'] != null) {
+        payload['relay_write_token'] = config['relay_write_token'];
+      }
+
+      // 3. Deposit in remote peer's mailbox via hub
+      final depositUrl =
+          '${peerRelayUrl.replaceAll(RegExp(r'/+$'), '')}/api/relay/mailbox/$peerMailboxId/messages';
+      debugPrint('Relay deposit: POST $depositUrl');
+
+      final hubDio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+      ));
+      final blob = utf8.encode(jsonEncode(payload));
+      final resp = await hubDio.post<dynamic>(
+        depositUrl,
+        data: Stream.fromIterable([blob]),
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $peerWriteToken',
+            'Content-Type': 'application/octet-stream',
+            'Content-Length': blob.length,
+          },
+          responseType: ResponseType.json,
+        ),
+      );
+      debugPrint('Relay deposit: ${resp.statusCode} - ${resp.data}');
+    } catch (e) {
+      debugPrint('Relay deposit failed: $e');
+    }
   }
 
   Future<Response> updateLibraryConfig({

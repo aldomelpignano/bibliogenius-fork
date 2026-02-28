@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../models/book.dart';
 import '../widgets/bookshelf_view.dart';
+import '../widgets/shimmer_loading.dart';
 import '../services/translation_service.dart';
 import '../providers/theme_provider.dart';
 
@@ -172,6 +173,9 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
     setState(() => _isRelayLoading = true);
 
     try {
+      // Diagnostic: check local relay status before requesting
+      await api.logRelayStatus();
+
       // 1. Request manifest to get total book count
       final manifest = await api.requestPeerManifest(widget.peerId);
 
@@ -205,17 +209,33 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
 
     int? cursor;
     List<Book> allBooks = [];
+    const maxRetriesPerPage = 2;
 
     while (mounted) {
-      final page = await api.requestPeerPage(
-        widget.peerId,
-        cursor: cursor,
-      );
+      Map<String, dynamic>? page;
+
+      // Try the page request, with retries if relay times out
+      for (int attempt = 0; attempt <= maxRetriesPerPage; attempt++) {
+        page = await api.requestPeerPage(
+          widget.peerId,
+          cursor: cursor,
+        );
+        if (page != null) break;
+
+        // Timed out - poll and retry (don't restart from scratch)
+        if (attempt < maxRetriesPerPage && mounted) {
+          debugPrint(
+            'Relay: page cursor=$cursor timed out, retrying '
+            '(${attempt + 1}/$maxRetriesPerPage)',
+          );
+          await api.pollRelayNow();
+        }
+      }
+
       if (page == null) {
-        // Page data still pending via relay - poll for it
-        debugPrint('Relay: page pending, starting adaptive polling');
-        _startAdaptivePolling();
-        return;
+        // All retries exhausted for this page - stop gracefully
+        debugPrint('Relay: page cursor=$cursor failed after retries, stopping');
+        break;
       }
 
       final books = (page['books'] as List?)
@@ -474,9 +494,7 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
             const SizedBox(height: 32),
-            if (_isRelayLoading)
-              _buildRelayLoadingIndicator()
-            else
+            if (!_isRelayLoading)
               OutlinedButton.icon(
                 onPressed: () => _loadCachedBooksFirst(),
                 icon: const Icon(Icons.refresh),
@@ -487,29 +505,6 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  /// Relay loading progress indicator (ADR-012)
-  Widget _buildRelayLoadingIndicator() {
-    return Column(
-      children: [
-        const SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          _relayBooksTotal > 0
-              ? '${TranslationService.translate(context, 'loading_via_relay')}... $_relayBooksLoaded/$_relayBooksTotal'
-              : TranslationService.translate(
-                    context,
-                    'connecting_via_relay',
-                  ),
-          style: TextStyle(fontSize: 14, color: Colors.blue[600]),
-        ),
-      ],
     );
   }
 
@@ -663,57 +658,62 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
                     // Book list
                     Expanded(
                       child: _filteredBooks.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  if (_isRelayLoading)
-                                    _buildRelayLoadingIndicator()
-                                  else ...[
-                                    Icon(
-                                      Icons.library_books_outlined,
-                                      size: 64,
-                                      color: Colors.grey[400],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
+                          ? _isRelayLoading
+                              ? BookshelfSkeleton(
+                                  message:
                                       TranslationService.translate(
                                         context,
-                                        'no_books_found',
+                                        'connecting_via_relay',
                                       ),
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.grey[600],
+                                )
+                              : Center(
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.library_books_outlined,
+                                        size: 64,
+                                        color: Colors.grey[400],
                                       ),
-                                    ),
-                                    const SizedBox(height: 24),
-                                    ElevatedButton.icon(
-                                      onPressed: () => _syncBooks(),
-                                      icon: const Icon(Icons.sync),
-                                      label: Text(
-                                        TranslationService.translate(
-                                          context,
-                                          'sync_library',
-                                        ),
-                                      ),
-                                    ),
-                                    if (!_isPeerOnline) ...[
-                                      const SizedBox(height: 8),
+                                      const SizedBox(height: 16),
                                       Text(
                                         TranslationService.translate(
                                           context,
-                                          'peer_offline',
+                                          'no_books_found',
                                         ),
                                         style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.orange[700],
+                                          fontSize: 18,
+                                          color: Colors.grey[600],
                                         ),
                                       ),
+                                      const SizedBox(height: 24),
+                                      ElevatedButton.icon(
+                                        onPressed: () => _syncBooks(),
+                                        icon: const Icon(Icons.sync),
+                                        label: Text(
+                                          TranslationService.translate(
+                                            context,
+                                            'sync_library',
+                                          ),
+                                        ),
+                                      ),
+                                      if (!_isPeerOnline) ...[
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          TranslationService.translate(
+                                            context,
+                                            'peer_offline',
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.orange[700],
+                                          ),
+                                        ),
+                                      ],
                                     ],
-                                  ],
-                                ],
-                              ),
-                            )
+                                  ),
+                                )
                           : _isShelfView
                               ? BookshelfView(
                                   books: _filteredBooks,
