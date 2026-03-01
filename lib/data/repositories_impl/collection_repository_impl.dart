@@ -1,55 +1,46 @@
 import '../../models/collection.dart';
 import '../../models/collection_book.dart';
-import '../../services/api_service.dart';
+import '../../services/ffi_service.dart';
 import '../repositories/collection_repository.dart';
 
 class CollectionRepositoryImpl implements CollectionRepository {
-  final ApiService _apiService;
+  final FfiService _ffi;
 
-  CollectionRepositoryImpl(this._apiService);
-
-  @override
-  Future<List<Collection>> getCollections() {
-    return _apiService.getCollections();
-  }
+  CollectionRepositoryImpl(this._ffi);
 
   @override
-  Future<List<Collection>> getBookCollections(int bookId) {
-    return _apiService.getBookCollections(bookId);
-  }
+  Future<List<Collection>> getCollections() => _ffi.getCollections();
 
   @override
-  Future<void> updateBookCollections(int bookId, List<String> collectionIds) {
-    return _apiService.updateBookCollections(bookId, collectionIds);
-  }
+  Future<List<Collection>> getBookCollections(int bookId) =>
+      _ffi.getBookCollections(bookId);
 
   @override
-  Future<Collection> createCollection(String name, {String? description}) {
-    return _apiService.createCollection(name, description: description);
-  }
+  Future<void> updateBookCollections(
+    int bookId,
+    List<String> collectionIds,
+  ) =>
+      _ffi.updateBookCollections(bookId, collectionIds);
 
   @override
-  Future<void> deleteCollection(String id) {
-    return _apiService.deleteCollection(id);
-  }
+  Future<Collection> createCollection(
+    String name, {
+    String? description,
+  }) =>
+      _ffi.createCollection(name, description: description);
 
   @override
-  Future<List<CollectionBook>> getCollectionBooks(String id) async {
-    final rawList = await _apiService.getCollectionBooks(id);
-    return rawList
-        .map(
-          (json) => CollectionBook.fromJson(json as Map<String, dynamic>),
-        )
-        .toList();
-  }
+  Future<void> deleteCollection(String id) => _ffi.deleteCollection(id);
 
   @override
-  Future<void> addBookToCollection(String collectionId, int bookId) {
-    return _apiService.addBookToCollection(collectionId, bookId);
-  }
+  Future<List<CollectionBook>> getCollectionBooks(String id) =>
+      _ffi.getCollectionBooks(id);
 
   @override
-  Future<void> removeBookFromCollection(String collectionId, int bookId) {
-    return _apiService.removeBookFromCollection(collectionId, bookId);
-  }
+  Future<void> addBookToCollection(String collectionId, int bookId) =>
+      _ffi.addBookToCollection(collectionId, bookId);
+
+  @override
+  Future<void> removeBookFromCollection(String collectionId, int bookId) =>
+      _ffi.removeBookFromCollection(collectionId, bookId);
 }

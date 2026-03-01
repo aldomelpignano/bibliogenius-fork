@@ -1147,6 +1147,266 @@ as String,
 }
 
 /// @nodoc
+mixin _$FrbDirectoryConfig {
+
+ String get nodeId; bool get isListed; bool get requiresApproval; String get acceptFrom;
+/// Create a copy of FrbDirectoryConfig
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$FrbDirectoryConfigCopyWith<FrbDirectoryConfig> get copyWith => _$FrbDirectoryConfigCopyWithImpl<FrbDirectoryConfig>(this as FrbDirectoryConfig, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbDirectoryConfig&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.isListed, isListed) || other.isListed == isListed)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.acceptFrom, acceptFrom) || other.acceptFrom == acceptFrom));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,nodeId,isListed,requiresApproval,acceptFrom);
+
+@override
+String toString() {
+  return 'FrbDirectoryConfig(nodeId: $nodeId, isListed: $isListed, requiresApproval: $requiresApproval, acceptFrom: $acceptFrom)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $FrbDirectoryConfigCopyWith<$Res>  {
+  factory $FrbDirectoryConfigCopyWith(FrbDirectoryConfig value, $Res Function(FrbDirectoryConfig) _then) = _$FrbDirectoryConfigCopyWithImpl;
+@useResult
+$Res call({
+ String nodeId, bool isListed, bool requiresApproval, String acceptFrom
+});
+
+
+
+
+}
+/// @nodoc
+class _$FrbDirectoryConfigCopyWithImpl<$Res>
+    implements $FrbDirectoryConfigCopyWith<$Res> {
+  _$FrbDirectoryConfigCopyWithImpl(this._self, this._then);
+
+  final FrbDirectoryConfig _self;
+  final $Res Function(FrbDirectoryConfig) _then;
+
+/// Create a copy of FrbDirectoryConfig
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? nodeId = null,Object? isListed = null,Object? requiresApproval = null,Object? acceptFrom = null,}) {
+  return _then(_self.copyWith(
+nodeId: null == nodeId ? _self.nodeId : nodeId // ignore: cast_nullable_to_non_nullable
+as String,isListed: null == isListed ? _self.isListed : isListed // ignore: cast_nullable_to_non_nullable
+as bool,requiresApproval: null == requiresApproval ? _self.requiresApproval : requiresApproval // ignore: cast_nullable_to_non_nullable
+as bool,acceptFrom: null == acceptFrom ? _self.acceptFrom : acceptFrom // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [FrbDirectoryConfig].
+extension FrbDirectoryConfigPatterns on FrbDirectoryConfig {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _FrbDirectoryConfig value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _FrbDirectoryConfig() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _FrbDirectoryConfig value)  $default,){
+final _that = this;
+switch (_that) {
+case _FrbDirectoryConfig():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _FrbDirectoryConfig value)?  $default,){
+final _that = this;
+switch (_that) {
+case _FrbDirectoryConfig() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String nodeId,  bool isListed,  bool requiresApproval,  String acceptFrom)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _FrbDirectoryConfig() when $default != null:
+return $default(_that.nodeId,_that.isListed,_that.requiresApproval,_that.acceptFrom);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String nodeId,  bool isListed,  bool requiresApproval,  String acceptFrom)  $default,) {final _that = this;
+switch (_that) {
+case _FrbDirectoryConfig():
+return $default(_that.nodeId,_that.isListed,_that.requiresApproval,_that.acceptFrom);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String nodeId,  bool isListed,  bool requiresApproval,  String acceptFrom)?  $default,) {final _that = this;
+switch (_that) {
+case _FrbDirectoryConfig() when $default != null:
+return $default(_that.nodeId,_that.isListed,_that.requiresApproval,_that.acceptFrom);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _FrbDirectoryConfig implements FrbDirectoryConfig {
+  const _FrbDirectoryConfig({required this.nodeId, required this.isListed, required this.requiresApproval, required this.acceptFrom});
+  
+
+@override final  String nodeId;
+@override final  bool isListed;
+@override final  bool requiresApproval;
+@override final  String acceptFrom;
+
+/// Create a copy of FrbDirectoryConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$FrbDirectoryConfigCopyWith<_FrbDirectoryConfig> get copyWith => __$FrbDirectoryConfigCopyWithImpl<_FrbDirectoryConfig>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FrbDirectoryConfig&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.isListed, isListed) || other.isListed == isListed)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.acceptFrom, acceptFrom) || other.acceptFrom == acceptFrom));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,nodeId,isListed,requiresApproval,acceptFrom);
+
+@override
+String toString() {
+  return 'FrbDirectoryConfig(nodeId: $nodeId, isListed: $isListed, requiresApproval: $requiresApproval, acceptFrom: $acceptFrom)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$FrbDirectoryConfigCopyWith<$Res> implements $FrbDirectoryConfigCopyWith<$Res> {
+  factory _$FrbDirectoryConfigCopyWith(_FrbDirectoryConfig value, $Res Function(_FrbDirectoryConfig) _then) = __$FrbDirectoryConfigCopyWithImpl;
+@override @useResult
+$Res call({
+ String nodeId, bool isListed, bool requiresApproval, String acceptFrom
+});
+
+
+
+
+}
+/// @nodoc
+class __$FrbDirectoryConfigCopyWithImpl<$Res>
+    implements _$FrbDirectoryConfigCopyWith<$Res> {
+  __$FrbDirectoryConfigCopyWithImpl(this._self, this._then);
+
+  final _FrbDirectoryConfig _self;
+  final $Res Function(_FrbDirectoryConfig) _then;
+
+/// Create a copy of FrbDirectoryConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? nodeId = null,Object? isListed = null,Object? requiresApproval = null,Object? acceptFrom = null,}) {
+  return _then(_FrbDirectoryConfig(
+nodeId: null == nodeId ? _self.nodeId : nodeId // ignore: cast_nullable_to_non_nullable
+as String,isListed: null == isListed ? _self.isListed : isListed // ignore: cast_nullable_to_non_nullable
+as bool,requiresApproval: null == requiresApproval ? _self.requiresApproval : requiresApproval // ignore: cast_nullable_to_non_nullable
+as bool,acceptFrom: null == acceptFrom ? _self.acceptFrom : acceptFrom // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$FrbDiscoveredPeer {
 
  String get name; String get host; int get port; List<String> get addresses; String? get libraryId; String? get ed25519PublicKey; String? get x25519PublicKey; String get discoveredAt;
@@ -1418,6 +1678,541 @@ as String?,ed25519PublicKey: freezed == ed25519PublicKey ? _self.ed25519PublicKe
 as String?,x25519PublicKey: freezed == x25519PublicKey ? _self.x25519PublicKey : x25519PublicKey // ignore: cast_nullable_to_non_nullable
 as String?,discoveredAt: null == discoveredAt ? _self.discoveredAt : discoveredAt // ignore: cast_nullable_to_non_nullable
 as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$FrbHubFollow {
+
+ PlatformInt64 get id; String get followerNodeId; String get followedNodeId; String get status; String get createdAt; String? get resolvedAt;
+/// Create a copy of FrbHubFollow
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$FrbHubFollowCopyWith<FrbHubFollow> get copyWith => _$FrbHubFollowCopyWithImpl<FrbHubFollow>(this as FrbHubFollow, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbHubFollow&&(identical(other.id, id) || other.id == id)&&(identical(other.followerNodeId, followerNodeId) || other.followerNodeId == followerNodeId)&&(identical(other.followedNodeId, followedNodeId) || other.followedNodeId == followedNodeId)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.resolvedAt, resolvedAt) || other.resolvedAt == resolvedAt));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,id,followerNodeId,followedNodeId,status,createdAt,resolvedAt);
+
+@override
+String toString() {
+  return 'FrbHubFollow(id: $id, followerNodeId: $followerNodeId, followedNodeId: $followedNodeId, status: $status, createdAt: $createdAt, resolvedAt: $resolvedAt)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $FrbHubFollowCopyWith<$Res>  {
+  factory $FrbHubFollowCopyWith(FrbHubFollow value, $Res Function(FrbHubFollow) _then) = _$FrbHubFollowCopyWithImpl;
+@useResult
+$Res call({
+ PlatformInt64 id, String followerNodeId, String followedNodeId, String status, String createdAt, String? resolvedAt
+});
+
+
+
+
+}
+/// @nodoc
+class _$FrbHubFollowCopyWithImpl<$Res>
+    implements $FrbHubFollowCopyWith<$Res> {
+  _$FrbHubFollowCopyWithImpl(this._self, this._then);
+
+  final FrbHubFollow _self;
+  final $Res Function(FrbHubFollow) _then;
+
+/// Create a copy of FrbHubFollow
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? followerNodeId = null,Object? followedNodeId = null,Object? status = null,Object? createdAt = null,Object? resolvedAt = freezed,}) {
+  return _then(_self.copyWith(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as PlatformInt64,followerNodeId: null == followerNodeId ? _self.followerNodeId : followerNodeId // ignore: cast_nullable_to_non_nullable
+as String,followedNodeId: null == followedNodeId ? _self.followedNodeId : followedNodeId // ignore: cast_nullable_to_non_nullable
+as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as String,resolvedAt: freezed == resolvedAt ? _self.resolvedAt : resolvedAt // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [FrbHubFollow].
+extension FrbHubFollowPatterns on FrbHubFollow {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _FrbHubFollow value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _FrbHubFollow() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _FrbHubFollow value)  $default,){
+final _that = this;
+switch (_that) {
+case _FrbHubFollow():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _FrbHubFollow value)?  $default,){
+final _that = this;
+switch (_that) {
+case _FrbHubFollow() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PlatformInt64 id,  String followerNodeId,  String followedNodeId,  String status,  String createdAt,  String? resolvedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _FrbHubFollow() when $default != null:
+return $default(_that.id,_that.followerNodeId,_that.followedNodeId,_that.status,_that.createdAt,_that.resolvedAt);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PlatformInt64 id,  String followerNodeId,  String followedNodeId,  String status,  String createdAt,  String? resolvedAt)  $default,) {final _that = this;
+switch (_that) {
+case _FrbHubFollow():
+return $default(_that.id,_that.followerNodeId,_that.followedNodeId,_that.status,_that.createdAt,_that.resolvedAt);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PlatformInt64 id,  String followerNodeId,  String followedNodeId,  String status,  String createdAt,  String? resolvedAt)?  $default,) {final _that = this;
+switch (_that) {
+case _FrbHubFollow() when $default != null:
+return $default(_that.id,_that.followerNodeId,_that.followedNodeId,_that.status,_that.createdAt,_that.resolvedAt);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _FrbHubFollow implements FrbHubFollow {
+  const _FrbHubFollow({required this.id, required this.followerNodeId, required this.followedNodeId, required this.status, required this.createdAt, this.resolvedAt});
+  
+
+@override final  PlatformInt64 id;
+@override final  String followerNodeId;
+@override final  String followedNodeId;
+@override final  String status;
+@override final  String createdAt;
+@override final  String? resolvedAt;
+
+/// Create a copy of FrbHubFollow
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$FrbHubFollowCopyWith<_FrbHubFollow> get copyWith => __$FrbHubFollowCopyWithImpl<_FrbHubFollow>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FrbHubFollow&&(identical(other.id, id) || other.id == id)&&(identical(other.followerNodeId, followerNodeId) || other.followerNodeId == followerNodeId)&&(identical(other.followedNodeId, followedNodeId) || other.followedNodeId == followedNodeId)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.resolvedAt, resolvedAt) || other.resolvedAt == resolvedAt));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,id,followerNodeId,followedNodeId,status,createdAt,resolvedAt);
+
+@override
+String toString() {
+  return 'FrbHubFollow(id: $id, followerNodeId: $followerNodeId, followedNodeId: $followedNodeId, status: $status, createdAt: $createdAt, resolvedAt: $resolvedAt)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$FrbHubFollowCopyWith<$Res> implements $FrbHubFollowCopyWith<$Res> {
+  factory _$FrbHubFollowCopyWith(_FrbHubFollow value, $Res Function(_FrbHubFollow) _then) = __$FrbHubFollowCopyWithImpl;
+@override @useResult
+$Res call({
+ PlatformInt64 id, String followerNodeId, String followedNodeId, String status, String createdAt, String? resolvedAt
+});
+
+
+
+
+}
+/// @nodoc
+class __$FrbHubFollowCopyWithImpl<$Res>
+    implements _$FrbHubFollowCopyWith<$Res> {
+  __$FrbHubFollowCopyWithImpl(this._self, this._then);
+
+  final _FrbHubFollow _self;
+  final $Res Function(_FrbHubFollow) _then;
+
+/// Create a copy of FrbHubFollow
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? followerNodeId = null,Object? followedNodeId = null,Object? status = null,Object? createdAt = null,Object? resolvedAt = freezed,}) {
+  return _then(_FrbHubFollow(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as PlatformInt64,followerNodeId: null == followerNodeId ? _self.followerNodeId : followerNodeId // ignore: cast_nullable_to_non_nullable
+as String,followedNodeId: null == followedNodeId ? _self.followedNodeId : followedNodeId // ignore: cast_nullable_to_non_nullable
+as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as String,resolvedAt: freezed == resolvedAt ? _self.resolvedAt : resolvedAt // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$FrbHubProfile {
+
+ String get nodeId; String get displayName; String? get description; int get bookCount; String? get locationCountry; bool get requiresApproval; String? get lastSeenAt;
+/// Create a copy of FrbHubProfile
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$FrbHubProfileCopyWith<FrbHubProfile> get copyWith => _$FrbHubProfileCopyWithImpl<FrbHubProfile>(this as FrbHubProfile, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbHubProfile&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.description, description) || other.description == description)&&(identical(other.bookCount, bookCount) || other.bookCount == bookCount)&&(identical(other.locationCountry, locationCountry) || other.locationCountry == locationCountry)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,nodeId,displayName,description,bookCount,locationCountry,requiresApproval,lastSeenAt);
+
+@override
+String toString() {
+  return 'FrbHubProfile(nodeId: $nodeId, displayName: $displayName, description: $description, bookCount: $bookCount, locationCountry: $locationCountry, requiresApproval: $requiresApproval, lastSeenAt: $lastSeenAt)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $FrbHubProfileCopyWith<$Res>  {
+  factory $FrbHubProfileCopyWith(FrbHubProfile value, $Res Function(FrbHubProfile) _then) = _$FrbHubProfileCopyWithImpl;
+@useResult
+$Res call({
+ String nodeId, String displayName, String? description, int bookCount, String? locationCountry, bool requiresApproval, String? lastSeenAt
+});
+
+
+
+
+}
+/// @nodoc
+class _$FrbHubProfileCopyWithImpl<$Res>
+    implements $FrbHubProfileCopyWith<$Res> {
+  _$FrbHubProfileCopyWithImpl(this._self, this._then);
+
+  final FrbHubProfile _self;
+  final $Res Function(FrbHubProfile) _then;
+
+/// Create a copy of FrbHubProfile
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? nodeId = null,Object? displayName = null,Object? description = freezed,Object? bookCount = null,Object? locationCountry = freezed,Object? requiresApproval = null,Object? lastSeenAt = freezed,}) {
+  return _then(_self.copyWith(
+nodeId: null == nodeId ? _self.nodeId : nodeId // ignore: cast_nullable_to_non_nullable
+as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
+as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,bookCount: null == bookCount ? _self.bookCount : bookCount // ignore: cast_nullable_to_non_nullable
+as int,locationCountry: freezed == locationCountry ? _self.locationCountry : locationCountry // ignore: cast_nullable_to_non_nullable
+as String?,requiresApproval: null == requiresApproval ? _self.requiresApproval : requiresApproval // ignore: cast_nullable_to_non_nullable
+as bool,lastSeenAt: freezed == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [FrbHubProfile].
+extension FrbHubProfilePatterns on FrbHubProfile {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _FrbHubProfile value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _FrbHubProfile() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _FrbHubProfile value)  $default,){
+final _that = this;
+switch (_that) {
+case _FrbHubProfile():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _FrbHubProfile value)?  $default,){
+final _that = this;
+switch (_that) {
+case _FrbHubProfile() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String nodeId,  String displayName,  String? description,  int bookCount,  String? locationCountry,  bool requiresApproval,  String? lastSeenAt)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _FrbHubProfile() when $default != null:
+return $default(_that.nodeId,_that.displayName,_that.description,_that.bookCount,_that.locationCountry,_that.requiresApproval,_that.lastSeenAt);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String nodeId,  String displayName,  String? description,  int bookCount,  String? locationCountry,  bool requiresApproval,  String? lastSeenAt)  $default,) {final _that = this;
+switch (_that) {
+case _FrbHubProfile():
+return $default(_that.nodeId,_that.displayName,_that.description,_that.bookCount,_that.locationCountry,_that.requiresApproval,_that.lastSeenAt);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String nodeId,  String displayName,  String? description,  int bookCount,  String? locationCountry,  bool requiresApproval,  String? lastSeenAt)?  $default,) {final _that = this;
+switch (_that) {
+case _FrbHubProfile() when $default != null:
+return $default(_that.nodeId,_that.displayName,_that.description,_that.bookCount,_that.locationCountry,_that.requiresApproval,_that.lastSeenAt);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _FrbHubProfile implements FrbHubProfile {
+  const _FrbHubProfile({required this.nodeId, required this.displayName, this.description, required this.bookCount, this.locationCountry, required this.requiresApproval, this.lastSeenAt});
+  
+
+@override final  String nodeId;
+@override final  String displayName;
+@override final  String? description;
+@override final  int bookCount;
+@override final  String? locationCountry;
+@override final  bool requiresApproval;
+@override final  String? lastSeenAt;
+
+/// Create a copy of FrbHubProfile
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$FrbHubProfileCopyWith<_FrbHubProfile> get copyWith => __$FrbHubProfileCopyWithImpl<_FrbHubProfile>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FrbHubProfile&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.description, description) || other.description == description)&&(identical(other.bookCount, bookCount) || other.bookCount == bookCount)&&(identical(other.locationCountry, locationCountry) || other.locationCountry == locationCountry)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,nodeId,displayName,description,bookCount,locationCountry,requiresApproval,lastSeenAt);
+
+@override
+String toString() {
+  return 'FrbHubProfile(nodeId: $nodeId, displayName: $displayName, description: $description, bookCount: $bookCount, locationCountry: $locationCountry, requiresApproval: $requiresApproval, lastSeenAt: $lastSeenAt)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$FrbHubProfileCopyWith<$Res> implements $FrbHubProfileCopyWith<$Res> {
+  factory _$FrbHubProfileCopyWith(_FrbHubProfile value, $Res Function(_FrbHubProfile) _then) = __$FrbHubProfileCopyWithImpl;
+@override @useResult
+$Res call({
+ String nodeId, String displayName, String? description, int bookCount, String? locationCountry, bool requiresApproval, String? lastSeenAt
+});
+
+
+
+
+}
+/// @nodoc
+class __$FrbHubProfileCopyWithImpl<$Res>
+    implements _$FrbHubProfileCopyWith<$Res> {
+  __$FrbHubProfileCopyWithImpl(this._self, this._then);
+
+  final _FrbHubProfile _self;
+  final $Res Function(_FrbHubProfile) _then;
+
+/// Create a copy of FrbHubProfile
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? nodeId = null,Object? displayName = null,Object? description = freezed,Object? bookCount = null,Object? locationCountry = freezed,Object? requiresApproval = null,Object? lastSeenAt = freezed,}) {
+  return _then(_FrbHubProfile(
+nodeId: null == nodeId ? _self.nodeId : nodeId // ignore: cast_nullable_to_non_nullable
+as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
+as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,bookCount: null == bookCount ? _self.bookCount : bookCount // ignore: cast_nullable_to_non_nullable
+as int,locationCountry: freezed == locationCountry ? _self.locationCountry : locationCountry // ignore: cast_nullable_to_non_nullable
+as String?,requiresApproval: null == requiresApproval ? _self.requiresApproval : requiresApproval // ignore: cast_nullable_to_non_nullable
+as bool,lastSeenAt: freezed == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -2234,6 +3029,278 @@ as BigInt,today: null == today ? _self.today : today // ignore: cast_nullable_to
 as BigInt,pending: null == pending ? _self.pending : pending // ignore: cast_nullable_to_non_nullable
 as BigInt,failed: null == failed ? _self.failed : failed // ignore: cast_nullable_to_non_nullable
 as BigInt,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$FrbRegisterParams {
+
+ String get nodeId; String get displayName; int get bookCount; bool get isListed; bool get requiresApproval; String get acceptFrom; String? get description; String? get locationCountry;
+/// Create a copy of FrbRegisterParams
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$FrbRegisterParamsCopyWith<FrbRegisterParams> get copyWith => _$FrbRegisterParamsCopyWithImpl<FrbRegisterParams>(this as FrbRegisterParams, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbRegisterParams&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.bookCount, bookCount) || other.bookCount == bookCount)&&(identical(other.isListed, isListed) || other.isListed == isListed)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.acceptFrom, acceptFrom) || other.acceptFrom == acceptFrom)&&(identical(other.description, description) || other.description == description)&&(identical(other.locationCountry, locationCountry) || other.locationCountry == locationCountry));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,nodeId,displayName,bookCount,isListed,requiresApproval,acceptFrom,description,locationCountry);
+
+@override
+String toString() {
+  return 'FrbRegisterParams(nodeId: $nodeId, displayName: $displayName, bookCount: $bookCount, isListed: $isListed, requiresApproval: $requiresApproval, acceptFrom: $acceptFrom, description: $description, locationCountry: $locationCountry)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $FrbRegisterParamsCopyWith<$Res>  {
+  factory $FrbRegisterParamsCopyWith(FrbRegisterParams value, $Res Function(FrbRegisterParams) _then) = _$FrbRegisterParamsCopyWithImpl;
+@useResult
+$Res call({
+ String nodeId, String displayName, int bookCount, bool isListed, bool requiresApproval, String acceptFrom, String? description, String? locationCountry
+});
+
+
+
+
+}
+/// @nodoc
+class _$FrbRegisterParamsCopyWithImpl<$Res>
+    implements $FrbRegisterParamsCopyWith<$Res> {
+  _$FrbRegisterParamsCopyWithImpl(this._self, this._then);
+
+  final FrbRegisterParams _self;
+  final $Res Function(FrbRegisterParams) _then;
+
+/// Create a copy of FrbRegisterParams
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? nodeId = null,Object? displayName = null,Object? bookCount = null,Object? isListed = null,Object? requiresApproval = null,Object? acceptFrom = null,Object? description = freezed,Object? locationCountry = freezed,}) {
+  return _then(_self.copyWith(
+nodeId: null == nodeId ? _self.nodeId : nodeId // ignore: cast_nullable_to_non_nullable
+as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
+as String,bookCount: null == bookCount ? _self.bookCount : bookCount // ignore: cast_nullable_to_non_nullable
+as int,isListed: null == isListed ? _self.isListed : isListed // ignore: cast_nullable_to_non_nullable
+as bool,requiresApproval: null == requiresApproval ? _self.requiresApproval : requiresApproval // ignore: cast_nullable_to_non_nullable
+as bool,acceptFrom: null == acceptFrom ? _self.acceptFrom : acceptFrom // ignore: cast_nullable_to_non_nullable
+as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,locationCountry: freezed == locationCountry ? _self.locationCountry : locationCountry // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [FrbRegisterParams].
+extension FrbRegisterParamsPatterns on FrbRegisterParams {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _FrbRegisterParams value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _FrbRegisterParams() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _FrbRegisterParams value)  $default,){
+final _that = this;
+switch (_that) {
+case _FrbRegisterParams():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _FrbRegisterParams value)?  $default,){
+final _that = this;
+switch (_that) {
+case _FrbRegisterParams() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String nodeId,  String displayName,  int bookCount,  bool isListed,  bool requiresApproval,  String acceptFrom,  String? description,  String? locationCountry)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _FrbRegisterParams() when $default != null:
+return $default(_that.nodeId,_that.displayName,_that.bookCount,_that.isListed,_that.requiresApproval,_that.acceptFrom,_that.description,_that.locationCountry);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String nodeId,  String displayName,  int bookCount,  bool isListed,  bool requiresApproval,  String acceptFrom,  String? description,  String? locationCountry)  $default,) {final _that = this;
+switch (_that) {
+case _FrbRegisterParams():
+return $default(_that.nodeId,_that.displayName,_that.bookCount,_that.isListed,_that.requiresApproval,_that.acceptFrom,_that.description,_that.locationCountry);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String nodeId,  String displayName,  int bookCount,  bool isListed,  bool requiresApproval,  String acceptFrom,  String? description,  String? locationCountry)?  $default,) {final _that = this;
+switch (_that) {
+case _FrbRegisterParams() when $default != null:
+return $default(_that.nodeId,_that.displayName,_that.bookCount,_that.isListed,_that.requiresApproval,_that.acceptFrom,_that.description,_that.locationCountry);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _FrbRegisterParams implements FrbRegisterParams {
+  const _FrbRegisterParams({required this.nodeId, required this.displayName, required this.bookCount, required this.isListed, required this.requiresApproval, required this.acceptFrom, this.description, this.locationCountry});
+  
+
+@override final  String nodeId;
+@override final  String displayName;
+@override final  int bookCount;
+@override final  bool isListed;
+@override final  bool requiresApproval;
+@override final  String acceptFrom;
+@override final  String? description;
+@override final  String? locationCountry;
+
+/// Create a copy of FrbRegisterParams
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$FrbRegisterParamsCopyWith<_FrbRegisterParams> get copyWith => __$FrbRegisterParamsCopyWithImpl<_FrbRegisterParams>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FrbRegisterParams&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.bookCount, bookCount) || other.bookCount == bookCount)&&(identical(other.isListed, isListed) || other.isListed == isListed)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.acceptFrom, acceptFrom) || other.acceptFrom == acceptFrom)&&(identical(other.description, description) || other.description == description)&&(identical(other.locationCountry, locationCountry) || other.locationCountry == locationCountry));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,nodeId,displayName,bookCount,isListed,requiresApproval,acceptFrom,description,locationCountry);
+
+@override
+String toString() {
+  return 'FrbRegisterParams(nodeId: $nodeId, displayName: $displayName, bookCount: $bookCount, isListed: $isListed, requiresApproval: $requiresApproval, acceptFrom: $acceptFrom, description: $description, locationCountry: $locationCountry)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$FrbRegisterParamsCopyWith<$Res> implements $FrbRegisterParamsCopyWith<$Res> {
+  factory _$FrbRegisterParamsCopyWith(_FrbRegisterParams value, $Res Function(_FrbRegisterParams) _then) = __$FrbRegisterParamsCopyWithImpl;
+@override @useResult
+$Res call({
+ String nodeId, String displayName, int bookCount, bool isListed, bool requiresApproval, String acceptFrom, String? description, String? locationCountry
+});
+
+
+
+
+}
+/// @nodoc
+class __$FrbRegisterParamsCopyWithImpl<$Res>
+    implements _$FrbRegisterParamsCopyWith<$Res> {
+  __$FrbRegisterParamsCopyWithImpl(this._self, this._then);
+
+  final _FrbRegisterParams _self;
+  final $Res Function(_FrbRegisterParams) _then;
+
+/// Create a copy of FrbRegisterParams
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? nodeId = null,Object? displayName = null,Object? bookCount = null,Object? isListed = null,Object? requiresApproval = null,Object? acceptFrom = null,Object? description = freezed,Object? locationCountry = freezed,}) {
+  return _then(_FrbRegisterParams(
+nodeId: null == nodeId ? _self.nodeId : nodeId // ignore: cast_nullable_to_non_nullable
+as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
+as String,bookCount: null == bookCount ? _self.bookCount : bookCount // ignore: cast_nullable_to_non_nullable
+as int,isListed: null == isListed ? _self.isListed : isListed // ignore: cast_nullable_to_non_nullable
+as bool,requiresApproval: null == requiresApproval ? _self.requiresApproval : requiresApproval // ignore: cast_nullable_to_non_nullable
+as bool,acceptFrom: null == acceptFrom ? _self.acceptFrom : acceptFrom // ignore: cast_nullable_to_non_nullable
+as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,locationCountry: freezed == locationCountry ? _self.locationCountry : locationCountry // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

@@ -4,6 +4,8 @@
 
 import 'package:flutter/foundation.dart';
 import '../models/book.dart';
+import '../models/collection.dart';
+import '../models/collection_book.dart';
 import '../models/contact.dart';
 import '../models/cover_candidate.dart';
 import '../models/tag.dart';
@@ -507,6 +509,36 @@ class FfiService {
 
   // ============ Converters ============
 
+  /// Convert FrbCollection to Collection model
+  Collection _frbCollectionToCollection(frb.FrbCollection fc) {
+    return Collection(
+      id: fc.id,
+      name: fc.name,
+      description: fc.description,
+      source: fc.source,
+      createdAt: fc.createdAt,
+      updatedAt: fc.updatedAt,
+      totalBooks: fc.totalBooks.toInt(),
+      ownedBooks: fc.ownedBooks.toInt(),
+    );
+  }
+
+  /// Convert FrbCollectionBook to CollectionBook model
+  CollectionBook _frbCollectionBookToCollectionBook(
+    frb.FrbCollectionBook cb,
+  ) {
+    return CollectionBook(
+      bookId: cb.bookId,
+      title: cb.title,
+      author: cb.author,
+      coverUrl: cb.coverUrl,
+      publisher: cb.publisher,
+      publicationYear: cb.publicationYear,
+      addedAt: DateTime.parse(cb.addedAt),
+      isOwned: cb.isOwned,
+    );
+  }
+
   /// Convert FrbBook to Book model
   Book _frbBookToBook(frb.FrbBook fb) {
     return Book(
@@ -750,6 +782,129 @@ class FfiService {
     return await frb.gamificationUpdateStreak();
   }
 
+  // ============ Collections ============
+
+  /// Get all collections with book counts.
+  Future<List<Collection>> getCollections() async {
+    try {
+      final frbList = await frb.getAllCollections();
+      return frbList.map(_frbCollectionToCollection).toList();
+    } catch (e) {
+      debugPrint('FFI getCollections error: $e');
+      rethrow;
+    }
+  }
+
+  /// Get a single collection by ID, or null if not found.
+  Future<Collection?> getCollectionById(String id) async {
+    try {
+      final fc = await frb.getCollection(id: id);
+      return fc == null ? null : _frbCollectionToCollection(fc);
+    } catch (e) {
+      debugPrint('FFI getCollectionById error: $e');
+      rethrow;
+    }
+  }
+
+  /// Create a new collection.
+  Future<Collection> createCollection(
+    String name, {
+    String? description,
+  }) async {
+    try {
+      final fc = await frb.createCollection(
+        name: name,
+        description: description,
+      );
+      return _frbCollectionToCollection(fc);
+    } catch (e) {
+      debugPrint('FFI createCollection error: $e');
+      rethrow;
+    }
+  }
+
+  /// Delete a collection by ID.
+  Future<void> deleteCollection(String id) async {
+    try {
+      await frb.deleteCollection(id: id);
+    } catch (e) {
+      debugPrint('FFI deleteCollection error: $e');
+      rethrow;
+    }
+  }
+
+  /// Get all books belonging to a collection.
+  Future<List<CollectionBook>> getCollectionBooks(String collectionId) async {
+    try {
+      final frbList = await frb.getCollectionBooks(
+        collectionId: collectionId,
+      );
+      return frbList.map(_frbCollectionBookToCollectionBook).toList();
+    } catch (e) {
+      debugPrint('FFI getCollectionBooks error: $e');
+      rethrow;
+    }
+  }
+
+  /// Add a book to a collection (idempotent).
+  Future<void> addBookToCollection(
+    String collectionId,
+    int bookId,
+  ) async {
+    try {
+      await frb.addBookToCollection(
+        collectionId: collectionId,
+        bookId: bookId,
+      );
+    } catch (e) {
+      debugPrint('FFI addBookToCollection error: $e');
+      rethrow;
+    }
+  }
+
+  /// Remove a book from a collection.
+  Future<void> removeBookFromCollection(
+    String collectionId,
+    int bookId,
+  ) async {
+    try {
+      await frb.removeBookFromCollection(
+        collectionId: collectionId,
+        bookId: bookId,
+      );
+    } catch (e) {
+      debugPrint('FFI removeBookFromCollection error: $e');
+      rethrow;
+    }
+  }
+
+  /// Get all collections a book belongs to.
+  Future<List<Collection>> getBookCollections(int bookId) async {
+    try {
+      final frbList = await frb.getBookCollections(bookId: bookId);
+      return frbList.map(_frbCollectionToCollection).toList();
+    } catch (e) {
+      debugPrint('FFI getBookCollections error: $e');
+      rethrow;
+    }
+  }
+
+  /// Replace the set of collections a book belongs to.
+  Future<void> updateBookCollections(
+    int bookId,
+    List<String> collectionIds,
+  ) async {
+    try {
+      await frb.updateBookCollections(
+        bookId: bookId,
+        collectionIds: collectionIds,
+      );
+    } catch (e) {
+      debugPrint('FFI updateBookCollections error: $e');
+      rethrow;
+    }
+  }
+
   // ============ mDNS Local Discovery (Modular) ============
 
   /// Check if mDNS discovery service is available
@@ -828,6 +983,143 @@ class FfiService {
       debugPrint('FFI stopMdns error: $e');
     }
   }
+
+  // ============ Hub Directory (FFI direct) ============
+
+  /// Get the local hub directory config, or null if not yet registered.
+  Future<frb.FrbDirectoryConfig?> hubDirectoryGetConfig() async {
+    try {
+      return await frb.hubDirectoryGetConfig();
+    } catch (e) {
+      debugPrint('FFI hubDirectoryGetConfig error: $e');
+      return null;
+    }
+  }
+
+  /// Register or update the library profile on the hub directory.
+  Future<frb.FrbDirectoryConfig?> hubDirectoryRegister(
+    frb.FrbRegisterParams params,
+  ) async {
+    try {
+      return await frb.hubDirectoryRegister(params: params);
+    } catch (e) {
+      debugPrint('FFI hubDirectoryRegister error: $e');
+      return null;
+    }
+  }
+
+  /// Push the local ISBN catalog to the hub (call after book changes).
+  Future<bool> hubDirectoryPushCatalog(List<String> isbnList) async {
+    try {
+      await frb.hubDirectoryPushCatalog(isbnList: isbnList);
+      return true;
+    } catch (e) {
+      debugPrint('FFI hubDirectoryPushCatalog error: $e');
+      return false;
+    }
+  }
+
+  /// List libraries in the public directory (paginated).
+  Future<List<frb.FrbHubProfile>> hubDirectoryList({
+    required int limit,
+    required int offset,
+  }) async {
+    try {
+      return await frb.hubDirectoryList(limit: limit, offset: offset);
+    } catch (e) {
+      debugPrint('FFI hubDirectoryList error: $e');
+      return [];
+    }
+  }
+
+  /// Get a single library profile by nodeId.
+  Future<frb.FrbHubProfile?> hubDirectoryGetProfile(String nodeId) async {
+    try {
+      return await frb.hubDirectoryGetProfile(nodeId: nodeId);
+    } catch (e) {
+      debugPrint('FFI hubDirectoryGetProfile error: $e');
+      return null;
+    }
+  }
+
+  /// Get the public catalog (ISBNs) of a followed library.
+  Future<List<String>> hubDirectoryGetCatalog(String nodeId) async {
+    try {
+      return await frb.hubDirectoryGetCatalog(nodeId: nodeId);
+    } catch (e) {
+      debugPrint('FFI hubDirectoryGetCatalog error: $e');
+      return [];
+    }
+  }
+
+  /// Follow (or request to follow) a library.
+  Future<frb.FrbHubFollow?> hubDirectoryFollow(String nodeId) async {
+    try {
+      return await frb.hubDirectoryFollow(nodeId: nodeId);
+    } catch (e) {
+      debugPrint('FFI hubDirectoryFollow error: $e');
+      return null;
+    }
+  }
+
+  /// Unfollow a library.
+  Future<bool> hubDirectoryUnfollow(String nodeId) async {
+    try {
+      await frb.hubDirectoryUnfollow(nodeId: nodeId);
+      return true;
+    } catch (e) {
+      debugPrint('FFI hubDirectoryUnfollow error: $e');
+      return false;
+    }
+  }
+
+  /// List incoming follow requests that are pending approval.
+  Future<List<frb.FrbHubFollow>> hubDirectoryPendingRequests() async {
+    try {
+      return await frb.hubDirectoryPendingRequests();
+    } catch (e) {
+      debugPrint('FFI hubDirectoryPendingRequests error: $e');
+      return [];
+    }
+  }
+
+  /// Resolve a follow request: resolution is "approve", "reject", or "block".
+  Future<frb.FrbHubFollow?> hubDirectoryResolveFollow(
+    int followId,
+    String resolution,
+  ) async {
+    try {
+      return await frb.hubDirectoryResolveFollow(
+        followId: followId,
+        resolution: resolution,
+      );
+    } catch (e) {
+      debugPrint('FFI hubDirectoryResolveFollow error: $e');
+      return null;
+    }
+  }
+
+  /// List libraries this library follows.
+  Future<List<frb.FrbHubFollow>> hubDirectoryListFollowing() async {
+    try {
+      return await frb.hubDirectoryListFollowing();
+    } catch (e) {
+      debugPrint('FFI hubDirectoryListFollowing error: $e');
+      return [];
+    }
+  }
+
+  /// List libraries that follow this library.
+  Future<List<frb.FrbHubFollow>> hubDirectoryListFollowers() async {
+    try {
+      return await frb.hubDirectoryListFollowers();
+    } catch (e) {
+      debugPrint('FFI hubDirectoryListFollowers error: $e');
+      return [];
+    }
+  }
+
+  // ============ HTTP Server ============
 
   /// Start the HTTP server on the specified port
   /// This is required for P2P functionality in standalone mode

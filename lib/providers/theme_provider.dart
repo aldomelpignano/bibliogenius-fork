@@ -293,6 +293,7 @@ class ThemeProvider with ChangeNotifier {
     _shareGamificationStats =
         prefs.getBool('shareGamificationStats') ?? false;
     _collectionsEnabled = prefs.getBool('collectionsEnabled') ?? false;
+    _groupByCollections = prefs.getBool('groupByCollections') ?? false;
     _quotesEnabled = prefs.getBool('quotesEnabled') ?? true;
 
     _digitalFormatsEnabled = prefs.getBool('digitalFormatsEnabled') ?? false;
@@ -897,6 +898,17 @@ class ThemeProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('collectionsEnabled', enabled);
     await _updateEnabledModules();
+    notifyListeners();
+  }
+
+  // Group library by collection (display setting)
+  bool _groupByCollections = false;
+  bool get groupByCollections => _groupByCollections;
+
+  Future<void> setGroupByCollections(bool enabled) async {
+    _groupByCollections = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('groupByCollections', enabled);
     notifyListeners();
   }
 

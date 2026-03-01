@@ -6,13 +6,16 @@ import '../widgets/genie_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../data/repositories/book_repository.dart';
+import '../data/repositories/collection_repository.dart';
 import '../data/repositories/tag_repository.dart';
+import '../models/collection.dart';
 import '../services/api_service.dart';
 import '../services/sync_service.dart';
 import '../services/translation_service.dart';
 import '../models/book.dart';
 import '../models/tag.dart';
 import '../widgets/bookshelf_view.dart';
+import '../widgets/collection_stack_widget.dart';
 import '../widgets/premium_empty_state.dart';
 import '../widgets/book_cover_grid.dart';
 import '../widgets/premium_book_card.dart';
@@ -25,6 +28,7 @@ enum ViewMode {
   coverGrid, // Netflix style
   spineShelf, // Original bookshelf
   list, // Simple list
+  groupedCollections, // Books grouped by collection
 }
 
 class BookListScreen extends StatefulWidget {
@@ -66,6 +70,8 @@ class _BookListScreenState extends State<BookListScreen>
 
   bool _isLoading = true;
   ViewMode _viewMode = ViewMode.coverGrid; // Default to cover grid
+  List<CollectionGroup> _collectionGroups = [];
+  bool _isLoadingGroups = false;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
@@ -108,6 +114,13 @@ class _BookListScreenState extends State<BookListScreen>
       if (!mounted) return;
       Provider.of<SyncService>(context, listen: false).syncAllPeers();
       _checkWizard();
+
+      // Apply default view mode from settings (group by collection)
+      final themeProvider = context.read<ThemeProvider>();
+      if (themeProvider.groupByCollections &&
+          themeProvider.collectionsEnabled) {
+        setState(() => _viewMode = ViewMode.groupedCollections);
+      }
 
       // Initialize filters from query params (only if not already set by widget)
       final state = GoRouterState.of(context);
@@ -725,6 +738,66 @@ class _BookListScreenState extends State<BookListScreen>
     });
 
     _filteredBooks = tempBooks;
+
+    // Rebuild collection groups whenever filters change and grouped mode is active.
+    if (_viewMode == ViewMode.groupedCollections) {
+      _fetchCollectionGroups();
+    }
+  }
+
+  Future<void> _fetchCollectionGroups() async {
+    if (!mounted) return;
+    setState(() => _isLoadingGroups = true);
+
+    try {
+      final collectionRepo = context.read<CollectionRepository>();
+      final collections = await collectionRepo.getCollections();
+
+      // Build a bookId -> Collection map (first collection wins for each book).
+      final Map<int, Collection> bookToCollection = {};
+      for (final collection in collections) {
+        final collectionBooks =
+            await collectionRepo.getCollectionBooks(collection.id);
+        for (final cb in collectionBooks) {
+          bookToCollection.putIfAbsent(cb.bookId, () => collection);
+        }
+      }
+
+      // Bucket each filtered book into its collection (or null).
+      final Map<String, List<Book>> byCollectionId = {
+        for (final c in collections) c.id: <Book>[],
+      };
+      final List<Book> uncollected = [];
+
+      for (final book in _filteredBooks) {
+        if (book.id == null) continue;
+        final col = bookToCollection[book.id];
+        if (col != null) {
+          byCollectionId[col.id]?.add(book);
+        } else {
+          uncollected.add(book);
+        }
+      }
+
+      // Build the ordered group list (non-empty collections first, then singletons).
+      final groups = <CollectionGroup>[];
+      for (final collection in collections) {
+        final books = byCollectionId[collection.id] ?? [];
+        if (books.isNotEmpty) {
+          groups.add(CollectionGroup(collection: collection, books: books));
+        }
+      }
+      for (final book in uncollected) {
+        groups.add(CollectionGroup(collection: null, books: [book]));
+      }
+
+      if (!mounted) return;
+      setState(() => _collectionGroups = groups);
+    } catch (e) {
+      debugPrint('Error building collection groups: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingGroups = false);
+    }
   }
 
   void _showTagFilterDialog() async {
@@ -971,6 +1044,15 @@ class _BookListScreenState extends State<BookListScreen>
             child: Row(
               children: [
                 _buildViewModeToggle(Icons.grid_view, ViewMode.coverGrid),
+                if (context.read<ThemeProvider>().collectionsEnabled)
+                  _buildViewModeToggle(
+                    Icons.collections_bookmark,
+                    ViewMode.groupedCollections,
+                    tooltip: TranslationService.translate(
+                      context,
+                      'view_mode_grouped_collections',
+                    ),
+                  ),
                 _buildViewModeToggle(Icons.shelves, ViewMode.spineShelf),
                 _buildViewModeToggle(Icons.list, ViewMode.list),
               ],
@@ -1478,13 +1560,26 @@ class _BookListScreenState extends State<BookListScreen>
     });
   }
 
-  Widget _buildViewModeToggle(IconData icon, ViewMode mode) {
+  Widget _buildViewModeToggle(
+    IconData icon,
+    ViewMode mode, {
+    String? tooltip,
+  }) {
     final bool isSelected = _viewMode == mode;
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
-    return ScaleOnTap(
+    final iconColor = isSelected
+        ? Colors.white
+        : isDarkTheme
+        ? Colors.white70
+        : Colors.black54;
+
+    Widget button = ScaleOnTap(
       onTap: () {
         setState(() {
           _viewMode = mode;
+          if (mode == ViewMode.groupedCollections) {
+            _fetchCollectionGroups();
+          }
         });
       },
       child: Container(
@@ -1495,17 +1590,14 @@ class _BookListScreenState extends State<BookListScreen>
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(
-          icon,
-          color: isSelected
-              ? Colors.white
-              : isDarkTheme
-              ? Colors.white70
-              : Colors.black54,
-          size: 20,
-        ),
+        child: Icon(icon, color: iconColor, size: 20),
       ),
     );
+
+    if (tooltip != null) {
+      button = Tooltip(message: tooltip, child: button);
+    }
+    return button;
   }
 
   Widget _buildFilterPill({
@@ -1721,8 +1813,14 @@ class _BookListScreenState extends State<BookListScreen>
   }
 
   ViewMode _getNextViewMode(ViewMode current) {
+    final collectionsEnabled =
+        context.read<ThemeProvider>().collectionsEnabled;
     switch (current) {
       case ViewMode.coverGrid:
+        return collectionsEnabled
+            ? ViewMode.groupedCollections
+            : ViewMode.spineShelf;
+      case ViewMode.groupedCollections:
         return ViewMode.spineShelf;
       case ViewMode.spineShelf:
         return ViewMode.list;
@@ -1735,6 +1833,8 @@ class _BookListScreenState extends State<BookListScreen>
     switch (mode) {
       case ViewMode.coverGrid:
         return Icons.grid_view;
+      case ViewMode.groupedCollections:
+        return Icons.collections_bookmark;
       case ViewMode.spineShelf:
         return Icons.shelves;
       case ViewMode.list:
@@ -1943,6 +2043,17 @@ class _BookListScreenState extends State<BookListScreen>
         return RefreshIndicator(
           onRefresh: _fetchBooks,
           child: _buildListView(),
+        );
+      case ViewMode.groupedCollections:
+        if (_isLoadingGroups) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return RefreshIndicator(
+          onRefresh: () async {
+            await _fetchBooks();
+            await _fetchCollectionGroups();
+          },
+          child: CollectionGroupGrid(groups: _collectionGroups),
         );
     }
   }

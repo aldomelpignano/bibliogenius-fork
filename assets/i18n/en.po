@@ -6612,3 +6612,159 @@ msgstr "Back to library"
 msgid "refreshing_library"
 msgstr "Refreshing..."
 
+
+#. Collection grouped view - stacked covers widget
+msgid "collection_group_uncollected"
+msgstr "Uncollected"
+
+msgid "collection_group_books_count"
+msgstr "books"
+
+msgid "collection_group_tap_hint"
+msgstr "Tap to see books in this collection"
+
+msgid "collection_view_all"
+msgstr "See collection"
+
+msgid "collection_owned_count"
+msgstr "{n} owned"
+
+msgid "collection_group_empty"
+msgstr "No collections to display"
+
+#. Library grouped view setting
+msgid "view_mode_grouped_collections"
+msgstr "Group by collection"
+
+msgid "group_by_collections_title"
+msgstr "Group by collection"
+
+msgid "group_by_collections_desc"
+msgstr "Show books grouped by their collection in the library"
+
+#. Public Directory (ADR-015)
+msgid "directory_title"
+msgstr "Library Directory"
+
+msgid "directory_tab_explore"
+msgstr "Explore"
+
+msgid "directory_tab_following"
+msgstr "Following"
+
+msgid "directory_tab_requests"
+msgstr "Requests"
+
+msgid "directory_empty"
+msgstr "No libraries are listed in the directory yet."
+
+msgid "directory_following_empty"
+msgstr "You are not following any libraries yet. Browse the directory to get started."
+
+msgid "directory_requests_empty"
+msgstr "No incoming follow requests."
+
+msgid "directory_books"
+msgstr "books"
+
+msgid "directory_follow"
+msgstr "Follow"
+
+msgid "directory_request"
+msgstr "Request"
+
+msgid "directory_following"
+msgstr "Following"
+
+msgid "directory_pending"
+msgstr "Pending"
+
+msgid "directory_unfollow"
+msgstr "Unfollow"
+
+msgid "directory_unfollow_title"
+msgstr "Unfollow library?"
+
+msgid "directory_unfollow_confirm"
+msgstr "You will no longer have access to this library's catalog."
+
+msgid "directory_follow_error"
+msgstr "Unable to follow this library. Please try again."
+
+msgid "directory_approve"
+msgstr "Approve"
+
+msgid "directory_reject"
+msgstr "Reject"
+
+msgid "directory_block"
+msgstr "Block"
+
+msgid "directory_pending_outgoing"
+msgstr "Awaiting approval"
+
+msgid "directory_active_follows"
+msgstr "Active"
+
+#. Settings section
+msgid "directory_settings_title"
+msgstr "Public Directory"
+
+msgid "directory_listed_title"
+msgstr "List my library in the directory"
+
+msgid "directory_listed_desc"
+msgstr "Other libraries can discover and follow you"
+
+msgid "directory_browse_button"
+msgstr "Browse the directory"
+
+msgid "directory_browse_anyway"
+msgstr "Browse the directory"
+
+msgid "directory_browse_anyway_desc"
+msgstr "Explore without being listed"
+
+msgid "directory_advanced_settings"
+msgstr "Advanced settings"
+
+msgid "directory_requires_approval_title"
+msgstr "Require approval for followers"
+
+msgid "directory_requires_approval_desc"
+msgstr "New followers need your approval before accessing your catalog"
+
+msgid "directory_accept_from_title"
+msgstr "Accept connections from"
+
+msgid "directory_accept_from_all"
+msgstr "Everyone"
+
+msgid "directory_accept_from_verified"
+msgstr "Verified"
+
+msgid "directory_accept_from_manual"
+msgstr "Manual only"
+
+#. Catalog screen
+msgid "directory_catalog_title"
+msgstr "Library Catalog"
+
+msgid "directory_catalog_empty"
+msgstr "This library has not shared any books yet."
+
+msgid "directory_catalog_isbn_count"
+msgstr "ISBNs shared"
+
+msgid "directory_catalog_isbn_label"
+msgstr "ISBN"
+
+msgid "directory_catalog_pending"
+msgstr "Your follow request is pending approval. You will be able to view this catalog once the library accepts."
+
+msgid "directory_catalog_not_following"
+msgstr "Follow this library to access its catalog."
+
+#. Generic
+msgid "action_retry"
+msgstr "Retry"

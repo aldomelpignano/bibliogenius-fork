@@ -78,6 +78,9 @@ import 'screens/device_pairing_screen.dart';
 import 'screens/sync_review_screen.dart';
 import 'screens/external_search_screen.dart';
 import 'screens/invite_acceptance_screen.dart';
+import 'screens/directory_screen.dart';
+import 'screens/library_catalog_screen.dart';
+import 'providers/hub_directory_provider.dart';
 import 'package:app_links/app_links.dart';
 
 import 'services/wizard_service.dart';
@@ -351,7 +354,7 @@ class MyApp extends StatelessWidget {
           value: ContactRepositoryImpl(apiService),
         ),
         Provider<CollectionRepository>.value(
-          value: CollectionRepositoryImpl(apiService),
+          value: CollectionRepositoryImpl(FfiService()),
         ),
         Provider<CopyRepository>.value(
           value: CopyRepositoryImpl(apiService),
@@ -376,6 +379,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<DeviceSyncProvider>(
           create: (_) => DeviceSyncProvider(),
+        ),
+        ChangeNotifierProvider<HubDirectoryProvider>(
+          create: (_) => HubDirectoryProvider(),
         ),
       ],
       child: const AppRouter(),
@@ -834,6 +840,21 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
                 GoRoute(
                   path: 'migration-wizard',
                   builder: (context, state) => const MigrationWizardScreen(),
+                ),
+              ],
+            ),
+            GoRoute(
+              path: '/directory',
+              builder: (context, state) => const DirectoryScreen(),
+              routes: [
+                GoRoute(
+                  path: ':nodeId',
+                  builder: (context, state) {
+                    final nodeId = Uri.decodeComponent(
+                      state.pathParameters['nodeId'] ?? '',
+                    );
+                    return LibraryCatalogScreen(nodeId: nodeId);
+                  },
                 ),
               ],
             ),

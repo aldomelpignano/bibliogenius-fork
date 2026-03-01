@@ -10,8 +10,10 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../widgets/genie_app_bar.dart';
 import '../widgets/contextual_help_sheet.dart';
 import '../services/api_service.dart';
+import '../services/ffi_service.dart';
 import '../services/translation_service.dart';
 import '../providers/theme_provider.dart';
+import '../providers/hub_directory_provider.dart';
 import '../services/auth_service.dart';
 import '../theme/app_design.dart';
 import '../themes/base/theme_registry.dart';
@@ -45,6 +47,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     _fetchSettings();
     _initPackageInfo();
+    // Load hub directory config (non-blocking)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<HubDirectoryProvider>().loadConfig();
+    });
   }
 
   Future<void> _initPackageInfo() async {
@@ -400,6 +406,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   themeProvider.collectionsEnabled,
                   (value) => themeProvider.setCollectionsEnabled(value),
                 ),
+                if (themeProvider.collectionsEnabled)
+                  _buildModuleToggle(
+                    context,
+                    'group_by_collections_title',
+                    'group_by_collections_desc',
+                    Icons.auto_stories,
+                    themeProvider.groupByCollections,
+                    (value) => themeProvider.setGroupByCollections(value),
+                  ),
                 _buildModuleToggle(
                   context,
                   'commerce_module',
@@ -535,6 +550,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   themeProvider.syncSafetyEnabled,
                   (value) => themeProvider.setSyncSafetyEnabled(value),
                 ),
+                // Public Directory section
+                const SizedBox(height: 16),
+                _buildDirectorySection(context),
+
                 // Developer Tools section
                 const SizedBox(height: 16),
                 Semantics(
@@ -745,6 +764,256 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Public Directory section
+  // ---------------------------------------------------------------------------
+
+  Widget _buildDirectorySection(BuildContext context) {
+    return Consumer<HubDirectoryProvider>(
+      builder: (context, dirProvider, _) {
+        final config = dirProvider.config;
+        final isListed = config?.isListed ?? false;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Semantics(
+              header: true,
+              child: Text(
+                TranslationService.translate(
+                      context,
+                      'directory_settings_title',
+                    ) ??
+                    'Public Directory',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                children: [
+                  // Main toggle: opt-in to be listed
+                  SwitchListTile(
+                    secondary: const Icon(Icons.public),
+                    title: Text(
+                      TranslationService.translate(
+                            context,
+                            'directory_listed_title',
+                          ) ??
+                          'Appear in the public directory',
+                    ),
+                    subtitle: Text(
+                      TranslationService.translate(
+                            context,
+                            'directory_listed_desc',
+                          ) ??
+                          'Other libraries can discover and follow you',
+                    ),
+                    value: isListed,
+                    onChanged: dirProvider.configLoading
+                        ? null
+                        : (value) => _toggleDirectoryListing(
+                              context,
+                              dirProvider,
+                              value,
+                            ),
+                  ),
+
+                  if (isListed) ...[
+                    const Divider(height: 1),
+                    // Browse directory button
+                    ListTile(
+                      leading: const Icon(Icons.travel_explore),
+                      title: Text(
+                        TranslationService.translate(
+                              context,
+                              'directory_browse_button',
+                            ) ??
+                            'Browse the directory',
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.go('/directory'),
+                    ),
+                    const Divider(height: 1),
+                    // Advanced settings accordion
+                    ExpansionTile(
+                      leading: const Icon(Icons.tune),
+                      title: Text(
+                        TranslationService.translate(
+                              context,
+                              'directory_advanced_settings',
+                            ) ??
+                            'Advanced settings',
+                      ),
+                      children: [
+                        // Requires approval toggle
+                        SwitchListTile(
+                          secondary: const Icon(Icons.how_to_reg),
+                          title: Text(
+                            TranslationService.translate(
+                                  context,
+                                  'directory_requires_approval_title',
+                                ) ??
+                                'Require approval for followers',
+                          ),
+                          subtitle: Text(
+                            TranslationService.translate(
+                                  context,
+                                  'directory_requires_approval_desc',
+                                ) ??
+                                'New followers need your approval before accessing your catalog',
+                          ),
+                          value: config?.requiresApproval ?? false,
+                          onChanged: dirProvider.configLoading
+                              ? null
+                              : (value) => _updateDirectoryConfig(
+                                    context,
+                                    dirProvider,
+                                    requiresApproval: value,
+                                  ),
+                        ),
+                        // Accept-from filter
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                TranslationService.translate(
+                                      context,
+                                      'directory_accept_from_title',
+                                    ) ??
+                                    'Accept connections from',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                              const SizedBox(height: 8),
+                              _buildAcceptFromSelector(context, dirProvider),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+
+                  if (!isListed && config == null) ...[
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.travel_explore),
+                      title: Text(
+                        TranslationService.translate(
+                              context,
+                              'directory_browse_anyway',
+                            ) ??
+                            'Browse the directory',
+                      ),
+                      subtitle: Text(
+                        TranslationService.translate(
+                              context,
+                              'directory_browse_anyway_desc',
+                            ) ??
+                            'You can explore without being listed',
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.go('/directory'),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildAcceptFromSelector(
+    BuildContext context,
+    HubDirectoryProvider dirProvider,
+  ) {
+    final current = dirProvider.config?.acceptFrom ?? 'all';
+    const options = ['all', 'verified', 'manual'];
+
+    return SegmentedButton<String>(
+      segments: options.map((o) {
+        return ButtonSegment<String>(
+          value: o,
+          label: Text(
+            TranslationService.translate(
+                  context,
+                  'directory_accept_from_$o',
+                ) ??
+                o,
+          ),
+        );
+      }).toList(),
+      selected: {current},
+      onSelectionChanged: (selected) => _updateDirectoryConfig(
+        context,
+        dirProvider,
+        acceptFrom: selected.first,
+      ),
+    );
+  }
+
+  Future<void> _toggleDirectoryListing(
+    BuildContext context,
+    HubDirectoryProvider dirProvider,
+    bool newValue,
+  ) async {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final libraryName =
+        themeProvider.libraryName.isNotEmpty ? themeProvider.libraryName : 'My Library';
+
+    final config = dirProvider.config;
+    final nodeId = config?.nodeId ?? await _getNodeId();
+    if (nodeId == null) return;
+
+    await dirProvider.register(
+      nodeId: nodeId,
+      displayName: libraryName,
+      bookCount: 0,
+      isListed: newValue,
+      requiresApproval: config?.requiresApproval ?? false,
+      acceptFrom: config?.acceptFrom ?? 'all',
+    );
+  }
+
+  Future<void> _updateDirectoryConfig(
+    BuildContext context,
+    HubDirectoryProvider dirProvider, {
+    bool? requiresApproval,
+    String? acceptFrom,
+  }) async {
+    final config = dirProvider.config;
+    if (config == null) return;
+
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final libraryName =
+        themeProvider.libraryName.isNotEmpty ? themeProvider.libraryName : 'My Library';
+
+    await dirProvider.register(
+      nodeId: config.nodeId,
+      displayName: libraryName,
+      bookCount: 0,
+      isListed: config.isListed,
+      requiresApproval: requiresApproval ?? config.requiresApproval,
+      acceptFrom: acceptFrom ?? config.acceptFrom,
+    );
+  }
+
+  Future<String?> _getNodeId() async {
+    try {
+      final config = await FfiService().hubDirectoryGetConfig();
+      return config?.nodeId;
+    } catch (_) {
+      return null;
+    }
   }
 
   Widget _buildMcpModuleToggle() {

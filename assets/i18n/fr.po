@@ -6612,3 +6612,159 @@ msgstr "Retour à la bibliothèque"
 msgid "refreshing_library"
 msgstr "Actualisation..."
 
+
+#. Collection grouped view - stacked covers widget
+msgid "collection_group_uncollected"
+msgstr "Sans collection"
+
+msgid "collection_group_books_count"
+msgstr "livres"
+
+msgid "collection_group_tap_hint"
+msgstr "Appuyer pour voir les livres de cette collection"
+
+msgid "collection_view_all"
+msgstr "Voir la collection"
+
+msgid "collection_owned_count"
+msgstr "{n} possédé(s)"
+
+msgid "collection_group_empty"
+msgstr "Aucune collection à afficher"
+
+#. Library grouped view setting
+msgid "view_mode_grouped_collections"
+msgstr "Grouper par collection"
+
+msgid "group_by_collections_title"
+msgstr "Grouper par collection"
+
+msgid "group_by_collections_desc"
+msgstr "Afficher les livres groupés par collection dans la bibliothèque"
+
+#. Annuaire public (ADR-015)
+msgid "directory_title"
+msgstr "Annuaire des bibliothèques"
+
+msgid "directory_tab_explore"
+msgstr "Explorer"
+
+msgid "directory_tab_following"
+msgstr "Suivis"
+
+msgid "directory_tab_requests"
+msgstr "Demandes"
+
+msgid "directory_empty"
+msgstr "Aucune bibliothèque n'est encore référencée dans l'annuaire."
+
+msgid "directory_following_empty"
+msgstr "Vous ne suivez encore aucune bibliothèque. Explorez l'annuaire pour commencer."
+
+msgid "directory_requests_empty"
+msgstr "Aucune demande de suivi en attente."
+
+msgid "directory_books"
+msgstr "livres"
+
+msgid "directory_follow"
+msgstr "Suivre"
+
+msgid "directory_request"
+msgstr "Demander"
+
+msgid "directory_following"
+msgstr "Suivi"
+
+msgid "directory_pending"
+msgstr "En attente"
+
+msgid "directory_unfollow"
+msgstr "Ne plus suivre"
+
+msgid "directory_unfollow_title"
+msgstr "Ne plus suivre cette bibliothèque ?"
+
+msgid "directory_unfollow_confirm"
+msgstr "Vous n'aurez plus accès au catalogue de cette bibliothèque."
+
+msgid "directory_follow_error"
+msgstr "Impossible de suivre cette bibliothèque. Veuillez réessayer."
+
+msgid "directory_approve"
+msgstr "Approuver"
+
+msgid "directory_reject"
+msgstr "Refuser"
+
+msgid "directory_block"
+msgstr "Bloquer"
+
+msgid "directory_pending_outgoing"
+msgstr "En attente d'approbation"
+
+msgid "directory_active_follows"
+msgstr "Actifs"
+
+#. Section Paramètres
+msgid "directory_settings_title"
+msgstr "Annuaire public"
+
+msgid "directory_listed_title"
+msgstr "Référencer ma bibliothèque dans l'annuaire"
+
+msgid "directory_listed_desc"
+msgstr "Les autres bibliothèques peuvent vous découvrir et vous suivre"
+
+msgid "directory_browse_button"
+msgstr "Parcourir l'annuaire"
+
+msgid "directory_browse_anyway"
+msgstr "Parcourir l'annuaire"
+
+msgid "directory_browse_anyway_desc"
+msgstr "Explorer sans être référencé"
+
+msgid "directory_advanced_settings"
+msgstr "Paramètres avancés"
+
+msgid "directory_requires_approval_title"
+msgstr "Approbation requise pour les abonnés"
+
+msgid "directory_requires_approval_desc"
+msgstr "Les nouveaux abonnés doivent être approuvés avant d'accéder à votre catalogue"
+
+msgid "directory_accept_from_title"
+msgstr "Accepter les connexions de"
+
+msgid "directory_accept_from_all"
+msgstr "Tout le monde"
+
+msgid "directory_accept_from_verified"
+msgstr "Vérifiés"
+
+msgid "directory_accept_from_manual"
+msgstr "Manuel uniquement"
+
+#. Ecran catalogue
+msgid "directory_catalog_title"
+msgstr "Catalogue de la bibliothèque"
+
+msgid "directory_catalog_empty"
+msgstr "Cette bibliothèque n'a encore partagé aucun livre."
+
+msgid "directory_catalog_isbn_count"
+msgstr "ISBN partagés"
+
+msgid "directory_catalog_isbn_label"
+msgstr "ISBN"
+
+msgid "directory_catalog_pending"
+msgstr "Votre demande de suivi est en attente d'approbation. Vous pourrez voir le catalogue une fois que la bibliothèque aura accepté."
+
+msgid "directory_catalog_not_following"
+msgstr "Suivez cette bibliothèque pour accéder à son catalogue."
+
+#. Générique
+msgid "action_retry"
+msgstr "Réessayer"

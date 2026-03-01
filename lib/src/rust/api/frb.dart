@@ -8,8 +8,8 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'frb.freezed.dart';
 
-// These functions are ignored because they are not marked as `pub`: `db`, `device_pairing_svc`, `device_sync_svc`, `entries_to_frb`, `install_panic_hook`, `load_google_books_api_key`, `runtime`, `track_to_frb`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`
+// These functions are ignored because they are not marked as `pub`: `db`, `device_pairing_svc`, `device_sync_svc`, `entries_to_frb`, `hub_db`, `hub_directory_svc`, `install_panic_hook`, `load_google_books_api_key`, `runtime`, `track_to_frb`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Initialize the FFI backend with database at the given path
 /// Must be called before any other FFI functions
@@ -509,6 +509,127 @@ Future<int> deviceSyncApproveAll() =>
 Future<int> deviceSyncRejectAll() =>
     RustLib.instance.api.crateApiFrbDeviceSyncRejectAll();
 
+/// Returns the local hub directory settings, or None if not yet registered.
+Future<FrbDirectoryConfig?> hubDirectoryGetConfig() =>
+    RustLib.instance.api.crateApiFrbHubDirectoryGetConfig();
+
+/// Registers with the hub directory (first call) or updates the profile.
+/// On first registration, the write_token is persisted automatically.
+Future<FrbDirectoryConfig> hubDirectoryRegister({
+  required FrbRegisterParams params,
+}) => RustLib.instance.api.crateApiFrbHubDirectoryRegister(params: params);
+
+/// Pushes the local ISBN list to the hub catalog cache.
+Future<void> hubDirectoryPushCatalog({required List<String> isbnList}) =>
+    RustLib.instance.api.crateApiFrbHubDirectoryPushCatalog(isbnList: isbnList);
+
+/// Browses the hub public directory.
+Future<List<FrbHubProfile>> hubDirectoryList({
+  required PlatformInt64 limit,
+  required PlatformInt64 offset,
+  String? country,
+}) => RustLib.instance.api.crateApiFrbHubDirectoryList(
+  limit: limit,
+  offset: offset,
+  country: country,
+);
+
+/// Gets a specific library profile from the hub directory.
+Future<FrbHubProfile> hubDirectoryGetProfile({required String nodeId}) =>
+    RustLib.instance.api.crateApiFrbHubDirectoryGetProfile(nodeId: nodeId);
+
+/// Gets the ISBN catalog of a library (public or approved follow).
+Future<List<String>> hubDirectoryGetCatalog({required String nodeId}) =>
+    RustLib.instance.api.crateApiFrbHubDirectoryGetCatalog(nodeId: nodeId);
+
+/// Sends a follow request to a library.
+Future<FrbHubFollow> hubDirectoryFollow({required String nodeId}) =>
+    RustLib.instance.api.crateApiFrbHubDirectoryFollow(nodeId: nodeId);
+
+/// Lists incoming follow requests pending approval.
+Future<List<FrbHubFollow>> hubDirectoryPendingRequests() =>
+    RustLib.instance.api.crateApiFrbHubDirectoryPendingRequests();
+
+/// Resolves a pending follow request. resolution: "approve" | "reject" | "block"
+Future<FrbHubFollow> hubDirectoryResolveFollow({
+  required PlatformInt64 followId,
+  required String resolution,
+}) => RustLib.instance.api.crateApiFrbHubDirectoryResolveFollow(
+  followId: followId,
+  resolution: resolution,
+);
+
+/// Lists libraries the local library is following (active follows).
+Future<List<FrbHubFollow>> hubDirectoryListFollowing() =>
+    RustLib.instance.api.crateApiFrbHubDirectoryListFollowing();
+
+/// Lists libraries that follow the local library (active followers).
+Future<List<FrbHubFollow>> hubDirectoryListFollowers() =>
+    RustLib.instance.api.crateApiFrbHubDirectoryListFollowers();
+
+/// Unfollows a library.
+Future<void> hubDirectoryUnfollow({required String nodeId}) =>
+    RustLib.instance.api.crateApiFrbHubDirectoryUnfollow(nodeId: nodeId);
+
+/// Returns all collections with their book counts.
+Future<List<FrbCollection>> getAllCollections() =>
+    RustLib.instance.api.crateApiFrbGetAllCollections();
+
+/// Returns a single collection by ID, or None if not found.
+Future<FrbCollection?> getCollection({required String id}) =>
+    RustLib.instance.api.crateApiFrbGetCollection(id: id);
+
+/// Creates a new collection. Returns the created collection.
+Future<FrbCollection> createCollection({
+  required String name,
+  String? description,
+}) => RustLib.instance.api.crateApiFrbCreateCollection(
+  name: name,
+  description: description,
+);
+
+/// Deletes a collection by ID.
+Future<void> deleteCollection({required String id}) =>
+    RustLib.instance.api.crateApiFrbDeleteCollection(id: id);
+
+/// Returns all books belonging to a collection.
+Future<List<FrbCollectionBook>> getCollectionBooks({
+  required String collectionId,
+}) => RustLib.instance.api.crateApiFrbGetCollectionBooks(
+  collectionId: collectionId,
+);
+
+/// Adds a book to a collection (idempotent).
+Future<void> addBookToCollection({
+  required String collectionId,
+  required int bookId,
+}) => RustLib.instance.api.crateApiFrbAddBookToCollection(
+  collectionId: collectionId,
+  bookId: bookId,
+);
+
+/// Removes a book from a collection.
+Future<void> removeBookFromCollection({
+  required String collectionId,
+  required int bookId,
+}) => RustLib.instance.api.crateApiFrbRemoveBookFromCollection(
+  collectionId: collectionId,
+  bookId: bookId,
+);
+
+/// Returns all collections a book belongs to.
+Future<List<FrbCollection>> getBookCollections({required int bookId}) =>
+    RustLib.instance.api.crateApiFrbGetBookCollections(bookId: bookId);
+
+/// Replaces the set of collections a book belongs to.
+Future<void> updateBookCollections({
+  required int bookId,
+  required List<String> collectionIds,
+}) => RustLib.instance.api.crateApiFrbUpdateBookCollections(
+  bookId: bookId,
+  collectionIds: collectionIds,
+);
+
 /// Simplified book structure for FFI
 @freezed
 sealed class FrbBook with _$FrbBook {
@@ -550,6 +671,106 @@ sealed class FrbBookMetadata with _$FrbBookMetadata {
   }) = _FrbBookMetadata;
 }
 
+/// Collection data exposed to Flutter.
+class FrbCollection {
+  final String id;
+  final String name;
+  final String? description;
+  final String source;
+  final PlatformInt64 totalBooks;
+  final PlatformInt64 ownedBooks;
+  final String createdAt;
+  final String updatedAt;
+
+  const FrbCollection({
+    required this.id,
+    required this.name,
+    this.description,
+    required this.source,
+    required this.totalBooks,
+    required this.ownedBooks,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      name.hashCode ^
+      description.hashCode ^
+      source.hashCode ^
+      totalBooks.hashCode ^
+      ownedBooks.hashCode ^
+      createdAt.hashCode ^
+      updatedAt.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbCollection &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name &&
+          description == other.description &&
+          source == other.source &&
+          totalBooks == other.totalBooks &&
+          ownedBooks == other.ownedBooks &&
+          createdAt == other.createdAt &&
+          updatedAt == other.updatedAt;
+}
+
+/// A book entry within a collection, exposed to Flutter.
+class FrbCollectionBook {
+  final int bookId;
+  final String title;
+  final String? author;
+  final String? coverUrl;
+  final String? publisher;
+  final int? publicationYear;
+  final String addedAt;
+  final bool isOwned;
+  final List<String>? digitalFormats;
+
+  const FrbCollectionBook({
+    required this.bookId,
+    required this.title,
+    this.author,
+    this.coverUrl,
+    this.publisher,
+    this.publicationYear,
+    required this.addedAt,
+    required this.isOwned,
+    this.digitalFormats,
+  });
+
+  @override
+  int get hashCode =>
+      bookId.hashCode ^
+      title.hashCode ^
+      author.hashCode ^
+      coverUrl.hashCode ^
+      publisher.hashCode ^
+      publicationYear.hashCode ^
+      addedAt.hashCode ^
+      isOwned.hashCode ^
+      digitalFormats.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbCollectionBook &&
+          runtimeType == other.runtimeType &&
+          bookId == other.bookId &&
+          title == other.title &&
+          author == other.author &&
+          coverUrl == other.coverUrl &&
+          publisher == other.publisher &&
+          publicationYear == other.publicationYear &&
+          addedAt == other.addedAt &&
+          isOwned == other.isOwned &&
+          digitalFormats == other.digitalFormats;
+}
+
 /// Simplified contact structure for FFI
 @freezed
 sealed class FrbContact with _$FrbContact {
@@ -581,6 +802,16 @@ sealed class FrbCoverCandidate with _$FrbCoverCandidate {
     required String url,
     required String source,
   }) = _FrbCoverCandidate;
+}
+
+@freezed
+sealed class FrbDirectoryConfig with _$FrbDirectoryConfig {
+  const factory FrbDirectoryConfig({
+    required String nodeId,
+    required bool isListed,
+    required bool requiresApproval,
+    required String acceptFrom,
+  }) = _FrbDirectoryConfig;
 }
 
 /// Discovered peer on local network (FFI-compatible)
@@ -692,6 +923,31 @@ class FrbGamificationStatus {
           editsCount == other.editsCount &&
           nextLevelProgress == other.nextLevelProgress &&
           badgeUrl == other.badgeUrl;
+}
+
+@freezed
+sealed class FrbHubFollow with _$FrbHubFollow {
+  const factory FrbHubFollow({
+    required PlatformInt64 id,
+    required String followerNodeId,
+    required String followedNodeId,
+    required String status,
+    required String createdAt,
+    String? resolvedAt,
+  }) = _FrbHubFollow;
+}
+
+@freezed
+sealed class FrbHubProfile with _$FrbHubProfile {
+  const factory FrbHubProfile({
+    required String nodeId,
+    required String displayName,
+    String? description,
+    required int bookCount,
+    String? locationCountry,
+    required bool requiresApproval,
+    String? lastSeenAt,
+  }) = _FrbHubProfile;
 }
 
 /// Leaderboard entry (FFI-safe)
@@ -1213,6 +1469,20 @@ class FrbPuzzleScore {
           normalizedScore == other.normalizedScore &&
           playedAt == other.playedAt &&
           newAchievements == other.newAchievements;
+}
+
+@freezed
+sealed class FrbRegisterParams with _$FrbRegisterParams {
+  const factory FrbRegisterParams({
+    required String nodeId,
+    required String displayName,
+    required int bookCount,
+    required bool isListed,
+    required bool requiresApproval,
+    required String acceptFrom,
+    String? description,
+    String? locationCountry,
+  }) = _FrbRegisterParams;
 }
 
 /// Streak info (FFI-safe)
