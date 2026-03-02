@@ -16,6 +16,12 @@ part 'frb.freezed.dart';
 Future<String> initBackend({required String dbPath}) =>
     RustLib.instance.api.crateApiFrbInitBackend(dbPath: dbPath);
 
+/// Pass the hub URL from Flutter to the Rust process environment.
+/// Must be called once after init_backend, before any hub_directory calls.
+/// Rust reads HUB_URL via std::env::var — it cannot see Flutter's dotenv map.
+Future<void> setHubUrlFfi({required String hubUrl}) =>
+    RustLib.instance.api.crateApiFrbSetHubUrlFfi(hubUrl: hubUrl);
+
 /// Check if the FFI backend is healthy
 String healthCheck() => RustLib.instance.api.crateApiFrbHealthCheck();
 
@@ -523,6 +529,11 @@ Future<FrbDirectoryConfig> hubDirectoryRegister({
 Future<void> hubDirectoryPushCatalog({required List<String> isbnList}) =>
     RustLib.instance.api.crateApiFrbHubDirectoryPushCatalog(isbnList: isbnList);
 
+/// Reads all non-null ISBNs from the local books table and pushes the catalog
+/// to the hub. Returns the number of ISBNs pushed.
+Future<int> hubDirectorySyncCatalog() =>
+    RustLib.instance.api.crateApiFrbHubDirectorySyncCatalog();
+
 /// Browses the hub public directory.
 Future<List<FrbHubProfile>> hubDirectoryList({
   required PlatformInt64 limit,
@@ -934,6 +945,7 @@ sealed class FrbHubFollow with _$FrbHubFollow {
     required String status,
     required String createdAt,
     String? resolvedAt,
+    String? followerDisplayName,
   }) = _FrbHubFollow;
 }
 

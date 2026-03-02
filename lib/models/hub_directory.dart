@@ -82,6 +82,9 @@ class HubFollow {
   final String createdAt;
   final String? resolvedAt;
 
+  /// Display name of the follower (enriched by the hub for pending requests).
+  final String? followerDisplayName;
+
   const HubFollow({
     required this.id,
     required this.followerNodeId,
@@ -89,6 +92,7 @@ class HubFollow {
     required this.status,
     required this.createdAt,
     this.resolvedAt,
+    this.followerDisplayName,
   });
 
   factory HubFollow.fromFrb(frb.FrbHubFollow f) => HubFollow(
@@ -98,6 +102,7 @@ class HubFollow {
         status: f.status,
         createdAt: f.createdAt,
         resolvedAt: f.resolvedAt,
+        followerDisplayName: f.followerDisplayName,
       );
 
   bool get isPending => status == 'pending';

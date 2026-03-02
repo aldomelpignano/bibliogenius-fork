@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart'; // For HapticFeedback
 import 'package:provider/provider.dart';
 import '../data/repositories/book_repository.dart';
+import '../providers/hub_directory_provider.dart';
 import '../data/repositories/copy_repository.dart';
 import '../services/translation_service.dart';
 import '../services/api_service.dart';
@@ -273,6 +274,9 @@ class _ScanScreenState extends State<ScanScreen> {
         final copyRepo = Provider.of<CopyRepository>(context, listen: false);
         await copyRepo.createCopy({'book_id': bookId, 'status': 'available'});
       }
+
+      // Mark catalog dirty so the hub gets updated on next sync
+      context.read<HubDirectoryProvider>().markCatalogDirty();
 
       setState(() {
         _batchCount++;

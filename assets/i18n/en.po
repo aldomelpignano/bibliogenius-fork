@@ -6342,10 +6342,10 @@ msgid "invite_share_title"
 msgstr "Your invite link"
 
 msgid "invite_card_title"
-msgstr "Share your invite link"
+msgstr "Share your library"
 
 msgid "invite_card_subtitle"
-msgstr "Invite contacts to connect"
+msgstr "Send an invitation link"
 
 msgid "copy_invite_link"
 msgstr "Copy link"
@@ -6646,6 +6646,9 @@ msgstr "Show books grouped by their collection in the library"
 msgid "directory_title"
 msgstr "Library Directory"
 
+msgid "directory_browse_subtitle"
+msgstr "Discover and follow other BiblioGenius libraries"
+
 msgid "directory_tab_explore"
 msgstr "Explore"
 
@@ -6734,6 +6737,12 @@ msgstr "Require approval for followers"
 msgid "directory_requires_approval_desc"
 msgstr "New followers need your approval before accessing your catalog"
 
+msgid "directory_requires_approval_short"
+msgstr "Approval required"
+
+msgid "directory_connected"
+msgstr "Connected"
+
 msgid "directory_accept_from_title"
 msgstr "Accept connections from"
 
@@ -6768,3 +6777,34 @@ msgstr "Follow this library to access its catalog."
 #. Generic
 msgid "action_retry"
 msgstr "Retry"
+
+#. Libraries tab
+msgid "tab_libraries"
+msgstr "Libraries"
+
+msgid "lib_filter_all"
+msgstr "All"
+
+msgid "lib_filter_peers"
+msgstr "Connections"
+
+msgid "lib_filter_following"
+msgstr "Following"
+
+msgid "lib_connection_peer"
+msgstr "Paired"
+
+msgid "lib_follow_pending"
+msgstr "Pending"
+
+msgid "lib_follow_active"
+msgstr "Following"
+
+msgid "lib_empty_title"
+msgstr "No connected libraries yet"
+
+msgid "lib_empty_hint"
+msgstr "Discover libraries via the directory, or connect directly with a peer on your network."
+
+msgid "lib_unfollow"
+msgstr "Unfollow"

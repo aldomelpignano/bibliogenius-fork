@@ -116,7 +116,7 @@ class ScaffoldWithNav extends StatelessWidget {
               );
             },
           ),
-          label: Text(TranslationService.translate(context, 'network')),
+          label: Text(TranslationService.translate(context, 'nav_network')),
         ),
       ),
       _NavItem(

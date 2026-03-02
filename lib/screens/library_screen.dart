@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../services/translation_service.dart';
 import '../widgets/genie_app_bar.dart';
 import '../widgets/contextual_help_sheet.dart';
+import '../widgets/invite_share_sheet.dart';
 import '../providers/theme_provider.dart';
 import 'book_list_screen.dart';
 import 'shelves_screen.dart';
@@ -225,15 +226,31 @@ class _LibraryScreenState extends State<LibraryScreen>
       },
     );
 
+    final shareLibraryTile = ListTile(
+      leading: const Icon(Icons.share, color: Colors.teal),
+      title: Text(
+        TranslationService.translate(context, 'invite_card_title'),
+      ),
+      subtitle: Text(
+        TranslationService.translate(context, 'invite_card_subtitle'),
+        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+      ),
+      onTap: () {
+        Navigator.pop(context);
+        showInviteShareSheet(context);
+      },
+    );
+
     // Books Tab (Index 0)
     if (_tabController.index == 0) {
-      return [batchScanTile];
+      return [batchScanTile, shareLibraryTile];
     }
 
     // Shelves Tab (Index 1)
     if (_tabController.index == 1) {
       return [
         batchScanTile,
+        shareLibraryTile,
         ListTile(
           leading: const Icon(Icons.settings, color: Colors.blueGrey),
           title: Text(

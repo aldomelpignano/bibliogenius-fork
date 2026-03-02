@@ -1019,6 +1019,17 @@ class FfiService {
     }
   }
 
+  /// Read all non-null ISBNs from the local DB and push them to the hub.
+  /// Returns the number of ISBNs pushed, or -1 on error.
+  Future<int> hubDirectorySyncCatalog() async {
+    try {
+      return await frb.hubDirectorySyncCatalog();
+    } catch (e) {
+      debugPrint('FFI hubDirectorySyncCatalog error: $e');
+      return -1;
+    }
+  }
+
   /// List libraries in the public directory (paginated).
   Future<List<frb.FrbHubProfile>> hubDirectoryList({
     required int limit,
@@ -1053,12 +1064,13 @@ class FfiService {
   }
 
   /// Follow (or request to follow) a library.
+  /// Throws on error so the caller can display the message.
   Future<frb.FrbHubFollow?> hubDirectoryFollow(String nodeId) async {
     try {
       return await frb.hubDirectoryFollow(nodeId: nodeId);
     } catch (e) {
       debugPrint('FFI hubDirectoryFollow error: $e');
-      return null;
+      rethrow;
     }
   }
 

@@ -20,6 +20,7 @@ import '../models/book.dart';
 import '../models/contact.dart';
 import '../models/copy.dart';
 import '../models/cover_candidate.dart';
+import '../providers/hub_directory_provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/api_service.dart';
 import '../services/translation_service.dart';
@@ -1861,6 +1862,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
         if (_book == null) return;
         await bookRepo.deleteBook(_book!.id!);
         if (context.mounted) {
+          context.read<HubDirectoryProvider>().markCatalogDirty();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(

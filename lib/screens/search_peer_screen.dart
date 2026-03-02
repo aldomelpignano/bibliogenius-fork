@@ -298,6 +298,9 @@ class _SearchPeerScreenState extends State<SearchPeerScreen> {
                                       'id': peer['id'],
                                       'name': peer['name'],
                                       'url': peer['url'],
+                                      'hasRelayCredentials':
+                                          (peer['relay_url'] as String?)?.isNotEmpty == true &&
+                                          (peer['mailbox_id'] as String?)?.isNotEmpty == true,
                                     },
                                   );
                                 },

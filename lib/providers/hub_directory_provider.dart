@@ -56,12 +56,26 @@ class HubDirectoryProvider extends ChangeNotifier {
   /// Number of pending incoming follow requests - used for badge.
   int get pendingCount => _pendingRequests.length;
 
+  // ── Name cache ──────────────────────────────────────────────────────────
+
+  /// nodeId -> display name, populated lazily from hub profile lookups.
+  final Map<String, String> _nameCache = {};
+
+  // ── Catalog sync ────────────────────────────────────────────────────────
+
+  /// True when the local book list has changed since the last catalog push.
+  bool _catalogDirty = false;
+
+  bool get catalogDirty => _catalogDirty;
+
   // ── Action state ──────────────────────────────────────────────────────────
 
-  bool _actionInProgress = false;
+  /// Node IDs currently being processed (per-item loading).
+  final Set<String> _busyNodes = {};
   String? _actionError;
 
-  bool get actionInProgress => _actionInProgress;
+  bool isBusy(String nodeId) => _busyNodes.contains(nodeId);
+  bool get actionInProgress => _busyNodes.isNotEmpty;
   String? get actionError => _actionError;
 
   // ---------------------------------------------------------------------------
@@ -181,7 +195,7 @@ class HubDirectoryProvider extends ChangeNotifier {
   /// Follow (or request to follow) a library identified by [nodeId].
   /// Updates the following list on success.
   Future<bool> follow(String nodeId) async {
-    _actionInProgress = true;
+    _busyNodes.add(nodeId);
     _actionError = null;
     notifyListeners();
 
@@ -191,20 +205,22 @@ class HubDirectoryProvider extends ChangeNotifier {
         await loadFollowing();
         return true;
       }
+      _actionError = 'Follow request failed';
+      debugPrint('HubDirectoryProvider follow: result was null for $nodeId');
       return false;
     } catch (e) {
       _actionError = e.toString();
       debugPrint('HubDirectoryProvider follow error: $e');
       return false;
     } finally {
-      _actionInProgress = false;
+      _busyNodes.remove(nodeId);
       notifyListeners();
     }
   }
 
   /// Unfollow a library identified by [nodeId].
   Future<bool> unfollow(String nodeId) async {
-    _actionInProgress = true;
+    _busyNodes.add(nodeId);
     _actionError = null;
     notifyListeners();
 
@@ -217,7 +233,7 @@ class HubDirectoryProvider extends ChangeNotifier {
       debugPrint('HubDirectoryProvider unfollow error: $e');
       return false;
     } finally {
-      _actionInProgress = false;
+      _busyNodes.remove(nodeId);
       notifyListeners();
     }
   }
@@ -230,6 +246,9 @@ class HubDirectoryProvider extends ChangeNotifier {
     try {
       final raw = await _ffi.hubDirectoryListFollowing();
       _following = raw.map(HubFollow.fromFrb).toList();
+      _resolveNames(
+        _following.map((f) => f.followedNodeId).toList(),
+      );
     } catch (e) {
       debugPrint('HubDirectoryProvider loadFollowing error: $e');
     }
@@ -240,6 +259,9 @@ class HubDirectoryProvider extends ChangeNotifier {
     try {
       final raw = await _ffi.hubDirectoryListFollowers();
       _followers = raw.map(HubFollow.fromFrb).toList();
+      _resolveNames(
+        _followers.map((f) => f.followerNodeId).toList(),
+      );
     } catch (e) {
       debugPrint('HubDirectoryProvider loadFollowers error: $e');
     }
@@ -251,6 +273,9 @@ class HubDirectoryProvider extends ChangeNotifier {
     try {
       final raw = await _ffi.hubDirectoryPendingRequests();
       _pendingRequests = raw.map(HubFollow.fromFrb).toList();
+      _resolveNames(
+        _pendingRequests.map((f) => f.followerNodeId).toList(),
+      );
     } catch (e) {
       debugPrint('HubDirectoryProvider loadPendingRequests error: $e');
     }
@@ -265,7 +290,8 @@ class HubDirectoryProvider extends ChangeNotifier {
   ///
   /// [resolution]: "approve", "reject", or "block"
   Future<bool> resolveFollow(int followId, String resolution) async {
-    _actionInProgress = true;
+    final key = 'resolve_$followId';
+    _busyNodes.add(key);
     _actionError = null;
     notifyListeners();
 
@@ -283,9 +309,40 @@ class HubDirectoryProvider extends ChangeNotifier {
       debugPrint('HubDirectoryProvider resolveFollow error: $e');
       return false;
     } finally {
-      _actionInProgress = false;
+      _busyNodes.remove(key);
       notifyListeners();
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Catalog sync
+  // ---------------------------------------------------------------------------
+
+  /// Mark the catalog as needing a push to the hub.
+  /// Call this after a book is added or deleted.
+  void markCatalogDirty() {
+    _catalogDirty = true;
+  }
+
+  /// Push the full ISBN catalog to the hub.
+  /// Returns the number of ISBNs pushed, or -1 on error.
+  Future<int> syncCatalog() async {
+    if (!isRegistered) return 0;
+    try {
+      final count = await _ffi.hubDirectorySyncCatalog();
+      if (count >= 0) _catalogDirty = false;
+      debugPrint('HubDirectoryProvider syncCatalog: pushed $count ISBNs');
+      return count;
+    } catch (e) {
+      debugPrint('HubDirectoryProvider syncCatalog error: $e');
+      return -1;
+    }
+  }
+
+  /// Push catalog only if dirty and registered. Intended for lifecycle hooks.
+  Future<void> syncCatalogIfDirty() async {
+    if (!_catalogDirty || !isRegistered || !isListed) return;
+    await syncCatalog();
   }
 
   // ---------------------------------------------------------------------------
@@ -300,6 +357,43 @@ class HubDirectoryProvider extends ChangeNotifier {
           .status;
     } catch (_) {
       return null;
+    }
+  }
+
+  /// Resolves a node ID to a display name.
+  /// Checks: name cache, then loaded directory profiles.
+  String? displayNameFor(String nodeId) {
+    final cached = _nameCache[nodeId];
+    if (cached != null) return cached;
+    try {
+      final name = _profiles
+          .firstWhere((p) => p.nodeId == nodeId)
+          .displayName;
+      _nameCache[nodeId] = name;
+      return name;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Fetches display names for [nodeIds] not already cached.
+  /// Runs in the background and calls notifyListeners when done.
+  void _resolveNames(List<String> nodeIds) {
+    final unknown = nodeIds
+        .where((id) => !_nameCache.containsKey(id))
+        .toSet();
+    if (unknown.isEmpty) return;
+
+    // Fire-and-forget: fetch each profile and update cache.
+    for (final id in unknown) {
+      _ffi.hubDirectoryGetProfile(id).then((profile) {
+        if (profile != null) {
+          _nameCache[id] = profile.displayName;
+          notifyListeners();
+        }
+      }).catchError((e) {
+        debugPrint('HubDirectoryProvider _resolveNames($id): $e');
+      });
     }
   }
 

@@ -9,15 +9,19 @@ import '../services/translation_service.dart';
 import '../providers/theme_provider.dart';
 
 class PeerBookListScreen extends StatefulWidget {
-  final int peerId; // Keep for compatibility
+  final int peerId;
   final String peerName;
-  final String peerUrl; // Add URL
+  final String peerUrl;
+  /// Whether this peer has relay credentials (relay_url + mailbox_id).
+  /// When false, relay sync is skipped and an offline state is shown instead.
+  final bool hasRelayCredentials;
 
   const PeerBookListScreen({
     super.key,
     required this.peerId,
     required this.peerName,
     required this.peerUrl,
+    this.hasRelayCredentials = false,
   });
 
   @override
@@ -156,7 +160,13 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
         }
       }
 
-      // 4. Offline (or live fetch failed without cache) - try relay
+      // 4. Offline (or live fetch failed without cache) - try relay if available
+      if (!widget.hasRelayCredentials) {
+        // Peer has no relay - show offline state immediately
+        if (mounted) setState(() { _isLoading = false; _isRefreshing = false; });
+        return;
+      }
+
       if (cacheDisplayed) {
         // Cache is already shown - try relay in background for updates
         if (mounted) setState(() => _isRefreshing = false);
@@ -164,7 +174,7 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
         return;
       }
 
-      // 5. No cache available - try relay sync (ADR-012)
+      // 5. No cache, but relay available - try relay sync (ADR-012)
       setState(() => _isLoading = false);
       _tryRelaySync();
     } catch (e) {

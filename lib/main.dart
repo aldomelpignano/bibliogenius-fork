@@ -820,6 +820,8 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
                       peerId: peer['id'],
                       peerName: peer['name'],
                       peerUrl: peer['url'],
+                      hasRelayCredentials:
+                          peer['hasRelayCredentials'] as bool? ?? false,
                     );
                   },
                 ),
@@ -1006,6 +1008,13 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
           debugPrint('Server unavailable after app resume');
         }
       });
+
+      // Push catalog to hub if books changed since last sync
+      try {
+        context.read<HubDirectoryProvider>().syncCatalogIfDirty();
+      } catch (e) {
+        debugPrint('Catalog sync on resume skipped: $e');
+      }
     }
   }
 

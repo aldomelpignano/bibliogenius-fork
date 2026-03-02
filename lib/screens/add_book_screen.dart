@@ -17,6 +17,7 @@ import '../data/repositories/copy_repository.dart';
 import '../services/api_service.dart';
 import '../services/translation_service.dart';
 import '../services/sync_service.dart';
+import '../providers/hub_directory_provider.dart';
 import '../providers/theme_provider.dart';
 import '../utils/book_status.dart';
 import '../models/book.dart';
@@ -413,6 +414,9 @@ class _AddBookScreenState extends State<AddBookScreen> {
         _duplicateBook = null;
         _lastLookedUpIsbn = null;
         _selectedDigitalFormats.clear();
+
+        // Mark catalog dirty so the hub gets updated on next sync
+        context.read<HubDirectoryProvider>().markCatalogDirty();
 
         // Trigger sync with peers in background (dont await to keep UI snappy)
         try {

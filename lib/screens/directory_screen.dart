@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../models/hub_directory.dart';
 import '../providers/hub_directory_provider.dart';
+import '../services/api_service.dart';
 import '../services/translation_service.dart';
 import '../theme/app_design.dart';
 import '../providers/theme_provider.dart';
@@ -24,6 +25,7 @@ class _DirectoryScreenState extends State<DirectoryScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   final _scrollController = ScrollController();
+  Set<String> _connectedPeerIds = {};
 
   @override
   void initState() {
@@ -36,9 +38,28 @@ class _DirectoryScreenState extends State<DirectoryScreen>
       provider.loadFollowing();
       provider.loadFollowers();
       provider.loadPendingRequests();
+      _loadConnectedPeerIds();
     });
 
     _scrollController.addListener(_onScroll);
+  }
+
+  Future<void> _loadConnectedPeerIds() async {
+    try {
+      final api = context.read<ApiService>();
+      final resp = await api.getPeers();
+      final peersData =
+          ((resp.data as Map<String, dynamic>?)?['data'] as List<dynamic>?) ??
+          [];
+      final ids = peersData
+          .map(
+            (j) =>
+                (j as Map<String, dynamic>)['library_uuid'] as String?,
+          )
+          .whereType<String>()
+          .toSet();
+      if (mounted) setState(() => _connectedPeerIds = ids);
+    } catch (_) {}
   }
 
   @override
@@ -66,27 +87,67 @@ class _DirectoryScreenState extends State<DirectoryScreen>
     return Scaffold(
       appBar: GenieAppBar(
         title: TranslationService.translate(context, 'directory_title'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(
-              text: TranslationService.translate(context, 'directory_tab_explore'),
-            ),
-            Tab(
-              text: TranslationService.translate(context, 'directory_tab_following'),
-            ),
-            Semantics(
-              label: _pendingBadgeLabel(context),
-              child: Tab(
-                child: _PendingBadgeTab(
-                  label: TranslationService.translate(
-                    context,
-                    'directory_tab_requests',
-                  ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(64),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppDesign.radiusRound),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicator: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppDesign.radiusRound),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
                 ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                dividerColor: Colors.transparent,
+                labelColor: AppDesign
+                    .appBarGradientForTheme(themeProvider.themeStyle)
+                    .colors
+                    .first,
+                unselectedLabelColor: Colors.white.withValues(alpha: 0.85),
+                labelPadding: EdgeInsets.zero,
+                tabs: [
+                  _PillTab(
+                    icon: Icons.travel_explore,
+                    label: TranslationService.translate(
+                      context,
+                      'directory_tab_explore',
+                    ),
+                  ),
+                  _PillTab(
+                    icon: Icons.group,
+                    label: TranslationService.translate(
+                      context,
+                      'directory_tab_following',
+                    ),
+                  ),
+                  Semantics(
+                    label: _pendingBadgeLabel(context),
+                    child: Tab(
+                      child: _PendingBadgeTab(
+                        label: TranslationService.translate(
+                          context,
+                          'directory_tab_requests',
+                        ),
+                        icon: Icons.mark_email_unread,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
       body: Container(
@@ -96,7 +157,10 @@ class _DirectoryScreenState extends State<DirectoryScreen>
         child: TabBarView(
           controller: _tabController,
           children: [
-            _ExploreTab(scrollController: _scrollController),
+            _ExploreTab(
+              scrollController: _scrollController,
+              connectedPeerIds: _connectedPeerIds,
+            ),
             const _FollowingTab(),
             const _RequestsTab(),
           ],
@@ -118,8 +182,12 @@ class _DirectoryScreenState extends State<DirectoryScreen>
 
 class _ExploreTab extends StatelessWidget {
   final ScrollController scrollController;
+  final Set<String> connectedPeerIds;
 
-  const _ExploreTab({required this.scrollController});
+  const _ExploreTab({
+    required this.scrollController,
+    required this.connectedPeerIds,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -150,7 +218,7 @@ class _ExploreTab extends StatelessWidget {
           onRefresh: provider.loadDirectory,
           child: ListView.builder(
             controller: scrollController,
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             itemCount:
                 provider.profiles.length + (provider.hasMore ? 1 : 0),
             itemBuilder: (context, index) {
@@ -160,7 +228,11 @@ class _ExploreTab extends StatelessWidget {
                   child: Center(child: CircularProgressIndicator()),
                 );
               }
-              return _LibraryCard(profile: provider.profiles[index]);
+              final profile = provider.profiles[index];
+              return _LibraryCard(
+                profile: profile,
+                isConnected: connectedPeerIds.contains(profile.nodeId),
+              );
             },
           ),
         );
@@ -200,7 +272,7 @@ class _FollowingTab extends StatelessWidget {
         return RefreshIndicator(
           onRefresh: provider.loadFollowing,
           child: ListView(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             children: [
               if (pending.isNotEmpty) ...[
                 _SectionHeader(
@@ -256,7 +328,7 @@ class _RequestsTab extends StatelessWidget {
         return RefreshIndicator(
           onRefresh: provider.loadPendingRequests,
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             itemCount: provider.pendingRequests.length,
             itemBuilder: (context, index) {
               return _IncomingRequestTile(
@@ -276,8 +348,9 @@ class _RequestsTab extends StatelessWidget {
 
 class _LibraryCard extends StatelessWidget {
   final HubProfile profile;
+  final bool isConnected;
 
-  const _LibraryCard({required this.profile});
+  const _LibraryCard({required this.profile, this.isConnected = false});
 
   @override
   Widget build(BuildContext context) {
@@ -287,7 +360,7 @@ class _LibraryCard extends StatelessWidget {
         provider.config?.nodeId == profile.nodeId;
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Semantics(
         button: true,
         label:
@@ -302,21 +375,25 @@ class _LibraryCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Avatar
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Theme.of(context)
-                      .colorScheme
-                      .primaryContainer,
-                  child: Text(
-                    profile.displayName.isNotEmpty
-                        ? profile.displayName[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color:
-                          Theme.of(context).colorScheme.onPrimaryContainer,
+                // Gradient avatar
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: _avatarGradientFor(profile.displayName),
+                    shape: BoxShape.circle,
+                    boxShadow: AppDesign.subtleShadow,
+                  ),
+                  child: Center(
+                    child: Text(
+                      profile.displayName.isNotEmpty
+                          ? profile.displayName[0].toUpperCase()
+                          : '?',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -342,40 +419,47 @@ class _LibraryCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
-                      const SizedBox(height: 4),
-                      Row(
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
                         children: [
-                          const Icon(Icons.menu_book,
-                              size: 14, color: Colors.grey),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${profile.bookCount} ${TranslationService.translate(context, 'directory_books')}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: Colors.grey[600]),
+                          _StatChip(
+                            icon: Icons.menu_book,
+                            label:
+                                '${profile.bookCount} ${TranslationService.translate(context, 'directory_books')}',
                           ),
-                          if (profile.locationCountry != null) ...[
-                            const SizedBox(width: 8),
-                            const Icon(Icons.place,
-                                size: 14, color: Colors.grey),
-                            const SizedBox(width: 4),
-                            Text(
-                              profile.locationCountry!,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(color: Colors.grey[600]),
+                          if (profile.locationCountry != null)
+                            _StatChip(
+                              icon: Icons.place,
+                              label: profile.locationCountry!,
                             ),
-                          ],
+                          if (isConnected)
+                            _StatChip(
+                              icon: Icons.wifi,
+                              label: TranslationService.translate(
+                                context,
+                                'directory_connected',
+                              ),
+                              color: Colors.green.shade700,
+                            )
+                          else if (profile.requiresApproval)
+                            _StatChip(
+                              icon: Icons.lock_outline,
+                              label: TranslationService.translate(
+                                context,
+                                'directory_requires_approval_short',
+                              ),
+                              color: Colors.orange.shade700,
+                            ),
                         ],
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Follow button (hidden for self)
-                if (!isSelf)
+                // Follow button: hidden for self and already-connected peers
+                if (!isSelf && !isConnected)
                   _FollowButton(
                     nodeId: profile.nodeId,
                     requiresApproval: profile.requiresApproval,
@@ -409,9 +493,11 @@ class _FollowButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<HubDirectoryProvider>();
 
+    final busy = provider.isBusy(nodeId);
+
     if (followStatus == 'active') {
       return OutlinedButton(
-        onPressed: provider.actionInProgress
+        onPressed: busy
             ? null
             : () => _confirmUnfollow(context, provider),
         child: Text(
@@ -431,7 +517,7 @@ class _FollowButton extends StatelessWidget {
 
     // Not yet following
     return FilledButton(
-      onPressed: provider.actionInProgress
+      onPressed: busy
           ? null
           : () async {
               final ok = await provider.follow(nodeId);
@@ -450,11 +536,17 @@ class _FollowButton extends StatelessWidget {
                 );
               }
             },
-      child: Text(
-        requiresApproval
-            ? TranslationService.translate(context, 'directory_request')
-            : TranslationService.translate(context, 'directory_follow'),
-      ),
+      child: busy
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Text(
+              requiresApproval
+                  ? TranslationService.translate(context, 'directory_request')
+                  : TranslationService.translate(context, 'directory_follow'),
+            ),
     );
   }
 
@@ -508,28 +600,35 @@ class _FollowTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<HubDirectoryProvider>();
     final nodeId =
         outgoing ? follow.followedNodeId : follow.followerNodeId;
+    final displayName = follow.followerDisplayName ??
+        provider.displayNameFor(nodeId);
+    final hasName = displayName != null && displayName.isNotEmpty;
+    final label = hasName ? displayName : nodeId;
     final statusLabel = follow.isPending
         ? TranslationService.translate(context, 'directory_pending')
         : TranslationService.translate(context, 'directory_following');
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor:
               Theme.of(context).colorScheme.primaryContainer,
           child: Text(
-            nodeId.isNotEmpty ? nodeId[0].toUpperCase() : '?',
+            label.isNotEmpty ? label[0].toUpperCase() : '?',
             style: TextStyle(
               color: Theme.of(context).colorScheme.onPrimaryContainer,
             ),
           ),
         ),
         title: Text(
-          nodeId,
-          style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+          label,
+          style: hasName
+              ? const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)
+              : const TextStyle(fontFamily: 'monospace', fontSize: 12),
         ),
         subtitle: Text(statusLabel),
         trailing: outgoing && follow.isActive
@@ -564,9 +663,13 @@ class _IncomingRequestTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.read<HubDirectoryProvider>();
+    final displayName = follow.followerDisplayName ??
+        provider.displayNameFor(follow.followerNodeId);
+    final hasName = displayName != null && displayName.isNotEmpty;
+    final label = hasName ? displayName : follow.followerNodeId;
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Row(
@@ -575,9 +678,7 @@ class _IncomingRequestTile extends StatelessWidget {
               backgroundColor:
                   Theme.of(context).colorScheme.primaryContainer,
               child: Text(
-                follow.followerNodeId.isNotEmpty
-                    ? follow.followerNodeId[0].toUpperCase()
-                    : '?',
+                label.isNotEmpty ? label[0].toUpperCase() : '?',
                 style: TextStyle(
                   color:
                       Theme.of(context).colorScheme.onPrimaryContainer,
@@ -587,9 +688,11 @@ class _IncomingRequestTile extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                follow.followerNodeId,
-                style:
-                    const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                label,
+                style: hasName
+                    ? const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 14)
+                    : const TextStyle(fontFamily: 'monospace', fontSize: 12),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -633,13 +736,39 @@ class _IncomingRequestTile extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
+// Pill tab - compact horizontal icon + label
+// ---------------------------------------------------------------------------
+
+class _PillTab extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _PillTab({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tab(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15),
+          const SizedBox(width: 5),
+          Text(label, style: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Pending badge tab label
 // ---------------------------------------------------------------------------
 
 class _PendingBadgeTab extends StatelessWidget {
   final String label;
+  final IconData icon;
 
-  const _PendingBadgeTab({required this.label});
+  const _PendingBadgeTab({required this.label, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -647,11 +776,13 @@ class _PendingBadgeTab extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label),
+        Icon(icon, size: 15),
+        const SizedBox(width: 5),
+        Text(label, style: const TextStyle(fontSize: 12)),
         if (count > 0) ...[
           const SizedBox(width: 4),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.error,
               borderRadius: BorderRadius.circular(10),
@@ -685,7 +816,7 @@ class _SectionHeader extends StatelessWidget {
     return Semantics(
       header: true,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
         child: Text(
           title,
           style: Theme.of(context)
@@ -731,6 +862,62 @@ class _EmptyState extends StatelessWidget {
       ),
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Stat chip (book count, location, approval)
+// ---------------------------------------------------------------------------
+
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color? color;
+
+  const _StatChip({required this.icon, required this.label, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = color ?? Theme.of(context).colorScheme.onSurfaceVariant;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppDesign.radiusRound),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: fg),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: fg,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Avatar gradient helper
+// ---------------------------------------------------------------------------
+
+LinearGradient _avatarGradientFor(String name) {
+  const gradients = [
+    AppDesign.refinedSuccessGradient,
+    AppDesign.primaryGradient,
+    AppDesign.refinedWarningGradient,
+    AppDesign.refinedAccentGradient,
+    AppDesign.refinedOceanGradient,
+    AppDesign.oceanGradient,
+  ];
+  final idx = name.isEmpty ? 0 : name.codeUnitAt(0) % gradients.length;
+  return gradients[idx];
 }
 
 // ---------------------------------------------------------------------------

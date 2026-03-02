@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../theme/app_design.dart';
 import '../widgets/genie_app_bar.dart';
 import '../widgets/contextual_help_sheet.dart';
 import '../widgets/invite_share_sheet.dart';
@@ -9,23 +10,20 @@ import 'package:go_router/go_router.dart';
 import 'dart:async';
 import 'dart:convert';
 import '../models/network_member.dart';
-import '../providers/theme_provider.dart';
+import '../models/library_relation.dart';
 import '../data/repositories/contact_repository.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../services/mdns_service.dart';
 import '../providers/pending_peers_provider.dart';
+import '../providers/hub_directory_provider.dart';
 import '../services/translation_service.dart';
-import '../utils/app_constants.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'borrow_requests_screen.dart';
 
-/// Filter options for the network list
-enum NetworkFilter { all, libraries, contacts }
-
-/// Unified screen displaying Contacts and Loans tabs
+/// Unified screen displaying Contacts, Libraries, and Loans tabs
 class NetworkScreen extends StatefulWidget {
   final int initialIndex;
 
@@ -43,20 +41,23 @@ class _NetworkScreenState extends State<NetworkScreen>
   late TabController _mainTabController;
   final GlobalKey<_ContactsListViewState> _contactsListKey =
       GlobalKey<_ContactsListViewState>();
+  final GlobalKey<_LibrariesListViewState> _librariesListKey =
+      GlobalKey<_LibrariesListViewState>();
 
   @override
   void initState() {
     super.initState();
-    // Two main tabs: Contacts and Loans
     _mainTabController = TabController(
-      length: 2,
+      length: 3,
       vsync: this,
       initialIndex: widget.initialIndex,
     );
+    _mainTabController.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
+    _mainTabController.removeListener(() => setState(() {}));
     _mainTabController.dispose();
     super.dispose();
   }
@@ -159,6 +160,24 @@ class _NetworkScreenState extends State<NetworkScreen>
                   );
                 },
               ),
+              const Divider(height: 1),
+              ListTile(
+                key: const Key('actionBrowseDirectory'),
+                leading: CircleAvatar(
+                  backgroundColor: Colors.teal.shade100,
+                  child: Icon(Icons.travel_explore, color: Colors.teal.shade700),
+                ),
+                title: Text(
+                  TranslationService.translate(context, 'directory_title'),
+                ),
+                subtitle: Text(
+                  TranslationService.translate(context, 'directory_browse_subtitle'),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  context.push('/directory');
+                },
+              ),
               const SizedBox(height: 8),
             ],
           ),
@@ -216,30 +235,28 @@ class _NetworkScreenState extends State<NetworkScreen>
           unselectedLabelColor: Colors.white70,
           tabs: [
             Tab(text: TranslationService.translate(context, 'contacts')),
-            Tab(
-              text: TranslationService.translate(
-                context,
-                'loans_and_borrowings',
-              ),
-            ),
+            Tab(text: TranslationService.translate(context, 'tab_libraries')),
+            Tab(text: TranslationService.translate(context, 'loans_and_borrowings')),
           ],
         ),
       ),
       body: TabBarView(
         controller: _mainTabController,
         children: [
-          // Tab 1: Contacts (now directly showing the list)
           ContactsListView(key: _contactsListKey),
-          // Tab 2: Loans (Existing BorrowRequestsScreen as view)
+          LibrariesListView(key: _librariesListKey),
           LoansScreen(isTabView: true, initialTab: widget.initialLoansTab),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        key: const Key('networkAddFab'),
-        heroTag: 'network_add_fab',
-        onPressed: () => _showAddConnectionSheet(context),
-        child: const Icon(Icons.add),
-      ),
+      // Hide FAB on Loans tab
+      floatingActionButton: _mainTabController.index == 2
+          ? null
+          : FloatingActionButton(
+              key: const Key('networkAddFab'),
+              heroTag: 'network_add_fab',
+              onPressed: () => _showAddConnectionSheet(context),
+              child: const Icon(Icons.add),
+            ),
     );
   }
 }
@@ -253,14 +270,8 @@ class ContactsListView extends StatefulWidget {
 }
 
 class _ContactsListViewState extends State<ContactsListView> {
-  // Logic from original NetworkScreen for loading/displaying list
-  List<NetworkMember> _members = [];
-  List<DiscoveredPeer> _localPeers = []; // mDNS discovered peers
+  List<NetworkMember> _members = []; // borrowers only
   bool _isLoading = true;
-  NetworkFilter _filter = NetworkFilter.all;
-  Map<int, bool> _peerConnectivity = {};
-  Map<String, bool> _localPeerConnectivity = {}; // connectivity for mDNS peers
-  Map<String, NetworkMember> _mergedLocalPeers = {}; // mDNS peers that are also in DB
 
   @override
   void initState() {
@@ -270,232 +281,38 @@ class _ContactsListViewState extends State<ContactsListView> {
 
   void reloadMembers() {
     _loadAllMembers();
-    // Also refresh pending peers count
-    if (mounted) {
-      context.read<PendingPeersProvider>().refresh();
-    }
   }
 
-  /// Pull-to-refresh: trigger immediate relay poll, then reload members.
   Future<void> _pullToRefresh() async {
-    final api = Provider.of<ApiService>(context, listen: false);
-    try {
-      await api.pollRelayNow();
-    } catch (_) {
-      // Poll may fail if relay not configured - that's fine
-    }
     await _loadAllMembers();
   }
 
   Future<void> _loadAllMembers() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
-    final api = Provider.of<ApiService>(context, listen: false);
-
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      final libraryId = await authService.getLibraryId() ?? 1;
-
       final contactRepo = Provider.of<ContactRepository>(context, listen: false);
-
-      // When P2P disabled, only load contacts
-      if (!AppConstants.enableP2PFeatures) {
-        final contactsList = await contactRepo.getContacts(libraryId: libraryId);
-        final contacts = contactsList
-            .map((c) => NetworkMember.fromContact(c))
-            .toList();
-
-        contacts.sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-        );
-
-        if (mounted) {
-          setState(() {
-            _members = contacts;
-            _isLoading = false;
-          });
-        }
-        return;
-      }
-
-      // P2P enabled logic (simplified for brevity, reused from original)
-      // For this refactor, we retain the core loading logic
-      // ... (Rest of loading logic similar to original _loadAllMembers)
-      // To save tokens/complexity, I will implement a simplified version that fetches both
-      // assuming standard API behavior.
-
-      // Fetch contacts and peers in parallel
-      final contactsFuture = contactRepo.getContacts(libraryId: libraryId);
-      final peersFuture = api.getPeers();
-      final contactsList = await contactsFuture;
-      final peersRes = await peersFuture;
-
-      final contacts = contactsList
+      final libraryId = await authService.getLibraryId() ?? 1;
+      final contactsList = await contactRepo.getContacts(libraryId: libraryId);
+      final borrowers = contactsList
           .map((c) => NetworkMember.fromContact(c))
-          .toList();
-
-      String? myUrl;
-      try {
-        final configRes = await api.getLibraryConfig();
-        myUrl = configRes.data['default_uri'] as String?;
-      } catch (_) {}
-
-      final List<dynamic> peersJson = (peersRes.data['data'] ?? []) as List;
-      final peers = peersJson
-          .where((peer) => myUrl == null || peer['url'] != myUrl)
-          .map((p) => NetworkMember.fromPeer(p))
-          .toList();
-
-      // Deduplicate
-      final peerNames = peers.map((p) => p.name.toLowerCase()).toSet();
-      final dedupedContacts = contacts.where((c) {
-        if (c.type == NetworkMemberType.borrower) return true;
-        return !peerNames.contains(c.name.toLowerCase());
-      }).toList();
-
-      final allMembers = [...peers, ...dedupedContacts];
-      allMembers.sort((a, b) {
-        if (a.source != b.source) {
-          return a.source == NetworkMemberSource.network ? -1 : 1;
-        }
-        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-      });
-
-      // Load mDNS discovered peers if network discovery is enabled AND on WiFi.
-      // Without a valid WiFi IP, mDNS peers are stale (from a previous WiFi session).
-      List<DiscoveredPeer> localPeers = [];
-      final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-      if (themeProvider.networkDiscoveryEnabled && MdnsService.isActive) {
-        final wifiIp = await MdnsService.getValidLanIp();
-        if (wifiIp != null) {
-          localPeers = MdnsService.peers;
-          debugPrint('🔍 NetworkScreen: Found ${localPeers.length} mDNS peers (WiFi: $wifiIp)');
-        } else {
-          debugPrint('🔍 NetworkScreen: No WiFi - hiding mDNS peers');
-        }
-      }
-
-      // Build merged peers map: mDNS peers that match a DB peer by URL
-      final Map<String, NetworkMember> mergedLocalPeers = {};
-      final Set<int> mergedPeerIds = {};
-
-      if (localPeers.isNotEmpty) {
-        // Index mDNS peers by URL
-        final Map<String, DiscoveredPeer> mdnsByUrl = {};
-        for (final lp in localPeers) {
-          mdnsByUrl['http://${lp.host}:${lp.port}'] = lp;
-        }
-
-        // Check which DB peers match an mDNS peer
-        for (final member in allMembers) {
-          if (member.source == NetworkMemberSource.network && member.url != null) {
-            final normalizedUrl = member.url!;
-            if (mdnsByUrl.containsKey(normalizedUrl)) {
-              final peer = mdnsByUrl[normalizedUrl]!;
-              final peerKey = '${peer.host}:${peer.port}';
-              mergedLocalPeers[peerKey] = member;
-              mergedPeerIds.add(member.id);
-            }
-          }
-        }
-      }
-
-      // Filter out merged peers from the main list (they appear in the mDNS section)
-      final filteredMembers = allMembers
-          .where((m) => !mergedPeerIds.contains(m.id))
-          .toList();
-
-      if (mounted) {
-        setState(() {
-          _members = filteredMembers;
-          _localPeers = localPeers;
-          _mergedLocalPeers = mergedLocalPeers;
-          _isLoading = false;
-        });
-        _checkPeersConnectivity(filteredMembers);
-        _checkLocalPeersConnectivity(localPeers);
-      }
+          .where((m) => m.type == NetworkMemberType.borrower)
+          .toList()
+        ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      if (mounted) setState(() { _members = borrowers; _isLoading = false; });
     } catch (e) {
-      debugPrint('Error loading members: $e');
+      debugPrint('Error loading contacts: $e');
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _checkPeersConnectivity(List<NetworkMember> members) async {
-    final api = Provider.of<ApiService>(context, listen: false);
-    for (final member in members) {
-      if (member.source != NetworkMemberSource.network) continue;
-      final url = member.url;
-      if (url == null || url.isEmpty) continue;
-      // relay:// peers have no direct LAN URL.
-      // If they have relay credentials, they're reachable via the hub.
-      if (url.startsWith('relay://')) {
-        if (mounted) {
-          setState(() {
-            _peerConnectivity[member.id] = member.hasRelayCredentials;
-          });
-        }
-        continue;
-      }
-
-      api
-          .checkPeerConnectivity(url, timeoutMs: 4000)
-          .then((isOnline) {
-            if (mounted) {
-              setState(() {
-                _peerConnectivity[member.id] = isOnline;
-              });
-            }
-          })
-          .catchError((_) {
-            if (mounted) {
-              setState(() {
-                _peerConnectivity[member.id] = false;
-              });
-            }
-          });
-    }
-  }
-
-  Future<void> _checkLocalPeersConnectivity(List<DiscoveredPeer> peers) async {
-    final api = Provider.of<ApiService>(context, listen: false);
-    for (final peer in peers) {
-      final url = 'http://${peer.host}:${peer.port}';
-      final peerKey = '${peer.host}:${peer.port}';
-
-      api
-          .checkPeerConnectivity(url, timeoutMs: 4000)
-          .then((isOnline) {
-            if (mounted) {
-              setState(() {
-                _localPeerConnectivity[peerKey] = isOnline;
-              });
-            }
-          })
-          .catchError((_) {
-            if (mounted) {
-              setState(() {
-                _localPeerConnectivity[peerKey] = false;
-              });
-            }
-          });
-    }
-  }
-
-  Future<void> _deleteMember(NetworkMember member) async {
-    final api = Provider.of<ApiService>(context, listen: false);
+  Future<void> _deleteContact(NetworkMember member) async {
     final contactRepo = Provider.of<ContactRepository>(context, listen: false);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
-          member.source == NetworkMemberSource.network
-              ? TranslationService.translate(
-                  context,
-                  'dialog_remove_library_title',
-                )
-              : TranslationService.translate(context, 'delete_contact_title'),
-        ),
+        title: Text(TranslationService.translate(context, 'delete_contact_title')),
         content: Text(
           '${TranslationService.translate(context, 'confirm_delete')} ${member.displayName}?',
         ),
@@ -507,190 +324,45 @@ class _ContactsListViewState extends State<ContactsListView> {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(
-              TranslationService.translate(context, 'delete_contact_btn'),
-            ),
+            child: Text(TranslationService.translate(context, 'delete_contact_btn')),
           ),
         ],
       ),
     );
-
     if (confirm == true) {
       try {
-        if (member.source == NetworkMemberSource.network) {
-          await api.deletePeer(member.id);
-        } else {
-          await contactRepo.deleteContact(member.id);
-        }
+        await contactRepo.deleteContact(member.id);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                TranslationService.translate(context, 'contact_deleted'),
-              ),
-            ),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(TranslationService.translate(context, 'contact_deleted')),
+          ));
           _loadAllMembers();
         }
-      } catch (e) {
-        // handle error
-      }
-    }
-  }
-
-  List<NetworkMember> get _filteredMembers {
-    switch (_filter) {
-      case NetworkFilter.all:
-        return _members;
-      case NetworkFilter.libraries:
-        return _members
-            .where(
-              (m) =>
-                  m.source == NetworkMemberSource.network ||
-                  m.type == NetworkMemberType.library,
-            )
-            .toList();
-      case NetworkFilter.contacts:
-        return _members
-            .where((m) => m.source == NetworkMemberSource.local)
-            .toList();
+      } catch (_) {}
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final pendingProvider = context.watch<PendingPeersProvider>();
-    final pendingCount = pendingProvider.pendingCount;
-
     return Column(
       children: [
-        // Pending connections banner
-        if (pendingCount > 0)
-          MaterialBanner(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: Badge(
-              label: Text('$pendingCount'),
-              child: const Icon(Icons.person_add),
-            ),
-            content: Text(
-              TranslationService.translate(
-                    context,
-                    'pending_connections_banner',
-                  )
-                  .replaceAll('{count}', '$pendingCount'),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  // Scroll to pending section (handled by Item 4)
-                  // For now, just dismiss
-                  pendingProvider.refresh();
-                },
-                child: Text(
-                  TranslationService.translate(context, 'review_connections'),
-                ),
-              ),
-            ],
-          ),
-        // Filter Chips
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildFilterChip(
-                  NetworkFilter.all,
-                  TranslationService.translate(context, 'filter_all_contacts'),
-                  const Key('filterAll'),
-                ),
-                const SizedBox(width: 8),
-                _buildFilterChip(
-                  NetworkFilter.contacts,
-                  TranslationService.translate(context, 'filter_borrowers'),
-                  const Key('filterBorrowers'),
-                ),
-                const SizedBox(width: 8),
-                if (AppConstants.enableP2PFeatures)
-                  _buildFilterChip(
-                    NetworkFilter.libraries,
-                    TranslationService.translate(context, 'filter_libraries'),
-                    const Key('filterLibraries'),
-                  ),
-              ],
-            ),
-          ),
-        ),
+        _InviteBanner(onTap: () => showInviteShareSheet(context)),
         Expanded(
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : RefreshIndicator(
                   onRefresh: _pullToRefresh,
-                  child: (_filteredMembers.isEmpty && _localPeers.isEmpty)
+                  child: _members.isEmpty
                       ? ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
                           children: [_buildEmptyState(context)],
                         )
-                      : Builder(
-                          builder: (context) {
-                            final pendingMembers = _filteredMembers
-                                .where((m) => m.isPending)
-                                .toList();
-                            final regularMembers = _filteredMembers
-                                .where((m) => !m.isPending)
-                                .toList();
-
-                            return ListView(
-                              key: const Key('networkMemberList'),
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              children: [
-                                // Invite card - always visible as first element
-                                _buildInviteCard(context),
-                                // Pending connections section
-                                if (pendingMembers.isNotEmpty) ...[
-                                  _buildSectionHeader(
-                                    context,
-                                    TranslationService.translate(
-                                      context,
-                                      'pending_requests_section',
-                                    ),
-                                    Icons.person_add,
-                                    key: const Key('pendingConnectionsSection'),
-                                  ),
-                                  ...pendingMembers.map(
-                                    (member) => _buildPendingPeerCard(member),
-                                  ),
-                                  const Divider(),
-                                ],
-                                // Local Network section (mDNS discovered peers)
-                                if (_localPeers.isNotEmpty &&
-                                    _filter != NetworkFilter.contacts) ...[
-                                  _buildSectionHeader(
-                                    context,
-                                    TranslationService.translate(
-                                      context,
-                                      'local_network_title',
-                                    ),
-                                    Icons.wifi,
-                                    key: const Key('localNetworkSection'),
-                                    subtitle: TranslationService.translate(
-                                      context,
-                                      'local_network_hint',
-                                    ),
-                                  ),
-                                  ..._localPeers.map(
-                                    (peer) => _buildLocalPeerTile(peer),
-                                  ),
-                                ],
-                                // Regular members section
-                                ...regularMembers.map((member) {
-                                  final isOnline =
-                                      _peerConnectivity[member.id] ?? false;
-                                  return _buildMemberTile(member, isOnline);
-                                }),
-                              ],
-                            );
-                          },
+                      : ListView.builder(
+                          key: const Key('networkMemberList'),
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          itemCount: _members.length,
+                          itemBuilder: (context, i) =>
+                              _buildBorrowerTile(_members[i]),
                         ),
                 ),
         ),
@@ -698,41 +370,38 @@ class _ContactsListViewState extends State<ContactsListView> {
     );
   }
 
-  Widget _buildInviteCard(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: Semantics(
-        button: true,
-        label: TranslationService.translate(context, 'invite_card_title'),
-        child: Card(
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor:
-                  Theme.of(context).colorScheme.primaryContainer,
-              child: Icon(
-                Icons.person_add,
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
-              ),
-            ),
-            title: Text(
-              TranslationService.translate(context, 'invite_card_title'),
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              TranslationService.translate(context, 'invite_card_subtitle'),
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.share),
-              tooltip: TranslationService.translate(
-                  context, 'tooltip_share_invite'),
-              onPressed: () => showInviteShareSheet(context),
-            ),
-            onTap: () => showInviteShareSheet(context),
+  Widget _buildBorrowerTile(NetworkMember member) {
+    return Card(
+      key: Key('memberTile_${member.id}'),
+      surfaceTintColor: Colors.transparent,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        leading: const CircleAvatar(
+          backgroundColor: Colors.orange,
+          child: Icon(Icons.person, color: Colors.white),
+        ),
+        title: Text(member.displayName),
+        subtitle: Text(
+          member.email ??
+              TranslationService.translate(context, 'contact_type_borrower'),
+        ),
+        trailing: IconButton(
+          icon: Icon(
+            Icons.delete_outline,
+            color: Theme.of(context).colorScheme.error,
           ),
+          tooltip: TranslationService.translate(context, 'delete'),
+          onPressed: () => _deleteContact(member),
+        ),
+        onTap: () => context.push(
+          '/contacts/${member.id}?isNetwork=false',
+          extra: member.toContact(),
         ),
       ),
     );
   }
+
 
   Widget _buildEmptyState(BuildContext context) {
     return Center(
@@ -1015,782 +684,6 @@ class _ContactsListViewState extends State<ContactsListView> {
     );
   }
 
-  Widget _buildFilterChip(NetworkFilter filter, String label, [Key? chipKey]) {
-    final isSelected = _filter == filter;
-    return FilterChip(
-      key: chipKey,
-      selected: isSelected,
-      label: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? Colors.white : null,
-        ),
-      ),
-      selectedColor: Theme.of(context).colorScheme.primary,
-      checkmarkColor: Colors.white,
-      onSelected: (selected) {
-        setState(() => _filter = filter);
-      },
-    );
-  }
-
-  Widget _buildSectionHeader(
-    BuildContext context,
-    String title,
-    IconData icon, {
-    Key? key,
-    String? subtitle,
-  }) {
-    return Container(
-      key: key,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: Theme.of(
-        context,
-      ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                if (subtitle != null)
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Builds a visual status badge with rounded corners and semi-transparent background
-  Widget _buildStatusBadge(String text, Color color) {
-    return Semantics(
-      label: text,
-      child: UnconstrainedBox(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: color,
-          ),
-        ),
-      ),
-      ),
-    );
-  }
-
-  Widget _buildLocalPeerTile(DiscoveredPeer peer) {
-    final peerKey = '${peer.host}:${peer.port}';
-    final isOnline =
-        _localPeerConnectivity[peerKey] ?? true; // Assume online until checked
-    final url = 'http://${peer.host}:${peer.port}';
-    final mergedMember = _mergedLocalPeers[peerKey];
-    final isPending = mergedMember?.status == 'pending';
-
-    // Determine badge color and text
-    final Color badgeColor;
-    final String badgeText;
-    if (mergedMember != null && !isPending) {
-      badgeColor = Colors.green;
-      badgeText = TranslationService.translate(context, 'status_connected');
-    } else if (isPending) {
-      badgeColor = Colors.orange;
-      badgeText = TranslationService.translate(context, 'connection_pending_approval');
-    } else {
-      badgeColor = Colors.blue;
-      badgeText = isOnline
-          ? TranslationService.translate(context, 'status_active')
-          : TranslationService.translate(context, 'status_offline');
-    }
-
-    // Compute display name: strip device hostname suffix if available
-    final String displayName;
-    final bool hasDeviceName = peer.deviceName != null && peer.deviceName!.isNotEmpty;
-    if (hasDeviceName) {
-      // The mDNS sanitizer strips parentheses from "$baseName ($deviceName)",
-      // producing e.g. "Federicos library macbook-pro-1home".
-      // Try to strip the device name suffix to get just the library name.
-      final suffix = ' ${peer.deviceName}';
-      if (peer.name.endsWith(suffix)) {
-        displayName = peer.name.substring(0, peer.name.length - suffix.length);
-      } else {
-        displayName = peer.name;
-      }
-    } else {
-      displayName = peer.name;
-    }
-
-    // Only show device name when the library name is a default/generic name,
-    // since custom names already identify the library uniquely.
-    const defaultNames = {'My Library', 'Ma Bibliothèque', 'BiblioGenius Library'};
-    final showDeviceName = hasDeviceName && defaultNames.contains(displayName);
-
-    // Short library ID for disambiguation (last 4 chars of UUID)
-    final shortId = peer.libraryId != null && peer.libraryId!.length >= 4
-        ? peer.libraryId!.substring(peer.libraryId!.length - 4)
-        : null;
-
-    // Title for peer library screen: only append device name for default library names
-    final peerTitle = showDeviceName
-        ? '$displayName (${peer.deviceName})'
-        : displayName;
-
-    // Build action buttons
-    final List<Widget> actionButtons;
-    if (mergedMember != null && !isPending) {
-      actionButtons = [
-        IconButton(
-          icon: const Icon(Icons.menu_book),
-          tooltip: TranslationService.translate(context, 'browse_library'),
-          onPressed: isOnline
-              ? () {
-                  context.push(
-                    '/peers/${mergedMember.id}/books',
-                    extra: {
-                      'id': mergedMember.id,
-                      'name': peerTitle,
-                      'url': mergedMember.url,
-                    },
-                  );
-                }
-              : null,
-        ),
-        IconButton(
-          icon: const Icon(Icons.sync),
-          tooltip: TranslationService.translate(context, 'tooltip_sync'),
-          onPressed: () async {
-            final api = Provider.of<ApiService>(context, listen: false);
-            if (mergedMember.url != null) {
-              await api.syncPeer(mergedMember.url!);
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      TranslationService.translate(context, 'sync_started'),
-                    ),
-                  ),
-                );
-                _loadAllMembers();
-              }
-            }
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.edit_outlined),
-          tooltip: TranslationService.translate(context, 'edit_contact'),
-          onPressed: () {
-            context.push(
-              '/contacts/${mergedMember.id}?isNetwork=true',
-              extra: mergedMember.toContact(),
-            );
-          },
-        ),
-        IconButton(
-          icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
-          tooltip: TranslationService.translate(context, 'delete'),
-          onPressed: () => _deleteMember(mergedMember),
-        ),
-      ];
-    } else if (isPending) {
-      actionButtons = [
-        IconButton(
-          icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
-          tooltip: TranslationService.translate(context, 'delete'),
-          onPressed: () => _deleteMember(mergedMember!),
-        ),
-      ];
-    } else {
-      actionButtons = [
-        IconButton(
-          icon: const Icon(Icons.menu_book),
-          tooltip: TranslationService.translate(context, 'browse_library'),
-          onPressed: isOnline
-              ? () {
-                  context.push(
-                    '/peers/0/books',
-                    extra: {'id': 0, 'name': peerTitle, 'url': url},
-                  );
-                }
-              : null,
-        ),
-        FilledButton.tonalIcon(
-          icon: const Icon(Icons.add, size: 18),
-          label: Text(
-            TranslationService.translate(context, 'connect'),
-            style: const TextStyle(fontSize: 13),
-          ),
-          onPressed: () async {
-            final api = Provider.of<ApiService>(context, listen: false);
-            try {
-              await api.connectPeer(
-                peer.name,
-                url,
-                ed25519PublicKey: peer.ed25519PublicKey,
-                x25519PublicKey: peer.x25519PublicKey,
-              );
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '${TranslationService.translate(context, 'request_sent_to')} ${peer.name}',
-                    ),
-                  ),
-                );
-                _loadAllMembers();
-              }
-            } catch (e) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '${TranslationService.translate(context, 'connection_error')}: $e',
-                    ),
-                  ),
-                );
-              }
-            }
-          },
-        ),
-      ];
-    }
-
-    // Determine onTap handler
-    final VoidCallback? onTap;
-    if (mergedMember != null && !isPending) {
-      onTap = () {
-        context.push(
-          '/peers/${mergedMember.id}/books',
-          extra: {
-            'id': mergedMember.id,
-            'name': peerTitle,
-            'url': mergedMember.url,
-          },
-        );
-      };
-    } else if (isOnline && !isPending) {
-      onTap = () {
-        context.push(
-          '/peers/0/books',
-          extra: {'id': 0, 'name': peerTitle, 'url': url},
-        );
-      };
-    } else {
-      onTap = null;
-    }
-
-    // Show E2EE lock for connected peers with key exchange done,
-    // or for mDNS peers advertising keys
-    final hasE2ee = (mergedMember?.keyExchangeDone ?? false) ||
-        (peer.ed25519PublicKey != null && peer.x25519PublicKey != null);
-    final statusBadge = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildStatusBadge(badgeText, badgeColor),
-        if (hasE2ee) ...[
-          const SizedBox(width: 4),
-          Tooltip(
-            message: TranslationService.translate(context, 'e2ee_enabled'),
-            child: Icon(Icons.lock, size: 14, color: Colors.green.shade600),
-          ),
-        ],
-      ],
-    );
-    final isActiveOnly = mergedMember == null && !isPending;
-
-    // Use compact two-row layout on narrow screens to avoid icon overflow
-    final isCompact = MediaQuery.of(context).size.width < 600;
-
-    if (!isCompact) {
-      // Wide screen: standard ListTile with trailing icons
-      return Card(
-        key: Key('localPeerTile_$peerKey'),
-        surfaceTintColor: Colors.transparent,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: ListTile(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          leading: CircleAvatar(
-            backgroundColor: badgeColor,
-            child: const Icon(Icons.wifi, color: Colors.white),
-          ),
-          title: Text(displayName),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (showDeviceName)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    peer.deviceName!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              statusBadge,
-              if (shortId != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    TranslationService.translate(context, 'peer_short_id')
-                        .replaceFirst('%s', shortId),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              if (isActiveOnly)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    TranslationService.translate(context, 'active_peer_hint'),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          isThreeLine: showDeviceName || shortId != null,
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: actionButtons,
-          ),
-          onTap: onTap,
-        ),
-      );
-    }
-
-    // Narrow screen: two-row layout (name/status on top, icons on bottom)
-    return Card(
-      key: Key('localPeerTile_$peerKey'),
-      surfaceTintColor: Colors.transparent,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Top row: avatar + name/device/status
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: badgeColor,
-                    child: const Icon(Icons.wifi, color: Colors.white),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          displayName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        if (showDeviceName)
-                          Text(
-                            peer.deviceName!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        const SizedBox(height: 4),
-                        statusBadge,
-                        if (shortId != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text(
-                              TranslationService.translate(context, 'peer_short_id')
-                                  .replaceFirst('%s', shortId),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        if (isActiveOnly)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text(
-                              TranslationService.translate(context, 'active_peer_hint'),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              // Bottom row: action buttons right-aligned
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: actionButtons,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPendingPeerCard(NetworkMember member) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor:
-              Theme.of(context).colorScheme.primaryContainer,
-          child: const Icon(Icons.person_add),
-        ),
-        title: Text(member.displayName),
-        subtitle: Text(
-          member.url?.replaceAll('http://', '') ?? '',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextButton(
-              onPressed: () => _rejectPeer(member.id),
-              child: Text(
-                TranslationService.translate(context, 'reject_connection'),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            FilledButton(
-              onPressed: () => _acceptPeer(member.id),
-              child: Text(
-                TranslationService.translate(context, 'accept_connection'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _acceptPeer(int peerId) async {
-    final api = Provider.of<ApiService>(context, listen: false);
-    try {
-      await api.updatePeerStatus(peerId, 'accepted');
-      if (mounted) {
-        context.read<PendingPeersProvider>().decrement();
-        _loadAllMembers();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              TranslationService.translate(context, 'connection_success_hint'),
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
-    }
-  }
-
-  Future<void> _rejectPeer(int peerId) async {
-    final api = Provider.of<ApiService>(context, listen: false);
-    try {
-      await api.deletePeer(peerId);
-      if (mounted) {
-        context.read<PendingPeersProvider>().decrement();
-        _loadAllMembers();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
-    }
-  }
-
-  Widget _buildMemberTile(NetworkMember member, bool isOnline) {
-    final isNetwork = member.source == NetworkMemberSource.network;
-
-    // For contacts (1 icon), keep simple ListTile layout
-    if (!isNetwork) {
-      return Card(
-        key: Key('memberTile_${member.id}'),
-        surfaceTintColor: Colors.transparent,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: ListTile(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          leading: CircleAvatar(
-            backgroundColor: Colors.orange,
-            child: const Icon(Icons.person, color: Colors.white),
-          ),
-          title: Text(member.displayName),
-          subtitle: Text(
-            member.email ??
-                TranslationService.translate(context, 'contact_type_borrower'),
-          ),
-          trailing: IconButton(
-            icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
-            tooltip: TranslationService.translate(context, 'delete'),
-            onPressed: () => _deleteMember(member),
-          ),
-          onTap: AppConstants.enableP2PFeatures
-              ? () {
-                  context.push(
-                    '/contacts/${member.id}?isNetwork=false',
-                    extra: member.toContact(),
-                  );
-                }
-              : null,
-        ),
-      );
-    }
-
-    // Network peers: two-row layout on narrow screens, ListTile on wide
-    final statusText = isOnline
-        ? TranslationService.translate(context, 'status_active')
-        : TranslationService.translate(context, 'status_offline');
-    final statusColor = isOnline ? Colors.green : Colors.grey;
-
-    // Short library ID for disambiguation (last 4 chars of UUID)
-    final shortId = member.libraryUuid != null && member.libraryUuid!.length >= 4
-        ? member.libraryUuid!.substring(member.libraryUuid!.length - 4)
-        : null;
-
-    final statusBadge = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildStatusBadge(statusText, statusColor),
-        if (member.keyExchangeDone) ...[
-          const SizedBox(width: 4),
-          Tooltip(
-            message: TranslationService.translate(context, 'e2ee_enabled'),
-            child: Icon(Icons.lock, size: 14, color: Colors.green.shade600),
-          ),
-        ],
-      ],
-    );
-
-    final VoidCallback? onTap = AppConstants.enableP2PFeatures && member.url != null
-        ? () {
-            context.push(
-              '/peers/${member.id}/books',
-              extra: {
-                'id': member.id,
-                'name': member.name,
-                'url': member.url,
-              },
-            );
-          }
-        : null;
-
-    final actionButtons = <Widget>[
-      IconButton(
-        icon: const Icon(Icons.menu_book),
-        tooltip: TranslationService.translate(context, 'browse_library'),
-        onPressed: member.url != null
-            ? () {
-                context.push(
-                  '/peers/${member.id}/books',
-                  extra: {
-                    'id': member.id,
-                    'name': member.name,
-                    'url': member.url,
-                  },
-                );
-              }
-            : null,
-      ),
-      IconButton(
-        icon: const Icon(Icons.sync),
-        tooltip: TranslationService.translate(context, 'tooltip_sync'),
-        onPressed: () async {
-          final api = Provider.of<ApiService>(context, listen: false);
-          if (member.url != null) {
-            await api.syncPeer(member.url!);
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    TranslationService.translate(context, 'sync_started'),
-                  ),
-                ),
-              );
-            }
-          }
-        },
-      ),
-      IconButton(
-        icon: const Icon(Icons.edit_outlined),
-        tooltip: TranslationService.translate(context, 'edit_contact'),
-        onPressed: () {
-          context.push(
-            '/contacts/${member.id}?isNetwork=true',
-            extra: member.toContact(),
-          );
-        },
-      ),
-      IconButton(
-        icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
-        tooltip: TranslationService.translate(context, 'delete'),
-        onPressed: () => _deleteMember(member),
-      ),
-    ];
-
-    final isCompact = MediaQuery.of(context).size.width < 600;
-
-    if (!isCompact) {
-      // Wide screen: standard ListTile with trailing icons
-      return Card(
-        key: Key('memberTile_${member.id}'),
-        surfaceTintColor: Colors.transparent,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: ListTile(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          leading: CircleAvatar(
-            backgroundColor: Theme.of(context).primaryColor,
-            child: const Icon(Icons.store, color: Colors.white),
-          ),
-          title: Text(member.displayName),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              statusBadge,
-              if (shortId != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    TranslationService.translate(context, 'peer_short_id')
-                        .replaceFirst('%s', shortId),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          isThreeLine: shortId != null,
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: actionButtons,
-          ),
-          onTap: onTap,
-        ),
-      );
-    }
-
-    // Narrow screen: two-row layout
-    return Card(
-      key: Key('memberTile_${member.id}'),
-      surfaceTintColor: Colors.transparent,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Top row: avatar + name/status
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    child: const Icon(Icons.store, color: Colors.white),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          member.displayName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        statusBadge,
-                        if (shortId != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text(
-                              TranslationService.translate(context, 'peer_short_id')
-                                  .replaceFirst('%s', shortId),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              // Bottom row: action buttons right-aligned
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: actionButtons,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 /// View for Sharing Code (extracted from original state)
@@ -2034,6 +927,964 @@ class _ShareContactViewState extends State<ShareContactView> {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Pending connections banner - compact, branded
+// ---------------------------------------------------------------------------
+
+class _PendingBanner extends StatelessWidget {
+  final int count;
+  final VoidCallback onAction;
+
+  const _PendingBanner({required this.count, required this.onAction});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xFF1C1A05) : const Color(0xFFFFFBEB);
+    final border = isDark ? const Color(0xFF78350F) : const Color(0xFFFDE68A);
+    final textColor = isDark ? const Color(0xFFFBBF24) : const Color(0xFF92400E);
+    final subtleText = isDark ? const Color(0xFFD97706) : const Color(0xFFB45309);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppDesign.radiusMedium),
+        border: Border.all(color: border),
+        boxShadow: AppDesign.subtleShadow,
+      ),
+      child: Row(
+        children: [
+          // Left accent bar
+          Container(
+            width: 4,
+            height: 52,
+            decoration: BoxDecoration(
+              gradient: AppDesign.warningGradient,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(AppDesign.radiusMedium),
+                bottomLeft: Radius.circular(AppDesign.radiusMedium),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Count badge
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              gradient: AppDesign.warningGradient,
+              shape: BoxShape.circle,
+              boxShadow: AppDesign.glowShadow(const Color(0xFFF59E0B)),
+            ),
+            child: Center(
+              child: Text(
+                '$count',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              TranslationService.translate(context, 'pending_connections_banner')
+                  .replaceAll('{count}', '$count'),
+              style: TextStyle(
+                fontSize: 12,
+                color: textColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: onAction,
+            style: TextButton.styleFrom(
+              foregroundColor: subtleText,
+              textStyle: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+            child: Text(
+              TranslationService.translate(context, 'review_connections'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Shared banner template - used by directory + invite banners
+// ---------------------------------------------------------------------------
+
+class _ActionBanner extends StatelessWidget {
+  final VoidCallback onTap;
+  final IconData icon;
+  final String titleKey;
+  final String subtitleKey;
+  final LinearGradient iconGradient;
+  final Color bgLight;
+  final Color bgDark;
+  final Color borderLight;
+  final Color borderDark;
+  final Color titleLight;
+  final Color titleDark;
+  final Color subtitleLight;
+  final Color subtitleDark;
+  final IconData trailingIcon;
+
+  const _ActionBanner({
+    required this.onTap,
+    required this.icon,
+    required this.titleKey,
+    required this.subtitleKey,
+    required this.iconGradient,
+    required this.bgLight,
+    required this.bgDark,
+    required this.borderLight,
+    required this.borderDark,
+    required this.titleLight,
+    required this.titleDark,
+    required this.subtitleLight,
+    required this.subtitleDark,
+    this.trailingIcon = Icons.arrow_forward_ios,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? bgDark : bgLight;
+    final border = isDark ? borderDark : borderLight;
+    final titleColor = isDark ? titleDark : titleLight;
+    final subtitleColor = isDark ? subtitleDark : subtitleLight;
+
+    return Semantics(
+      button: true,
+      label: TranslationService.translate(context, titleKey),
+      child: ScaleOnTap(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(AppDesign.radiusMedium),
+            border: Border.all(color: border),
+            boxShadow: AppDesign.subtleShadow,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  gradient: iconGradient,
+                  borderRadius: BorderRadius.circular(AppDesign.radiusSmall),
+                  boxShadow: AppDesign.glowShadow(iconGradient.colors.first),
+                ),
+                child: Icon(icon, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      TranslationService.translate(context, titleKey),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: titleColor,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      TranslationService.translate(context, subtitleKey),
+                      style: TextStyle(fontSize: 11, color: subtitleColor),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(trailingIcon, size: 13, color: subtitleColor),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Directory discovery banner (indigo)
+// ---------------------------------------------------------------------------
+
+class _DirectoryBanner extends StatelessWidget {
+  final VoidCallback onTap;
+  const _DirectoryBanner({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => _ActionBanner(
+        onTap: onTap,
+        icon: Icons.travel_explore,
+        titleKey: 'directory_title',
+        subtitleKey: 'directory_browse_subtitle',
+        iconGradient: AppDesign.primaryGradient,
+        bgLight: const Color(0xFFEEF2FF),
+        bgDark: const Color(0xFF1A1833),
+        borderLight: const Color(0xFFC7D2FE),
+        borderDark: const Color(0xFF3730A3),
+        titleLight: const Color(0xFF3730A3),
+        titleDark: const Color(0xFFA5B4FC),
+        subtitleLight: const Color(0xFF6366F1),
+        subtitleDark: const Color(0xFF818CF8),
+      );
+}
+
+// ---------------------------------------------------------------------------
+// Invite banner (teal)
+// ---------------------------------------------------------------------------
+
+class _InviteBanner extends StatelessWidget {
+  final VoidCallback onTap;
+  const _InviteBanner({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => _ActionBanner(
+        onTap: onTap,
+        icon: Icons.person_add,
+        titleKey: 'invite_card_title',
+        subtitleKey: 'invite_card_subtitle',
+        iconGradient: AppDesign.refinedSuccessGradient,
+        bgLight: const Color(0xFFE6F4F2),
+        bgDark: const Color(0xFF0D2020),
+        borderLight: const Color(0xFFB2D8D4),
+        borderDark: const Color(0xFF1B4D47),
+        titleLight: const Color(0xFF1A4E48),
+        titleDark: const Color(0xFF80CBC4),
+        subtitleLight: const Color(0xFF2E7D72),
+        subtitleDark: const Color(0xFF4DB6AC),
+        trailingIcon: Icons.share,
+      );
+}
+
+// ---------------------------------------------------------------------------
+// Libraries tab - unified view of peers + hub follows
+// ---------------------------------------------------------------------------
+
+/// Unified list of remote libraries (P2P peers + hub follows), deduplicated
+/// by library_uuid / node_id.
+class LibrariesListView extends StatefulWidget {
+  const LibrariesListView({super.key});
+
+  @override
+  State<LibrariesListView> createState() => _LibrariesListViewState();
+}
+
+class _LibrariesListViewState extends State<LibrariesListView> {
+  List<LibraryRelation> _relations = [];
+  /// mDNS-discovered peers not yet saved to the DB (no overlap with _relations)
+  List<DiscoveredPeer> _localPeers = [];
+  bool _isLoading = true;
+  LibraryFilter _filter = LibraryFilter.all;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLibraries();
+  }
+
+  Future<void> _loadLibraries() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    try {
+      final api = Provider.of<ApiService>(context, listen: false);
+      final dirProvider =
+          Provider.of<HubDirectoryProvider>(context, listen: false);
+
+      // Load saved P2P peers and hub follows concurrently
+      final peersResFuture = api.getPeers();
+      final followsFuture = dirProvider.loadFollowing();
+      final peersRes = await peersResFuture;
+      await followsFuture;
+
+      final peersData =
+          ((peersRes.data as Map<String, dynamic>?)?['data'] as List<dynamic>?) ?? [];
+      final peers = peersData
+          .map((j) => NetworkMember.fromPeer(j as Map<String, dynamic>))
+          .toList();
+      final follows = dirProvider.following;
+
+      // Merge saved peers + follows by library_uuid / node_id
+      final Map<String, LibraryRelation> map = {};
+      for (final peer in peers) {
+        final nodeId = peer.libraryUuid ?? 'peer_${peer.id}';
+        map[nodeId] = LibraryRelation(nodeId: nodeId, peer: peer);
+      }
+      for (final follow in follows) {
+        final nodeId = follow.followedNodeId;
+        final existing = map[nodeId];
+        if (existing != null) {
+          map[nodeId] = existing.withFollow(follow);
+        } else {
+          map[nodeId] = LibraryRelation(nodeId: nodeId, follow: follow);
+        }
+      }
+
+      final relations = map.values.toList()
+        ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+
+      // mDNS peers not yet saved - exclude those already in the saved list.
+      // Match by: 1) libraryId (UUID), 2) host/IP.
+      final savedUuids = peers
+          .map((p) => p.libraryUuid)
+          .whereType<String>()
+          .toSet();
+      final savedHosts = peers
+          .map((p) {
+            if (p.url == null) return null;
+            try {
+              return Uri.parse(p.url!).host;
+            } catch (_) {
+              return null;
+            }
+          })
+          .whereType<String>()
+          .toSet();
+      final localPeers = MdnsService.peers
+          .where((p) {
+            if (p.libraryId != null && savedUuids.contains(p.libraryId)) {
+              return false;
+            }
+            if (savedHosts.contains(p.host)) return false;
+            return true;
+          })
+          .toList();
+
+      if (mounted) {
+        setState(() {
+          _relations = relations;
+          _localPeers = localPeers;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading libraries: $e');
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  List<LibraryRelation> get _filtered => switch (_filter) {
+        LibraryFilter.all => _relations,
+        LibraryFilter.peers => _relations.where((r) => r.isPeer).toList(),
+        LibraryFilter.following =>
+          _relations.where((r) => r.isFollowing).toList(),
+      };
+
+  /// mDNS peers shown only on All and Peers filter tabs
+  List<DiscoveredPeer> get _visibleLocalPeers =>
+      _filter == LibraryFilter.following ? [] : _localPeers;
+
+  @override
+  Widget build(BuildContext context) {
+    final pendingProvider = context.watch<PendingPeersProvider>();
+    return Column(
+      children: [
+        if (pendingProvider.pendingCount > 0)
+          _PendingBanner(
+            count: pendingProvider.pendingCount,
+            onAction: pendingProvider.refresh,
+          ),
+        _DirectoryBanner(onTap: () => context.push('/directory')),
+        // Filter chips
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterChip(
+                  LibraryFilter.all, 'lib_filter_all',
+                  const Key('libFilterAll'),
+                ),
+                const SizedBox(width: 8),
+                _buildFilterChip(
+                  LibraryFilter.peers, 'lib_filter_peers',
+                  const Key('libFilterPeers'),
+                ),
+                const SizedBox(width: 8),
+                _buildFilterChip(
+                  LibraryFilter.following, 'lib_filter_following',
+                  const Key('libFilterFollowing'),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : RefreshIndicator(
+                  onRefresh: _loadLibraries,
+                  child: (_filtered.isEmpty && _visibleLocalPeers.isEmpty)
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [_buildEmptyState(context)],
+                        )
+                      : ListView(
+                          key: const Key('librariesList'),
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            // Locally discovered libraries (mDNS, not yet saved)
+                            if (_visibleLocalPeers.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              _sectionHeader(
+                                context,
+                                TranslationService.translate(
+                                  context, 'local_network_title',
+                                ),
+                                Icons.wifi,
+                                subtitle: TranslationService.translate(
+                                  context, 'local_network_hint',
+                                ),
+                                key: const Key('localNetworkSection'),
+                              ),
+                              ..._visibleLocalPeers.map(_buildLocalPeerTile),
+                              if (_filtered.isNotEmpty) const Divider(height: 8),
+                            ],
+                            // Saved peers + follows
+                            ..._filtered.map(
+                              (r) => _LibraryRelationCard(
+                                relation: r,
+                                onRefresh: _loadLibraries,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _sectionHeader(
+    BuildContext context,
+    String title,
+    IconData icon, {
+    Key? key,
+    String? subtitle,
+  }) {
+    return Semantics(
+      header: true,
+      child: Container(
+        key: key,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        color: Theme.of(context)
+            .colorScheme
+            .surfaceContainerHighest
+            .withValues(alpha: 0.5),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  if (subtitle != null)
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocalPeerTile(DiscoveredPeer peer) {
+    final url = 'http://${peer.host}:${peer.port}';
+
+    // Compute display name: strip device hostname suffix when present
+    String displayName = peer.name;
+    if (peer.deviceName != null && peer.deviceName!.isNotEmpty) {
+      final suffix = ' ${peer.deviceName}';
+      if (peer.name.endsWith(suffix)) {
+        displayName = peer.name.substring(0, peer.name.length - suffix.length);
+      }
+    }
+    const defaultNames = {'My Library', 'Ma Bibliothèque', 'BiblioGenius Library'};
+    final showDevice = peer.deviceName != null &&
+        peer.deviceName!.isNotEmpty &&
+        defaultNames.contains(displayName);
+
+    return Semantics(
+      button: true,
+      label: displayName,
+      child: Card(
+        key: Key('localPeerTile_${peer.host}_${peer.port}'),
+        surfaceTintColor: Colors.transparent,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: ListTile(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          leading: const CircleAvatar(
+            backgroundColor: Colors.blue,
+            child: Icon(Icons.wifi, color: Colors.white),
+          ),
+          title: Text(displayName),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showDevice)
+                Text(
+                  peer.deviceName!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              Container(
+                margin: const EdgeInsets.only(top: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  TranslationService.translate(context, 'status_active'),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          isThreeLine: showDevice,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.menu_book),
+                tooltip: TranslationService.translate(context, 'browse_library'),
+                onPressed: () => context.push(
+                  '/peers/0/books',
+                  extra: {'id': 0, 'name': displayName, 'url': url, 'hasRelayCredentials': false},
+                ),
+              ),
+              Consumer<ApiService>(
+                builder: (context, api, _) => FilledButton.tonalIcon(
+                  icon: const Icon(Icons.add, size: 16),
+                  label: Text(
+                    TranslationService.translate(context, 'connect'),
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  onPressed: () async {
+                    try {
+                      await api.connectPeer(
+                        peer.name, url,
+                        ed25519PublicKey: peer.ed25519PublicKey,
+                        x25519PublicKey: peer.x25519PublicKey,
+                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(
+                            '${TranslationService.translate(context, 'request_sent_to')} $displayName',
+                          ),
+                        ));
+                        _loadLibraries();
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(
+                            '${TranslationService.translate(context, 'connection_error')}: $e',
+                          ),
+                        ));
+                      }
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+          onTap: () => context.push(
+            '/peers/0/books',
+            extra: {'id': 0, 'name': displayName, 'url': url, 'hasRelayCredentials': false},
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(LibraryFilter filter, String labelKey, Key chipKey) {
+    final isSelected = _filter == filter;
+    return FilterChip(
+      key: chipKey,
+      selected: isSelected,
+      label: Text(
+        TranslationService.translate(context, labelKey),
+        style: TextStyle(color: isSelected ? Colors.white : null),
+      ),
+      selectedColor: Theme.of(context).colorScheme.primary,
+      checkmarkColor: Colors.white,
+      onSelected: (_) => setState(() => _filter = filter),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.library_books_outlined,
+                size: 64,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Semantics(
+              header: true,
+              child: Text(
+                TranslationService.translate(context, 'lib_empty_title'),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              TranslationService.translate(context, 'lib_empty_hint'),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => context.push('/directory'),
+              icon: const Icon(Icons.travel_explore),
+              label: Text(TranslationService.translate(context, 'directory_title')),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Library relation card - shows peer + follow status with actions
+// ---------------------------------------------------------------------------
+
+class _LibraryRelationCard extends StatelessWidget {
+  final LibraryRelation relation;
+  final VoidCallback onRefresh;
+
+  const _LibraryRelationCard({
+    required this.relation,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Avatar color encodes the dominant connection type
+    final Color avatarColor;
+    final IconData avatarIcon;
+    if (relation.isPeer && relation.isFollowing) {
+      avatarColor = Colors.teal;
+      avatarIcon = Icons.wifi;
+    } else if (relation.isPeer) {
+      avatarColor = Colors.blue;
+      avatarIcon = Icons.wifi;
+    } else {
+      avatarColor = Colors.deepPurple;
+      avatarIcon = Icons.library_books;
+    }
+
+    return Semantics(
+      button: true,
+      label: relation.name,
+      child: Card(
+        key: Key('libraryCard_${relation.nodeId}'),
+        surfaceTintColor: Colors.transparent,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 4, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header: avatar + name + connection chips
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: avatarColor,
+                    child: Icon(avatarIcon, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          relation.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 4,
+                          children: [
+                            if (relation.isPeer)
+                              _chip(
+                                context,
+                                label: TranslationService.translate(
+                                  context, 'lib_connection_peer',
+                                ),
+                                color: Colors.blue,
+                              ),
+                            if (relation.isFollowing)
+                              _chip(
+                                context,
+                                label: relation.followPending
+                                    ? TranslationService.translate(
+                                        context, 'lib_follow_pending',
+                                      )
+                                    : TranslationService.translate(
+                                        context, 'lib_follow_active',
+                                      ),
+                                color: relation.followPending
+                                    ? Colors.orange
+                                    : Colors.deepPurple,
+                                icon: relation.followPending
+                                    ? Icons.pending
+                                    : Icons.bookmark,
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              // Action row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: _buildActions(context),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildActions(BuildContext context) {
+    final actions = <Widget>[];
+
+    // Browse catalog - P2P peer
+    if (relation.isPeer && relation.peer?.url != null) {
+      final peer = relation.peer!;
+      actions.add(IconButton(
+        icon: const Icon(Icons.menu_book),
+        tooltip: TranslationService.translate(context, 'browse_library'),
+        onPressed: () => context.push(
+          '/peers/${peer.id}/books',
+          extra: {
+            'id': peer.id,
+            'name': relation.name,
+            'url': peer.url,
+            'hasRelayCredentials': peer.hasRelayCredentials,
+          },
+        ),
+      ));
+    }
+
+    // Browse catalog - active hub follow (no direct peer)
+    if (!relation.isPeer &&
+        relation.isFollowing &&
+        relation.follow!.isActive) {
+      actions.add(IconButton(
+        icon: const Icon(Icons.menu_book),
+        tooltip: TranslationService.translate(context, 'browse_library'),
+        onPressed: () =>
+            context.push('/directory/${Uri.encodeComponent(relation.nodeId)}'),
+      ));
+    }
+
+    // Sync (peers only)
+    if (relation.isPeer && relation.peer?.url != null) {
+      actions.add(
+        Consumer<ApiService>(
+          builder: (context, api, _) => IconButton(
+            icon: const Icon(Icons.sync),
+            tooltip: TranslationService.translate(context, 'tooltip_sync'),
+            onPressed: () async {
+              await api.syncPeer(relation.peer!.url!);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(
+                    TranslationService.translate(context, 'sync_started'),
+                  ),
+                ));
+              }
+            },
+          ),
+        ),
+      );
+    }
+
+    // Unfollow (active follows only)
+    if (relation.isFollowing && !relation.followPending) {
+      actions.add(
+        Consumer<HubDirectoryProvider>(
+          builder: (context, dirProvider, _) => IconButton(
+            icon: Icon(
+              Icons.bookmark_remove,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            tooltip: TranslationService.translate(context, 'lib_unfollow'),
+            onPressed: () async {
+              await dirProvider.unfollow(relation.nodeId);
+              onRefresh();
+            },
+          ),
+        ),
+      );
+    }
+
+    // Disconnect peer
+    if (relation.isPeer) {
+      actions.add(
+        Consumer<ApiService>(
+          builder: (context, api, _) => IconButton(
+            icon: Icon(
+              Icons.link_off,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            tooltip: TranslationService.translate(context, 'delete'),
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: Text(
+                    TranslationService.translate(ctx, 'delete_contact_title'),
+                  ),
+                  content: Text(
+                    '${TranslationService.translate(ctx, 'confirm_delete')} '
+                    '${relation.name}?',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: Text(
+                        TranslationService.translate(ctx, 'cancel'),
+                      ),
+                    ),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.red,
+                      ),
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: Text(
+                        TranslationService.translate(ctx, 'delete_contact_btn'),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true && context.mounted) {
+                await api.deletePeer(relation.peer!.id);
+                onRefresh();
+              }
+            },
+          ),
+        ),
+      );
+    }
+
+    return actions;
+  }
+
+  Widget _chip(
+    BuildContext context, {
+    required String label,
+    required Color color,
+    IconData? icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 11, color: color),
+            const SizedBox(width: 3),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

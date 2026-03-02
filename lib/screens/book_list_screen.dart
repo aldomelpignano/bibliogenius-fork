@@ -763,7 +763,7 @@ class _BookListScreenState extends State<BookListScreen>
         }
       }
 
-      // Bucket each filtered book into its collection (or null).
+      // Bucket each filtered book into its collection (or uncollected).
       final Map<String, List<Book>> byCollectionId = {
         for (final c in collections) c.id: <Book>[],
       };
@@ -779,7 +779,7 @@ class _BookListScreenState extends State<BookListScreen>
         }
       }
 
-      // Build the ordered group list (non-empty collections first, then singletons).
+      // Build ordered group list: collections first, then individual uncollected books.
       final groups = <CollectionGroup>[];
       for (final collection in collections) {
         final books = byCollectionId[collection.id] ?? [];
@@ -2053,7 +2053,10 @@ class _BookListScreenState extends State<BookListScreen>
             await _fetchBooks();
             await _fetchCollectionGroups();
           },
-          child: CollectionGroupGrid(groups: _collectionGroups),
+          child: CollectionGroupGrid(
+            groups: _collectionGroups,
+            onBookTap: _onBookTap,
+          ),
         );
     }
   }

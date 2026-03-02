@@ -10,11 +10,11 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../widgets/genie_app_bar.dart';
 import '../widgets/contextual_help_sheet.dart';
 import '../services/api_service.dart';
-import '../services/ffi_service.dart';
 import '../services/translation_service.dart';
 import '../providers/theme_provider.dart';
 import '../providers/hub_directory_provider.dart';
 import '../services/auth_service.dart';
+import '../services/ffi_service.dart';
 import '../theme/app_design.dart';
 import '../themes/base/theme_registry.dart';
 import '../utils/app_constants.dart';
@@ -827,20 +827,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                   if (isListed) ...[
                     const Divider(height: 1),
-                    // Browse directory button
-                    ListTile(
-                      leading: const Icon(Icons.travel_explore),
-                      title: Text(
-                        TranslationService.translate(
-                              context,
-                              'directory_browse_button',
-                            ) ??
-                            'Browse the directory',
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => context.go('/directory'),
-                    ),
-                    const Divider(height: 1),
                     // Advanced settings accordion
                     ExpansionTile(
                       leading: const Icon(Icons.tune),
@@ -901,28 +887,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
 
-                  if (!isListed && config == null) ...[
-                    const Divider(height: 1),
-                    ListTile(
-                      leading: const Icon(Icons.travel_explore),
-                      title: Text(
-                        TranslationService.translate(
-                              context,
-                              'directory_browse_anyway',
-                            ) ??
-                            'Browse the directory',
-                      ),
-                      subtitle: Text(
-                        TranslationService.translate(
-                              context,
-                              'directory_browse_anyway_desc',
-                            ) ??
-                            'You can explore without being listed',
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => context.go('/directory'),
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -967,21 +931,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bool newValue,
   ) async {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
     final libraryName =
         themeProvider.libraryName.isNotEmpty ? themeProvider.libraryName : 'My Library';
 
     final config = dirProvider.config;
-    final nodeId = config?.nodeId ?? await _getNodeId();
-    if (nodeId == null) return;
+    // Use existing node_id, or fall back to the stable library UUID (first registration).
+    final nodeId = config?.nodeId ?? await authService.getOrCreateLibraryUuid();
 
-    await dirProvider.register(
+    final bookCount = await FfiService().countBooks();
+
+    final ok = await dirProvider.register(
       nodeId: nodeId,
       displayName: libraryName,
-      bookCount: 0,
+      bookCount: bookCount,
       isListed: newValue,
       requiresApproval: config?.requiresApproval ?? false,
-      acceptFrom: config?.acceptFrom ?? 'all',
+      acceptFrom: config?.acceptFrom ?? 'everyone',
     );
+
+    if (ok && newValue) {
+      // Push the full ISBN catalog to the hub after listing.
+      dirProvider.syncCatalog();
+    }
+
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            dirProvider.configError ??
+                (TranslationService.translate(context, 'error_network') ?? 'Network error'),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
   }
 
   Future<void> _updateDirectoryConfig(
@@ -997,22 +981,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final libraryName =
         themeProvider.libraryName.isNotEmpty ? themeProvider.libraryName : 'My Library';
 
-    await dirProvider.register(
+    final bookCount = await FfiService().countBooks();
+
+    final ok = await dirProvider.register(
       nodeId: config.nodeId,
       displayName: libraryName,
-      bookCount: 0,
+      bookCount: bookCount,
       isListed: config.isListed,
       requiresApproval: requiresApproval ?? config.requiresApproval,
       acceptFrom: acceptFrom ?? config.acceptFrom,
     );
-  }
 
-  Future<String?> _getNodeId() async {
-    try {
-      final config = await FfiService().hubDirectoryGetConfig();
-      return config?.nodeId;
-    } catch (_) {
-      return null;
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            dirProvider.configError ??
+                (TranslationService.translate(context, 'error_network') ?? 'Network error'),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 

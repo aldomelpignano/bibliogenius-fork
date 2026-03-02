@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../models/book.dart';
 import '../models/collection.dart';
 import '../services/translation_service.dart';
+import 'book_cover_card.dart';
 import 'cached_book_cover.dart';
 
 // ---------------------------------------------------------------------------
@@ -85,7 +86,6 @@ class _CollectionStackWidgetState extends State<CollectionStackWidget> {
     final name = group.collection?.name ??
         TranslationService.translate(context, 'collection_group_uncollected');
     final bookCount = group.books.length;
-    final ownedCount = group.ownedCount;
 
     final booksLabel =
         TranslationService.translate(context, 'collection_group_books_count');
@@ -93,35 +93,32 @@ class _CollectionStackWidgetState extends State<CollectionStackWidget> {
         TranslationService.translate(context, 'collection_group_tap_hint');
     final semanticLabel = '$name, $bookCount $booksLabel. $tapHint';
 
+    final ownedLabel = TranslationService.translate(
+      context,
+      'collection_owned_count',
+    ).replaceAll('{n}', '${group.ownedCount}');
+    final tooltipMessage = '$name\n$bookCount $booksLabel - $ownedLabel';
+
     return Semantics(
       button: true,
       label: semanticLabel,
       excludeSemantics: true,
-      child: GestureDetector(
-        onTapDown: _onTapDown,
-        onTapUp: _onTapUp,
-        onTapCancel: _onTapCancel,
-        onTap: _onTap,
-        child: AnimatedScale(
-          scale: _pressed ? 0.93 : 1.0,
-          duration: const Duration(milliseconds: 120),
-          curve: Curves.easeOut,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: _StackedCovers(
-                  covers: group.stackCoverUrls,
-                  bookCount: bookCount,
-                ),
-              ),
-              const SizedBox(height: 8),
-              _CollectionLabel(
-                name: name,
-                bookCount: bookCount,
-                ownedCount: ownedCount,
-              ),
-            ],
+      child: Tooltip(
+        message: tooltipMessage,
+        preferBelow: false,
+        child: GestureDetector(
+          onTapDown: _onTapDown,
+          onTapUp: _onTapUp,
+          onTapCancel: _onTapCancel,
+          onTap: _onTap,
+          child: AnimatedScale(
+            scale: _pressed ? 0.93 : 1.0,
+            duration: const Duration(milliseconds: 120),
+            curve: Curves.easeOut,
+            child: _StackedCovers(
+              covers: group.stackCoverUrls,
+              bookCount: bookCount,
+            ),
           ),
         ),
       ),
@@ -295,58 +292,6 @@ class _CountBadge extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// _CollectionLabel
-// ---------------------------------------------------------------------------
-
-class _CollectionLabel extends StatelessWidget {
-  final String name;
-  final int bookCount;
-  final int ownedCount;
-
-  const _CollectionLabel({
-    required this.name,
-    required this.bookCount,
-    required this.ownedCount,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final ownedLabel = TranslationService.translate(
-      context,
-      'collection_owned_count',
-    ).replaceAll('{n}', '$ownedCount');
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Column(
-        children: [
-          Text(
-            name,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              height: 1.25,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            ownedLabel,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              height: 1.2,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
 // CollectionGroupBottomSheet
 // ---------------------------------------------------------------------------
 
@@ -369,7 +314,7 @@ class CollectionGroupBottomSheet extends StatelessWidget {
     if (onCollectionTap != null) {
       onCollectionTap!();
     } else if (group.collection != null) {
-      context.push('/collections/${group.collection!.id}');
+      context.push('/collections/${group.collection!.id}', extra: group.collection);
     }
   }
 
@@ -694,18 +639,186 @@ class _BookTile extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
+// CollectionCoverCard - used in collection_list_screen.dart
+// ---------------------------------------------------------------------------
+
+/// Displays a collection as stacked book covers with the collection name
+/// below in dark text.
+///
+/// When the collection has no book covers, a colored placeholder is shown
+/// (matching the default library fallback style).
+/// Tapping navigates to the collection detail page.
+class CollectionCoverCard extends StatefulWidget {
+  final Collection collection;
+  final List<String?> coverUrls;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+
+  const CollectionCoverCard({
+    super.key,
+    required this.collection,
+    required this.coverUrls,
+    required this.onTap,
+    this.onLongPress,
+  });
+
+  @override
+  State<CollectionCoverCard> createState() => _CollectionCoverCardState();
+}
+
+class _CollectionCoverCardState extends State<CollectionCoverCard> {
+  bool _pressed = false;
+
+  /// Generate a stable color from the collection name.
+  Color _colorFromName(String name) {
+    final hash = name.hashCode.abs();
+    return Color.fromARGB(
+      255,
+      60 + (hash % 140),
+      60 + ((hash >> 8) % 140),
+      60 + ((hash >> 16) % 140),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bookCount = widget.collection.totalBooks;
+    final booksLabel =
+        TranslationService.translate(context, 'collection_group_books_count');
+    final semanticLabel =
+        '${widget.collection.name}, $bookCount $booksLabel';
+
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapUp: (_) => setState(() => _pressed = false),
+        onTapCancel: () => setState(() => _pressed = false),
+        onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
+        child: AnimatedScale(
+          scale: _pressed ? 0.93 : 1.0,
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Covers area
+              Expanded(
+                child: widget.coverUrls.isEmpty
+                    ? _buildColoredFallback(theme)
+                    : _StackedCovers(
+                        covers: widget.coverUrls,
+                        bookCount: bookCount,
+                      ),
+              ),
+              const SizedBox(height: 4),
+              // Collection name below
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: Text(
+                  widget.collection.name,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.1,
+                    height: 1.15,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Colored placeholder for collections without book covers.
+  Widget _buildColoredFallback(ThemeData theme) {
+    final color = _colorFromName(widget.collection.name);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth * 0.82;
+        final h = math.min(constraints.maxHeight * 0.94, w / 0.67);
+        return Center(
+          child: Container(
+            width: w,
+            height: h,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [color.withValues(alpha: 0.8), color],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.collections_bookmark,
+                  color: Colors.white70,
+                  size: 28,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.collection.name,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(0, 1),
+                        blurRadius: 2,
+                        color: Colors.black45,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // CollectionGroupGrid - usage in book_list_screen.dart
 // ---------------------------------------------------------------------------
 
 /// Drop-in replacement for [BookCoverGrid] when group-by-collection is active.
 ///
-/// Groups are built outside this widget (by a service or provider).
-/// Books without a collection appear as individual [CollectionGroup] entries
-/// with [CollectionGroup.collection] == null.
+/// Displays a mixed grid of collection stacks (for books in collections) and
+/// individual book covers (for uncollected books). Uncollected books behave
+/// identically to the default library: tap navigates to the book page.
 class CollectionGroupGrid extends StatelessWidget {
   final List<CollectionGroup> groups;
+  final Function(Book) onBookTap;
 
-  const CollectionGroupGrid({super.key, required this.groups});
+  const CollectionGroupGrid({
+    super.key,
+    required this.groups,
+    required this.onBookTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -715,14 +828,21 @@ class CollectionGroupGrid extends StatelessWidget {
     return GridView.builder(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 160,
-        childAspectRatio: 0.58,
+        maxCrossAxisExtent: 150,
+        childAspectRatio: 0.72,
         crossAxisSpacing: 16,
-        mainAxisSpacing: 20,
+        mainAxisSpacing: 16,
       ),
       itemCount: groups.length,
       itemBuilder: (context, index) {
-        return CollectionStackWidget(group: groups[index]);
+        final group = groups[index];
+        // Uncollected single book: render as a regular cover card.
+        if (group.collection == null && group.books.length == 1) {
+          final book = group.books.first;
+          return BookCoverCard(book: book, onTap: () => onBookTap(book));
+        }
+        // Collection with books: render as stacked covers.
+        return CollectionStackWidget(group: group);
       },
     );
   }

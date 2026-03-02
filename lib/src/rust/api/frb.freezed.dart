@@ -1687,7 +1687,7 @@ as String,
 /// @nodoc
 mixin _$FrbHubFollow {
 
- PlatformInt64 get id; String get followerNodeId; String get followedNodeId; String get status; String get createdAt; String? get resolvedAt;
+ PlatformInt64 get id; String get followerNodeId; String get followedNodeId; String get status; String get createdAt; String? get resolvedAt; String? get followerDisplayName;
 /// Create a copy of FrbHubFollow
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1698,16 +1698,16 @@ $FrbHubFollowCopyWith<FrbHubFollow> get copyWith => _$FrbHubFollowCopyWithImpl<F
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbHubFollow&&(identical(other.id, id) || other.id == id)&&(identical(other.followerNodeId, followerNodeId) || other.followerNodeId == followerNodeId)&&(identical(other.followedNodeId, followedNodeId) || other.followedNodeId == followedNodeId)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.resolvedAt, resolvedAt) || other.resolvedAt == resolvedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbHubFollow&&(identical(other.id, id) || other.id == id)&&(identical(other.followerNodeId, followerNodeId) || other.followerNodeId == followerNodeId)&&(identical(other.followedNodeId, followedNodeId) || other.followedNodeId == followedNodeId)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.resolvedAt, resolvedAt) || other.resolvedAt == resolvedAt)&&(identical(other.followerDisplayName, followerDisplayName) || other.followerDisplayName == followerDisplayName));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,followerNodeId,followedNodeId,status,createdAt,resolvedAt);
+int get hashCode => Object.hash(runtimeType,id,followerNodeId,followedNodeId,status,createdAt,resolvedAt,followerDisplayName);
 
 @override
 String toString() {
-  return 'FrbHubFollow(id: $id, followerNodeId: $followerNodeId, followedNodeId: $followedNodeId, status: $status, createdAt: $createdAt, resolvedAt: $resolvedAt)';
+  return 'FrbHubFollow(id: $id, followerNodeId: $followerNodeId, followedNodeId: $followedNodeId, status: $status, createdAt: $createdAt, resolvedAt: $resolvedAt, followerDisplayName: $followerDisplayName)';
 }
 
 
@@ -1718,7 +1718,7 @@ abstract mixin class $FrbHubFollowCopyWith<$Res>  {
   factory $FrbHubFollowCopyWith(FrbHubFollow value, $Res Function(FrbHubFollow) _then) = _$FrbHubFollowCopyWithImpl;
 @useResult
 $Res call({
- PlatformInt64 id, String followerNodeId, String followedNodeId, String status, String createdAt, String? resolvedAt
+ PlatformInt64 id, String followerNodeId, String followedNodeId, String status, String createdAt, String? resolvedAt, String? followerDisplayName
 });
 
 
@@ -1735,7 +1735,7 @@ class _$FrbHubFollowCopyWithImpl<$Res>
 
 /// Create a copy of FrbHubFollow
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? followerNodeId = null,Object? followedNodeId = null,Object? status = null,Object? createdAt = null,Object? resolvedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? followerNodeId = null,Object? followedNodeId = null,Object? status = null,Object? createdAt = null,Object? resolvedAt = freezed,Object? followerDisplayName = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as PlatformInt64,followerNodeId: null == followerNodeId ? _self.followerNodeId : followerNodeId // ignore: cast_nullable_to_non_nullable
@@ -1743,6 +1743,7 @@ as String,followedNodeId: null == followedNodeId ? _self.followedNodeId : follow
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as String,resolvedAt: freezed == resolvedAt ? _self.resolvedAt : resolvedAt // ignore: cast_nullable_to_non_nullable
+as String?,followerDisplayName: freezed == followerDisplayName ? _self.followerDisplayName : followerDisplayName // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -1878,8 +1879,8 @@ return $default(_that.id,_that.followerNodeId,_that.followedNodeId,_that.status,
 
 
 class _FrbHubFollow implements FrbHubFollow {
-  const _FrbHubFollow({required this.id, required this.followerNodeId, required this.followedNodeId, required this.status, required this.createdAt, this.resolvedAt});
-  
+  const _FrbHubFollow({required this.id, required this.followerNodeId, required this.followedNodeId, required this.status, required this.createdAt, this.resolvedAt, this.followerDisplayName});
+
 
 @override final  PlatformInt64 id;
 @override final  String followerNodeId;
@@ -1887,6 +1888,7 @@ class _FrbHubFollow implements FrbHubFollow {
 @override final  String status;
 @override final  String createdAt;
 @override final  String? resolvedAt;
+@override final  String? followerDisplayName;
 
 /// Create a copy of FrbHubFollow
 /// with the given fields replaced by the non-null parameter values.
@@ -1903,11 +1905,11 @@ bool operator ==(Object other) {
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,followerNodeId,followedNodeId,status,createdAt,resolvedAt);
+int get hashCode => Object.hash(runtimeType,id,followerNodeId,followedNodeId,status,createdAt,resolvedAt,followerDisplayName);
 
 @override
 String toString() {
-  return 'FrbHubFollow(id: $id, followerNodeId: $followerNodeId, followedNodeId: $followedNodeId, status: $status, createdAt: $createdAt, resolvedAt: $resolvedAt)';
+  return 'FrbHubFollow(id: $id, followerNodeId: $followerNodeId, followedNodeId: $followedNodeId, status: $status, createdAt: $createdAt, resolvedAt: $resolvedAt, followerDisplayName: $followerDisplayName)';
 }
 
 
@@ -1918,7 +1920,7 @@ abstract mixin class _$FrbHubFollowCopyWith<$Res> implements $FrbHubFollowCopyWi
   factory _$FrbHubFollowCopyWith(_FrbHubFollow value, $Res Function(_FrbHubFollow) _then) = __$FrbHubFollowCopyWithImpl;
 @override @useResult
 $Res call({
- PlatformInt64 id, String followerNodeId, String followedNodeId, String status, String createdAt, String? resolvedAt
+ PlatformInt64 id, String followerNodeId, String followedNodeId, String status, String createdAt, String? resolvedAt, String? followerDisplayName
 });
 
 
@@ -1935,7 +1937,7 @@ class __$FrbHubFollowCopyWithImpl<$Res>
 
 /// Create a copy of FrbHubFollow
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? followerNodeId = null,Object? followedNodeId = null,Object? status = null,Object? createdAt = null,Object? resolvedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? followerNodeId = null,Object? followedNodeId = null,Object? status = null,Object? createdAt = null,Object? resolvedAt = freezed,Object? followerDisplayName = freezed,}) {
   return _then(_FrbHubFollow(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as PlatformInt64,followerNodeId: null == followerNodeId ? _self.followerNodeId : followerNodeId // ignore: cast_nullable_to_non_nullable
@@ -1943,6 +1945,7 @@ as String,followedNodeId: null == followedNodeId ? _self.followedNodeId : follow
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as String,resolvedAt: freezed == resolvedAt ? _self.resolvedAt : resolvedAt // ignore: cast_nullable_to_non_nullable
+as String?,followerDisplayName: freezed == followerDisplayName ? _self.followerDisplayName : followerDisplayName // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

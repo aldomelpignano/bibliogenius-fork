@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../src/rust/frb_generated.dart';
 import '../src/rust/api/frb.dart' as frb;
+import '../services/api_service.dart';
 
 const _migrationFlag = 'db_migration_completed_v1';
 const _dbName = 'bibliogenius.db';
@@ -33,6 +34,11 @@ Future<bool> initializePlatform() async {
     debugPrint('FFI: Calling initBackend...');
     final result = await frb.initBackend(dbPath: dbPath);
     debugPrint('FFI Backend initialized: $result');
+
+    // Bridge hub URL from Flutter dotenv to Rust process environment.
+    // Rust reads HUB_URL via std::env::var and cannot see Flutter's dotenv map.
+    await frb.setHubUrlFfi(hubUrl: ApiService.hubUrl);
+    debugPrint('FFI: HUB_URL set to ${ApiService.hubUrl}');
     debugPrint('FFI: useFfi set to TRUE');
 
     return true; // useFfi = true

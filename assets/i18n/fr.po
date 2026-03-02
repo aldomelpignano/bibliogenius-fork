@@ -6342,10 +6342,10 @@ msgid "invite_share_title"
 msgstr "Votre lien d'invitation"
 
 msgid "invite_card_title"
-msgstr "Partagez votre lien d'invitation"
+msgstr "Partagez votre bibliothèque"
 
 msgid "invite_card_subtitle"
-msgstr "Invitez des contacts à se connecter"
+msgstr "Envoyez un lien d'invitation"
 
 msgid "copy_invite_link"
 msgstr "Copier le lien"
@@ -6646,6 +6646,9 @@ msgstr "Afficher les livres groupés par collection dans la bibliothèque"
 msgid "directory_title"
 msgstr "Annuaire des bibliothèques"
 
+msgid "directory_browse_subtitle"
+msgstr "Découvrir et suivre d'autres bibliothèques BiblioGenius"
+
 msgid "directory_tab_explore"
 msgstr "Explorer"
 
@@ -6734,6 +6737,12 @@ msgstr "Approbation requise pour les abonnés"
 msgid "directory_requires_approval_desc"
 msgstr "Les nouveaux abonnés doivent être approuvés avant d'accéder à votre catalogue"
 
+msgid "directory_requires_approval_short"
+msgstr "Approbation requise"
+
+msgid "directory_connected"
+msgstr "Connectée"
+
 msgid "directory_accept_from_title"
 msgstr "Accepter les connexions de"
 
@@ -6768,3 +6777,34 @@ msgstr "Suivez cette bibliothèque pour accéder à son catalogue."
 #. Générique
 msgid "action_retry"
 msgstr "Réessayer"
+
+#. Onglet Bibliothèques
+msgid "tab_libraries"
+msgstr "Bibliothèques"
+
+msgid "lib_filter_all"
+msgstr "Tout"
+
+msgid "lib_filter_peers"
+msgstr "Relations"
+
+msgid "lib_filter_following"
+msgstr "Suivis"
+
+msgid "lib_connection_peer"
+msgstr "Jumelée"
+
+msgid "lib_follow_pending"
+msgstr "En attente"
+
+msgid "lib_follow_active"
+msgstr "Suivi"
+
+msgid "lib_empty_title"
+msgstr "Aucune bibliothèque connectée"
+
+msgid "lib_empty_hint"
+msgstr "Découvrez des bibliothèques via l'annuaire, ou connectez-vous directement avec un pair sur votre réseau."
+
+msgid "lib_unfollow"
+msgstr "Ne plus suivre"
