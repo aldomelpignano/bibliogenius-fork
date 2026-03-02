@@ -5,6 +5,7 @@ import '../models/hub_directory.dart';
 import '../providers/hub_directory_provider.dart';
 import '../services/ffi_service.dart';
 import '../services/translation_service.dart';
+import '../src/rust/api/frb.dart' show FrbCatalogEntry;
 import '../theme/app_design.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/genie_app_bar.dart';
@@ -27,7 +28,7 @@ class _LibraryCatalogScreenState extends State<LibraryCatalogScreen> {
   final FfiService _ffi = FfiService();
 
   HubProfile? _profile;
-  List<String> _isbns = [];
+  List<FrbCatalogEntry> _entries = [];
   bool _loading = true;
   String? _error;
 
@@ -45,13 +46,13 @@ class _LibraryCatalogScreenState extends State<LibraryCatalogScreen> {
 
     try {
       final profileFrb = await _ffi.hubDirectoryGetProfile(widget.nodeId);
-      final isbns = await _ffi.hubDirectoryGetCatalog(widget.nodeId);
+      final entries = await _ffi.hubDirectoryGetCatalog(widget.nodeId);
 
       if (!mounted) return;
       setState(() {
         _profile =
             profileFrb != null ? HubProfile.fromFrb(profileFrb) : null;
-        _isbns = isbns;
+        _entries = entries;
       });
     } catch (e) {
       if (!mounted) return;
@@ -128,7 +129,7 @@ class _LibraryCatalogScreenState extends State<LibraryCatalogScreen> {
       );
     }
 
-    if (_isbns.isEmpty) {
+    if (_entries.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -164,7 +165,7 @@ class _LibraryCatalogScreenState extends State<LibraryCatalogScreen> {
           child: Semantics(
             header: true,
             child: Text(
-              '${_isbns.length} ${TranslationService.translate(context, 'directory_catalog_isbn_count')}',
+              '${_entries.length} ${TranslationService.translate(context, 'directory_catalog_isbn_count')}',
               style: Theme.of(context)
                   .textTheme
                   .titleSmall
@@ -177,21 +178,25 @@ class _LibraryCatalogScreenState extends State<LibraryCatalogScreen> {
             onRefresh: _load,
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(vertical: 4),
-              itemCount: _isbns.length,
+              itemCount: _entries.length,
               separatorBuilder: (context, index) =>
                   const Divider(height: 1, indent: 16),
               itemBuilder: (context, index) {
-                final isbn = _isbns[index];
+                final entry = _entries[index];
+                final hasTitle = entry.title.isNotEmpty;
                 return ListTile(
-                  leading: const Icon(Icons.barcode_reader),
-                  title: Text(isbn,
-                      style: const TextStyle(fontFamily: 'monospace')),
+                  leading: const Icon(Icons.menu_book),
+                  title: Text(
+                    hasTitle ? entry.title : entry.isbn,
+                    style: hasTitle
+                        ? null
+                        : const TextStyle(fontFamily: 'monospace'),
+                  ),
                   subtitle: Text(
-                    TranslationService.translate(
-                      context,
-                      'directory_catalog_isbn_label',
-                    ),
-                    style: const TextStyle(fontSize: 11),
+                    entry.author ?? entry.isbn,
+                    style: const TextStyle(fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 );
               },

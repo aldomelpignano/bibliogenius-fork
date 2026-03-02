@@ -715,7 +715,7 @@ class _CollectionCoverCardState extends State<CollectionCoverCard> {
                         bookCount: bookCount,
                       ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               // Collection name below
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 2),

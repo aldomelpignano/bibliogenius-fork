@@ -26,7 +26,7 @@ class BookshelfView extends StatelessWidget {
             children: books.map((book) {
               return GestureDetector(
                 onTap: () => onBookTap(book),
-                child: BookSpine(
+                child: BookSpine.fromBook(
                   book: book,
                   height:
                       220 + ((book.id ?? 0) % 4) * 12.0, // Vary height slightly

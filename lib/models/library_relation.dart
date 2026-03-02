@@ -2,7 +2,7 @@ import 'network_member.dart';
 import 'hub_directory.dart';
 
 /// Filter for the unified libraries list.
-enum LibraryFilter { all, peers, following }
+enum LibraryFilter { nearby, following, discover }
 
 /// A unified view of a remote library, regardless of how we're connected to it.
 ///

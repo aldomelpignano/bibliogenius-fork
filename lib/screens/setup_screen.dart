@@ -68,7 +68,7 @@ class _SetupScreenState extends State<SetupScreen> {
               debugPrint(
                 'Stepper onStepContinue called - currentStep: $currentStep',
               );
-              if (currentStep < 4) {
+              if (currentStep < 5) {
                 if (currentStep == 1) {
                   // Validate library name is not empty
                   if (_libraryNameController.text.trim().isEmpty) {
@@ -91,8 +91,8 @@ class _SetupScreenState extends State<SetupScreen> {
                     _libraryNameController.text.trim(),
                   );
                 }
-                // Validate password on credentials step
-                if (currentStep == 3) {
+                // Validate password on credentials step (now step 4)
+                if (currentStep == 4) {
                   if (_passwordController.text.isNotEmpty &&
                       _passwordController.text !=
                           _confirmPasswordController.text) {
@@ -127,7 +127,7 @@ class _SetupScreenState extends State<SetupScreen> {
               }
             },
             controlsBuilder: (context, details) {
-              final isLastStep = currentStep == 4;
+              final isLastStep = currentStep == 5;
               return Padding(
                 padding: const EdgeInsets.only(top: 24.0, bottom: 12.0),
                 child: Row(
@@ -237,7 +237,79 @@ class _SetupScreenState extends State<SetupScreen> {
                 isActive: currentStep >= 1,
                 state: currentStep > 1 ? StepState.complete : StepState.indexed,
               ),
-              // Step 2: Demo Content (was Step 3)
+              // Step 2: Profile Type
+              Step(
+                title: Text(t('setup_profile_step_title')),
+                content: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t('setup_profile_step_desc'),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(height: 16),
+                    _ProfileCard(
+                      icon: Icons.menu_book,
+                      label: t('profile_reader'),
+                      description: t('profile_reader_desc'),
+                      selected: themeProvider.setupProfileType == 'reader',
+                      onTap: () =>
+                          themeProvider.setSetupProfileType('reader'),
+                    ),
+                    const SizedBox(height: 8),
+                    _ProfileCard(
+                      icon: Icons.local_library,
+                      label: t('profile_librarian'),
+                      description: t('profile_librarian_desc'),
+                      selected: themeProvider.setupProfileType == 'librarian',
+                      onTap: () =>
+                          themeProvider.setSetupProfileType('librarian'),
+                    ),
+                    const SizedBox(height: 8),
+                    _ProfileCard(
+                      icon: Icons.storefront,
+                      label: t('profile_bookseller'),
+                      description: t('profile_bookseller_desc'),
+                      selected: themeProvider.setupProfileType == 'bookseller',
+                      onTap: () =>
+                          themeProvider.setSetupProfileType('bookseller'),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      t('setup_profile_coming_soon'),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[500],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _ProfileCard(
+                      icon: Icons.family_restroom,
+                      label: t('profile_family'),
+                      description: t('profile_family_desc'),
+                      enabled: false,
+                    ),
+                    const SizedBox(height: 8),
+                    _ProfileCard(
+                      icon: Icons.school,
+                      label: t('profile_educator'),
+                      description: t('profile_educator_desc'),
+                      enabled: false,
+                    ),
+                    const SizedBox(height: 8),
+                    _ProfileCard(
+                      icon: Icons.groups,
+                      label: t('profile_association'),
+                      description: t('profile_association_desc'),
+                      enabled: false,
+                    ),
+                  ],
+                ),
+                isActive: currentStep >= 2,
+                state: currentStep > 2 ? StepState.complete : StepState.indexed,
+              ),
+              // Step 3: Demo Content
               Step(
                 title: Text(t('setup_demo_title')),
                 content: Column(
@@ -267,10 +339,10 @@ class _SetupScreenState extends State<SetupScreen> {
                     ),
                   ],
                 ),
-                isActive: currentStep >= 2,
-                state: currentStep > 2 ? StepState.complete : StepState.indexed,
+                isActive: currentStep >= 3,
+                state: currentStep > 3 ? StepState.complete : StepState.indexed,
               ),
-              // Step 3: Credentials
+              // Step 4: Credentials
               Step(
                 title: Text(
                   TranslationService.translate(
@@ -346,10 +418,10 @@ class _SetupScreenState extends State<SetupScreen> {
                     ),
                   ],
                 ),
-                isActive: currentStep >= 3,
-                state: currentStep > 3 ? StepState.complete : StepState.indexed,
+                isActive: currentStep >= 4,
+                state: currentStep > 4 ? StepState.complete : StepState.indexed,
               ),
-              // Step 4: Finish
+              // Step 5: Finish
               Step(
                 title: Text(t('setup_finish_title')),
                 content: Column(
@@ -366,8 +438,8 @@ class _SetupScreenState extends State<SetupScreen> {
                     Text(t('setup_finish_body')),
                   ],
                 ),
-                isActive: currentStep >= 4,
-                state: currentStep == 4
+                isActive: currentStep >= 5,
+                state: currentStep == 5
                     ? StepState.complete
                     : StepState.indexed,
               ),
@@ -395,13 +467,19 @@ class _SetupScreenState extends State<SetupScreen> {
       debugPrint('_finishSetup: Got services');
 
       // 1. Setup Backend
-      debugPrint('_finishSetup: Calling apiService.setup...');
+      final profileType = themeProvider.setupProfileType;
+      debugPrint('_finishSetup: Calling apiService.setup (profile: $profileType)...');
       await apiService.setup(
         libraryName: themeProvider.setupLibraryName,
-        profileType: 'individual',
+        profileType: profileType,
         theme: themeProvider.themeStyle,
       );
       debugPrint('_finishSetup: apiService.setup completed');
+
+      // 2. Apply preset modules for the selected profile
+      debugPrint('_finishSetup: Applying preset: $profileType...');
+      await themeProvider.applyPreset(profileType);
+      debugPrint('_finishSetup: Preset applied');
 
       // 2. Import Demo Data if requested
       if (themeProvider.setupImportDemo) {
@@ -433,7 +511,7 @@ class _SetupScreenState extends State<SetupScreen> {
         // This is done AFTER dialog is fully closed to prevent dirty widget errors
         debugPrint('_finishSetup: Calling completeSetupWithSettings...');
         await themeProvider.completeSetupWithSettings(
-          profileType: 'individual',
+          profileType: profileType,
           avatarConfig: themeProvider.setupAvatarConfig,
           libraryName: themeProvider.setupLibraryName,
           apiService: apiService,
@@ -508,5 +586,125 @@ class _SetupScreenState extends State<SetupScreen> {
         );
       }
     }
+  }
+}
+
+class _ProfileCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String description;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback? onTap;
+
+  const _ProfileCard({
+    required this.icon,
+    required this.label,
+    required this.description,
+    this.selected = false,
+    this.enabled = true,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final opacity = enabled ? 1.0 : 0.45;
+
+    return Opacity(
+      opacity: opacity,
+      child: Semantics(
+        button: enabled,
+        label: enabled ? '$label, $description' : '$label, ${TranslationService.translate(context, 'coming_soon')}',
+        child: Material(
+          color: selected
+              ? Theme.of(context).colorScheme.primaryContainer
+              : Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(12),
+          elevation: selected ? 2 : 0,
+          child: InkWell(
+            onTap: enabled ? onTap : null,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: selected
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey.shade300,
+                  width: selected ? 2 : 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    icon,
+                    size: 32,
+                    color: selected
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey[600],
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              label,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                                color: selected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                              ),
+                            ),
+                            if (!enabled) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  TranslationService.translate(context, 'coming_soon'),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          description,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (selected)
+                    Icon(
+                      Icons.check_circle,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

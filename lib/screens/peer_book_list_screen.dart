@@ -2,8 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
+import '../services/ffi_service.dart';
 import '../models/book.dart';
+import '../src/rust/api/frb.dart' show FrbCatalogEntry;
 import '../widgets/bookshelf_view.dart';
+import '../widgets/book_spine.dart';
 import '../widgets/shimmer_loading.dart';
 import '../services/translation_service.dart';
 import '../providers/theme_provider.dart';
@@ -15,6 +18,9 @@ class PeerBookListScreen extends StatefulWidget {
   /// Whether this peer has relay credentials (relay_url + mailbox_id).
   /// When false, relay sync is skipped and an offline state is shown instead.
   final bool hasRelayCredentials;
+  /// Hub directory node ID for this library. When set and P2P/cache/relay all
+  /// fail, the screen falls back to displaying the hub catalog as BookSpines.
+  final String? nodeId;
 
   const PeerBookListScreen({
     super.key,
@@ -22,6 +28,7 @@ class PeerBookListScreen extends StatefulWidget {
     required this.peerName,
     required this.peerUrl,
     this.hasRelayCredentials = false,
+    this.nodeId,
   });
 
   @override
@@ -47,6 +54,10 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
   int _relayBooksLoaded = 0;
   int _relayBooksTotal = 0;
   Timer? _pollTimer;
+
+  /// Hub catalog fallback state (hub-only data: title + author + ISBN)
+  bool _isHubOnly = false;
+  List<FrbCatalogEntry> _hubEntries = [];
 
   @override
   void initState() {
@@ -162,7 +173,10 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
 
       // 4. Offline (or live fetch failed without cache) - try relay if available
       if (!widget.hasRelayCredentials) {
-        // Peer has no relay - show offline state immediately
+        // Peer has no relay - try hub catalog fallback if nodeId is available
+        if (widget.nodeId != null && _books.isEmpty) {
+          await _loadHubCatalog();
+        }
         if (mounted) setState(() { _isLoading = false; _isRefreshing = false; });
         return;
       }
@@ -185,6 +199,25 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
           _isRefreshing = false;
         });
       }
+    }
+  }
+
+  /// Load hub catalog as a last-resort fallback (title + author + ISBN only).
+  /// Displays as BookSpines since we have no covers or full book data.
+  Future<void> _loadHubCatalog() async {
+    if (widget.nodeId == null) return;
+    try {
+      final ffi = FfiService();
+      final entries = await ffi.hubDirectoryGetCatalog(widget.nodeId!);
+      if (!mounted) return;
+      if (entries.isNotEmpty) {
+        setState(() {
+          _isHubOnly = true;
+          _hubEntries = entries;
+        });
+      }
+    } catch (e) {
+      debugPrint('Hub catalog fallback failed: $e');
     }
   }
 
@@ -521,6 +554,97 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
   }
 
   /// Full-page view shown when peer is offline and no books available
+  Widget _buildHubOnlyView() {
+    return Column(
+      children: [
+        // Info banner
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          color: Colors.indigo.withValues(alpha: 0.08),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline, size: 18, color: Colors.indigo[400]),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  TranslationService.translate(context, 'hub_only_hint'),
+                  style: TextStyle(fontSize: 13, color: Colors.indigo[600]),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // BookSpine shelf view
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Wrap(
+              spacing: 0,
+              runSpacing: 20,
+              alignment: WrapAlignment.start,
+              crossAxisAlignment: WrapCrossAlignment.end,
+              children: _hubEntries.map((entry) {
+                final seed = entry.isbn.hashCode;
+                return GestureDetector(
+                  onTap: () => _showHubEntryDetails(entry),
+                  child: BookSpine(
+                    title: entry.title,
+                    subtitle: entry.author,
+                    colorSeed: seed,
+                    height: 220 + (seed.abs() % 4) * 12.0,
+                    width: 60 + (seed.abs() % 3) * 6.0,
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showHubEntryDetails(FrbCatalogEntry entry) {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                entry.title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (entry.author != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  entry.author!,
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                ),
+              ],
+              const SizedBox(height: 8),
+              Text(
+                'ISBN: ${entry.isbn}',
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                TranslationService.translate(context, 'hub_only_detail_hint'),
+                style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildOfflineNotAvailableView() {
     return Center(
       child: Padding(
@@ -693,12 +817,15 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
+          // Hub-only fallback: display BookSpines from hub catalog data
+          : (_isHubOnly && _hubEntries.isNotEmpty && _books.isEmpty)
+              ? _buildHubOnlyView()
           // If peer offline, no books, no caching, and not relay loading
-          : (!_isPeerOnline &&
-                  !_offlineCachingEnabled &&
-                  _books.isEmpty &&
-                  !_isRelayLoading)
-              ? _buildOfflineNotAvailableView()
+              : (!_isPeerOnline &&
+                      !_offlineCachingEnabled &&
+                      _books.isEmpty &&
+                      !_isRelayLoading)
+                  ? _buildOfflineNotAvailableView()
               : Column(
                   children: [
                     // Staleness indicator bar

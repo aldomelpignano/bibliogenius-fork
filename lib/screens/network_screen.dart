@@ -22,6 +22,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'borrow_requests_screen.dart';
+import '../models/hub_directory.dart';
 
 /// Unified screen displaying Contacts, Libraries, and Loans tabs
 class NetworkScreen extends StatefulWidget {
@@ -158,24 +159,6 @@ class _NetworkScreenState extends State<NetworkScreen>
                       ],
                     ),
                   );
-                },
-              ),
-              const Divider(height: 1),
-              ListTile(
-                key: const Key('actionBrowseDirectory'),
-                leading: CircleAvatar(
-                  backgroundColor: Colors.teal.shade100,
-                  child: Icon(Icons.travel_explore, color: Colors.teal.shade700),
-                ),
-                title: Text(
-                  TranslationService.translate(context, 'directory_title'),
-                ),
-                subtitle: Text(
-                  TranslationService.translate(context, 'directory_browse_subtitle'),
-                ),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  context.push('/directory');
                 },
               ),
               const SizedBox(height: 8),
@@ -1126,32 +1109,6 @@ class _ActionBanner extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Directory discovery banner (indigo)
-// ---------------------------------------------------------------------------
-
-class _DirectoryBanner extends StatelessWidget {
-  final VoidCallback onTap;
-  const _DirectoryBanner({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) => _ActionBanner(
-        onTap: onTap,
-        icon: Icons.travel_explore,
-        titleKey: 'directory_title',
-        subtitleKey: 'directory_browse_subtitle',
-        iconGradient: AppDesign.primaryGradient,
-        bgLight: const Color(0xFFEEF2FF),
-        bgDark: const Color(0xFF1A1833),
-        borderLight: const Color(0xFFC7D2FE),
-        borderDark: const Color(0xFF3730A3),
-        titleLight: const Color(0xFF3730A3),
-        titleDark: const Color(0xFFA5B4FC),
-        subtitleLight: const Color(0xFF6366F1),
-        subtitleDark: const Color(0xFF818CF8),
-      );
-}
-
-// ---------------------------------------------------------------------------
 // Invite banner (teal)
 // ---------------------------------------------------------------------------
 
@@ -1196,12 +1153,43 @@ class _LibrariesListViewState extends State<LibrariesListView> {
   /// mDNS-discovered peers not yet saved to the DB (no overlap with _relations)
   List<DiscoveredPeer> _localPeers = [];
   bool _isLoading = true;
-  LibraryFilter _filter = LibraryFilter.all;
+  LibraryFilter _filter = LibraryFilter.nearby;
 
   @override
   void initState() {
     super.initState();
+    Provider.of<HubDirectoryProvider>(context, listen: false)
+        .addListener(_onDirectoryChanged);
     _loadLibraries();
+  }
+
+  @override
+  void dispose() {
+    Provider.of<HubDirectoryProvider>(context, listen: false)
+        .removeListener(_onDirectoryChanged);
+    super.dispose();
+  }
+
+  /// Called when HubDirectoryProvider notifies (e.g. display names resolved).
+  /// Updates display names on existing relations without a full reload.
+  void _onDirectoryChanged() {
+    if (!mounted) return;
+    final dirProvider =
+        Provider.of<HubDirectoryProvider>(context, listen: false);
+    bool changed = false;
+    final updated = _relations.map((r) {
+      if (r.isFollowing && r.peer == null) {
+        final hubName = dirProvider.displayNameFor(r.nodeId);
+        if (hubName != null && r.name != hubName) {
+          changed = true;
+          return r.withDisplayName(hubName);
+        }
+      }
+      return r;
+    }).toList();
+    if (changed) {
+      setState(() => _relations = updated);
+    }
   }
 
   Future<void> _loadLibraries() async {
@@ -1233,11 +1221,20 @@ class _LibrariesListViewState extends State<LibrariesListView> {
       }
       for (final follow in follows) {
         final nodeId = follow.followedNodeId;
+        final hubName = dirProvider.displayNameFor(nodeId);
         final existing = map[nodeId];
         if (existing != null) {
-          map[nodeId] = existing.withFollow(follow);
+          var merged = existing.withFollow(follow);
+          if (hubName != null && existing.peer?.name == null) {
+            merged = merged.withDisplayName(hubName);
+          }
+          map[nodeId] = merged;
         } else {
-          map[nodeId] = LibraryRelation(nodeId: nodeId, follow: follow);
+          map[nodeId] = LibraryRelation(
+            nodeId: nodeId,
+            displayName: hubName,
+            follow: follow,
+          );
         }
       }
 
@@ -1285,15 +1282,15 @@ class _LibrariesListViewState extends State<LibrariesListView> {
   }
 
   List<LibraryRelation> get _filtered => switch (_filter) {
-        LibraryFilter.all => _relations,
-        LibraryFilter.peers => _relations.where((r) => r.isPeer).toList(),
+        LibraryFilter.nearby => _relations.where((r) => r.isPeer).toList(),
         LibraryFilter.following =>
           _relations.where((r) => r.isFollowing).toList(),
+        LibraryFilter.discover => [],
       };
 
-  /// mDNS peers shown only on All and Peers filter tabs
+  /// mDNS peers shown only on Nearby tab
   List<DiscoveredPeer> get _visibleLocalPeers =>
-      _filter == LibraryFilter.following ? [] : _localPeers;
+      _filter == LibraryFilter.nearby ? _localPeers : [];
 
   @override
   Widget build(BuildContext context) {
@@ -1305,7 +1302,6 @@ class _LibrariesListViewState extends State<LibrariesListView> {
             count: pendingProvider.pendingCount,
             onAction: pendingProvider.refresh,
           ),
-        _DirectoryBanner(onTap: () => context.push('/directory')),
         // Filter chips
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
@@ -1314,64 +1310,67 @@ class _LibrariesListViewState extends State<LibrariesListView> {
             child: Row(
               children: [
                 _buildFilterChip(
-                  LibraryFilter.all, 'lib_filter_all',
-                  const Key('libFilterAll'),
-                ),
-                const SizedBox(width: 8),
-                _buildFilterChip(
-                  LibraryFilter.peers, 'lib_filter_peers',
-                  const Key('libFilterPeers'),
+                  LibraryFilter.nearby, 'lib_filter_nearby',
+                  const Key('libFilterNearby'),
                 ),
                 const SizedBox(width: 8),
                 _buildFilterChip(
                   LibraryFilter.following, 'lib_filter_following',
                   const Key('libFilterFollowing'),
                 ),
+                const SizedBox(width: 8),
+                _buildFilterChip(
+                  LibraryFilter.discover, 'lib_filter_discover',
+                  const Key('libFilterDiscover'),
+                ),
               ],
             ),
           ),
         ),
         Expanded(
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : RefreshIndicator(
-                  onRefresh: _loadLibraries,
-                  child: (_filtered.isEmpty && _visibleLocalPeers.isEmpty)
-                      ? ListView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          children: [_buildEmptyState(context)],
-                        )
-                      : ListView(
-                          key: const Key('librariesList'),
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          children: [
-                            // Locally discovered libraries (mDNS, not yet saved)
-                            if (_visibleLocalPeers.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              _sectionHeader(
-                                context,
-                                TranslationService.translate(
-                                  context, 'local_network_title',
+          child: _filter == LibraryFilter.discover
+              ? _buildDiscoverContent(context)
+              : _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : RefreshIndicator(
+                      onRefresh: _loadLibraries,
+                      child: (_filtered.isEmpty && _visibleLocalPeers.isEmpty)
+                          ? ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [_buildEmptyState(context)],
+                            )
+                          : ListView(
+                              key: const Key('librariesList'),
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [
+                                // Locally discovered libraries (mDNS, not yet saved)
+                                if (_visibleLocalPeers.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  _sectionHeader(
+                                    context,
+                                    TranslationService.translate(
+                                      context, 'local_network_title',
+                                    ),
+                                    Icons.wifi,
+                                    subtitle: TranslationService.translate(
+                                      context, 'local_network_hint',
+                                    ),
+                                    key: const Key('localNetworkSection'),
+                                  ),
+                                  ..._visibleLocalPeers.map(_buildLocalPeerTile),
+                                  if (_filtered.isNotEmpty)
+                                    const Divider(height: 8),
+                                ],
+                                // Saved peers + follows
+                                ..._filtered.map(
+                                  (r) => _LibraryRelationCard(
+                                    relation: r,
+                                    onRefresh: _loadLibraries,
+                                  ),
                                 ),
-                                Icons.wifi,
-                                subtitle: TranslationService.translate(
-                                  context, 'local_network_hint',
-                                ),
-                                key: const Key('localNetworkSection'),
-                              ),
-                              ..._visibleLocalPeers.map(_buildLocalPeerTile),
-                              if (_filtered.isNotEmpty) const Divider(height: 8),
-                            ],
-                            // Saved peers + follows
-                            ..._filtered.map(
-                              (r) => _LibraryRelationCard(
-                                relation: r,
-                                onRefresh: _loadLibraries,
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
-                ),
+                    ),
         ),
       ],
     );
@@ -1540,6 +1539,244 @@ class _LibrariesListViewState extends State<LibrariesListView> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDiscoverContent(BuildContext context) {
+    return Consumer<HubDirectoryProvider>(
+      builder: (context, provider, _) {
+        // Trigger initial load if needed
+        if (provider.profiles.isEmpty && !provider.listLoading) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            provider.loadDirectory();
+          });
+        }
+
+        if (provider.listLoading && provider.profiles.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (provider.listError != null && provider.profiles.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.error_outline,
+                      size: 64,
+                      color: Theme.of(context).colorScheme.error),
+                  const SizedBox(height: 16),
+                  Text(
+                    provider.listError!,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
+                    onPressed: () => provider.loadDirectory(),
+                    icon: const Icon(Icons.refresh),
+                    label: Text(
+                      TranslationService.translate(context, 'action_retry'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        if (provider.profiles.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.public_off, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    TranslationService.translate(context, 'directory_empty'),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: Colors.grey[600]),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: provider.loadDirectory,
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (notification.metrics.pixels >=
+                  notification.metrics.maxScrollExtent - 200) {
+                provider.loadMoreDirectory();
+              }
+              return false;
+            },
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              itemCount:
+                  provider.profiles.length + (provider.hasMore ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index == provider.profiles.length) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                final profile = provider.profiles[index];
+                return _buildDiscoverCard(context, profile, provider);
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDiscoverCard(
+    BuildContext context,
+    HubProfile profile,
+    HubDirectoryProvider provider,
+  ) {
+    final followStatus = provider.followStatusFor(profile.nodeId);
+    final isSelf = provider.config?.nodeId == profile.nodeId;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Semantics(
+        button: true,
+        label:
+            '${profile.displayName}, ${profile.bookCount} ${TranslationService.translate(context, 'directory_books')}',
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => context.push(
+            '/directory/${Uri.encodeComponent(profile.nodeId)}',
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  child: Text(
+                    profile.displayName.isNotEmpty
+                        ? profile.displayName[0].toUpperCase()
+                        : '?',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profile.displayName,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      if (profile.description != null &&
+                          profile.description!.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          profile.description!,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: Colors.grey[600]),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      const SizedBox(height: 6),
+                      Text(
+                        '${profile.bookCount} ${TranslationService.translate(context, 'directory_books')}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (!isSelf) _buildFollowAction(context, profile, followStatus),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFollowAction(
+    BuildContext context,
+    HubProfile profile,
+    String? followStatus,
+  ) {
+    final provider = context.read<HubDirectoryProvider>();
+    final busy = provider.isBusy(profile.nodeId);
+
+    if (followStatus == 'active') {
+      return OutlinedButton(
+        onPressed: null,
+        child: Text(
+          TranslationService.translate(context, 'directory_following'),
+        ),
+      );
+    }
+    if (followStatus == 'pending') {
+      return OutlinedButton(
+        onPressed: null,
+        child: Text(
+          TranslationService.translate(context, 'directory_pending'),
+        ),
+      );
+    }
+    return FilledButton(
+      onPressed: busy
+          ? null
+          : () async {
+              final ok = await provider.follow(profile.nodeId);
+              if (!context.mounted) return;
+              if (!ok) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      provider.actionError ??
+                          TranslationService.translate(
+                            context,
+                            'directory_follow_error',
+                          ),
+                    ),
+                  ),
+                );
+              }
+            },
+      child: busy
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Text(
+              profile.requiresApproval
+                  ? TranslationService.translate(context, 'directory_request')
+                  : TranslationService.translate(context, 'directory_follow'),
+            ),
     );
   }
 
@@ -1744,6 +1981,7 @@ class _LibraryRelationCard extends StatelessWidget {
             'name': relation.name,
             'url': peer.url,
             'hasRelayCredentials': peer.hasRelayCredentials,
+            'nodeId': relation.nodeId,
           },
         ),
       ));

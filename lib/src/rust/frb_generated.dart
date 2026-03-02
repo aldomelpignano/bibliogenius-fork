@@ -241,7 +241,7 @@ abstract class RustLibApi extends BaseApi {
 
   Future<FrbHubFollow> crateApiFrbHubDirectoryFollow({required String nodeId});
 
-  Future<List<String>> crateApiFrbHubDirectoryGetCatalog({
+  Future<List<FrbCatalogEntry>> crateApiFrbHubDirectoryGetCatalog({
     required String nodeId,
   });
 
@@ -2121,7 +2121,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<List<String>> crateApiFrbHubDirectoryGetCatalog({
+  Future<List<FrbCatalogEntry>> crateApiFrbHubDirectoryGetCatalog({
     required String nodeId,
   }) {
     return handler.executeNormal(
@@ -2137,7 +2137,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_String,
+          decodeSuccessData: sse_decode_list_frb_catalog_entry,
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateApiFrbHubDirectoryGetCatalogConstMeta,
@@ -4925,6 +4925,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  @protected
+  FrbCatalogEntry sse_decode_frb_catalog_entry(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_isbn = sse_decode_String(deserializer);
+    var var_title = sse_decode_String(deserializer);
+    var var_author = sse_decode_opt_String(deserializer);
+    return FrbCatalogEntry(
+      isbn: var_isbn,
+      title: var_title,
+      author: var_author,
+    );
+  }
+
   FrbHubFollow sse_decode_frb_hub_follow(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_id = sse_decode_i_64(deserializer);
@@ -5452,6 +5465,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <FrbDiscoveredPeer>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_frb_discovered_peer(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  @protected
+  List<FrbCatalogEntry> sse_decode_list_frb_catalog_entry(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbCatalogEntry>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_catalog_entry(deserializer));
     }
     return ans_;
   }
@@ -6057,6 +6084,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  @protected
+  void sse_encode_frb_catalog_entry(
+    FrbCatalogEntry self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.isbn, serializer);
+    sse_encode_String(self.title, serializer);
+    sse_encode_opt_String(self.author, serializer);
+  }
+
   void sse_encode_frb_hub_follow(FrbHubFollow self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_64(self.id, serializer);
@@ -6445,6 +6483,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  @protected
+  void sse_encode_list_frb_catalog_entry(
+    List<FrbCatalogEntry> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_catalog_entry(item, serializer);
+    }
+  }
+
   void sse_encode_list_frb_hub_follow(
     List<FrbHubFollow> self,
     SseSerializer serializer,

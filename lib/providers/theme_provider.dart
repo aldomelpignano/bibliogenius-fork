@@ -696,7 +696,7 @@ class ThemeProvider with ChangeNotifier {
   int get setupStep => _setupStep;
   String _setupLibraryName = '';
   String get setupLibraryName => _setupLibraryName;
-  String _setupProfileType = 'individual';
+  String _setupProfileType = 'reader';
   String get setupProfileType => _setupProfileType;
   AvatarConfig _setupAvatarConfig = AvatarConfig.defaultConfig;
   AvatarConfig get setupAvatarConfig => _setupAvatarConfig;
@@ -731,7 +731,7 @@ class ThemeProvider with ChangeNotifier {
   void resetSetupState() {
     _setupStep = 0;
     _setupLibraryName = '';
-    _setupProfileType = 'individual';
+    _setupProfileType = 'reader';
     _setupAvatarConfig = AvatarConfig.defaultConfig;
     _setupImportDemo = false;
     notifyListeners();

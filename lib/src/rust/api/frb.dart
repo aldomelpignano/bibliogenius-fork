@@ -549,8 +549,9 @@ Future<List<FrbHubProfile>> hubDirectoryList({
 Future<FrbHubProfile> hubDirectoryGetProfile({required String nodeId}) =>
     RustLib.instance.api.crateApiFrbHubDirectoryGetProfile(nodeId: nodeId);
 
-/// Gets the ISBN catalog of a library (public or approved follow).
-Future<List<String>> hubDirectoryGetCatalog({required String nodeId}) =>
+/// Gets the catalog of a library (public or approved follow).
+/// Returns enriched entries (ISBN + title + author) when available.
+Future<List<FrbCatalogEntry>> hubDirectoryGetCatalog({required String nodeId}) =>
     RustLib.instance.api.crateApiFrbHubDirectoryGetCatalog(nodeId: nodeId);
 
 /// Sends a follow request to a library.
@@ -680,6 +681,31 @@ sealed class FrbBookMetadata with _$FrbBookMetadata {
     String? coverUrl,
     String? summary,
   }) = _FrbBookMetadata;
+}
+
+/// Enriched catalog entry (ISBN + title + author) for hub-stored book data.
+class FrbCatalogEntry {
+  final String isbn;
+  final String title;
+  final String? author;
+
+  const FrbCatalogEntry({
+    required this.isbn,
+    required this.title,
+    this.author,
+  });
+
+  @override
+  int get hashCode => isbn.hashCode ^ title.hashCode ^ author.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbCatalogEntry &&
+          runtimeType == other.runtimeType &&
+          isbn == other.isbn &&
+          title == other.title &&
+          author == other.author;
 }
 
 /// Collection data exposed to Flutter.

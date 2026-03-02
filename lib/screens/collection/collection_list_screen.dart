@@ -318,7 +318,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                 maxCrossAxisExtent: 180,
                 childAspectRatio: 0.55,
                 crossAxisSpacing: 16,
-                mainAxisSpacing: 20,
+                mainAxisSpacing: 12,
               ),
               itemCount: _collections.length,
               itemBuilder: (context, index) {

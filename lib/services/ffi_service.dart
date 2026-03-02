@@ -1053,8 +1053,8 @@ class FfiService {
     }
   }
 
-  /// Get the public catalog (ISBNs) of a followed library.
-  Future<List<String>> hubDirectoryGetCatalog(String nodeId) async {
+  /// Get the enriched catalog (ISBN + title + author) of a followed library.
+  Future<List<frb.FrbCatalogEntry>> hubDirectoryGetCatalog(String nodeId) async {
     try {
       return await frb.hubDirectoryGetCatalog(nodeId: nodeId);
     } catch (e) {

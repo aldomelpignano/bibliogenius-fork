@@ -1070,7 +1070,7 @@ msgstr "Validation des connexions"
 
 #. Require your approval before new peers can access your library
 msgid "connection_validation_desc"
-msgstr "Exiger votre approbation avant que de nouveaux pairs puissent accéder à votre bibliothèque"
+msgstr "Exiger votre approbation avant que de nouvelles bibliothèques puissent accéder à la vôtre"
 
 #. Approuver automatiquement les emprunts
 msgid "auto_approve_loans_title"
@@ -2629,7 +2629,7 @@ msgstr "Allez dans \"Connecter une bibliothèque\" pour partager votre QR code o
 
 #. Go to \"Network\" to add friends or libraries. You can add borrowers (who can borrow your books) or libraries (whose catalog you can browse).
 msgid "help_desc_contacts"
-msgstr "Allez dans \"Réseau\" pour ajouter des amis ou bibliothèques. Vous pouvez ajouter des emprunteurs ou des bibliothèques dont vous pouvez consulter le catalogue."
+msgstr "Allez dans \"Réseau\" pour ajouter des amis ou bibliothèques. Vous pouvez ajouter des emprunteurs ou des bibliothèques dont vous pouvez consulter les livres partagés."
 
 #. Your library data is stored locally on your device. When you connect with friends, only the books you choose to share are visible to them. You can export a backup anytime from your Profile.
 msgid "help_desc_data_privacy"
@@ -3074,11 +3074,11 @@ msgstr "Livres possédés"
 
 #. No peers sharing their stats yet
 msgid "leaderboard_empty"
-msgstr "Aucun pair ne partage ses stats pour l'instant"
+msgstr "Aucun proche ne partage ses stats pour l'instant"
 
 #. No peers at this level
 msgid "leaderboard_empty_filter"
-msgstr "Aucun pair à ce niveau"
+msgstr "Aucun proche à ce niveau"
 
 #. Lender
 msgid "leaderboard_lender"
@@ -3566,9 +3566,9 @@ msgstr "Gamification"
 msgid "module_gamification_desc"
 msgstr "Activez les badges, niveaux et le suivi de progression."
 
-#. Network Discovery (mDNS)
+#. Network Discovery
 msgid "module_network"
-msgstr "Découverte Réseau (mDNS)"
+msgstr "Découverte Réseau"
 
 #. Make your library visible to other users on the local network.
 msgid "module_network_desc"
@@ -3704,7 +3704,7 @@ msgstr "Classement réseau"
 
 #. Compare your progress with connected peers.
 msgid "network_gamification_desc"
-msgstr "Comparez votre progression avec les pairs connectés."
+msgstr "Comparez votre progression avec les bibliothèques proches."
 
 #. Network Libraries
 msgid "network_libraries_title"
@@ -4078,6 +4078,14 @@ msgstr "Coller depuis le presse-papiers"
 msgid "peer_offline"
 msgstr "Hors ligne"
 
+#. Hub-only data hint shown when only ISBN/title/author available
+msgid "hub_only_hint"
+msgstr "Cette bibliothèque est hors ligne. Affichage des livres partagés uniquement."
+
+#. Detail hint for hub-only entries
+msgid "hub_only_detail_hint"
+msgstr "Connectez-vous au même Wi-Fi ou attendez que cette bibliothèque soit en ligne pour voir les détails."
+
 #. Offline Library Cache
 msgid "peer_offline_caching"
 msgstr "Cache hors ligne"
@@ -4086,9 +4094,9 @@ msgstr "Cache hors ligne"
 msgid "peer_offline_caching_desc"
 msgstr "Mettre en cache les bibliothèques des contacts pour consultation hors ligne. Leur liste de livres sera stockée sur votre appareil."
 
-#. Peer is offline, cannot sync
+#. Library is offline, cannot sync
 msgid "peer_offline_cannot_sync"
-msgstr "Contact hors ligne, synchronisation impossible"
+msgstr "Bibliothèque hors ligne, synchronisation impossible"
 
 #. This library is currently unavailable. The contact must be online to view their books.
 msgid "peer_offline_library_unavailable"
@@ -4201,6 +4209,38 @@ msgstr "Lecteur"
 #. Track your reading, wishlists, and personal collection.
 msgid "profile_individual_desc"
 msgstr "Suivez vos lectures, listes de souhaits et collection personnelle."
+
+#. Reader
+msgid "profile_reader"
+msgstr "Lecteur"
+
+#. Manage your personal library, reading lists, and wishlists.
+msgid "profile_reader_desc"
+msgstr "Gérez votre bibliothèque personnelle, listes de lecture et souhaits."
+
+#. Family
+msgid "profile_family"
+msgstr "Famille"
+
+#. Share a family library with multiple readers.
+msgid "profile_family_desc"
+msgstr "Partagez une bibliothèque familiale avec plusieurs lecteurs."
+
+#. Educator
+msgid "profile_educator"
+msgstr "Éducateur"
+
+#. Manage a classroom or school library.
+msgid "profile_educator_desc"
+msgstr "Gérez une bibliothèque de classe ou d'école."
+
+#. Association
+msgid "profile_association"
+msgstr "Association"
+
+#. Manage resources for an association or community group.
+msgid "profile_association_desc"
+msgstr "Gérez les ressources d'une association ou d'un groupe."
 
 #. Young Reader
 msgid "profile_kid"
@@ -4919,6 +4959,38 @@ msgstr "Modifier les paramètres"
 msgid "settings_saved"
 msgstr "Paramètres enregistrés"
 
+#. Network
+msgid "settings_network_title"
+msgstr "Réseau"
+
+#. Local network
+msgid "settings_network_local"
+msgstr "Réseau local"
+
+#. Automatic discovery on Wi-Fi
+msgid "settings_network_discovery"
+msgstr "Découverte automatique sur le Wi-Fi"
+
+#. Makes your library visible to nearby devices on the same Wi-Fi
+msgid "settings_network_discovery_desc"
+msgstr "Rend votre bibliothèque visible aux appareils proches sur le même Wi-Fi"
+
+#. Libraries detected
+msgid "settings_network_peers_detected"
+msgstr "Bibliothèques détectées"
+
+#. Extended network
+msgid "settings_network_extended"
+msgstr "Réseau étendu"
+
+#. Privacy and cache
+msgid "settings_network_privacy"
+msgstr "Confidentialité et cache"
+
+#. Enable network features first to configure privacy options.
+msgid "settings_network_enable_first"
+msgstr "Activez d'abord le réseau pour configurer les options de confidentialité."
+
 #. Back
 msgid "setup_btn_back"
 msgstr "Retour"
@@ -5007,6 +5079,18 @@ msgstr "Facultatif - Définissez un mot de passe pour protéger votre bibliothè
 msgid "setup_profile_type_label"
 msgstr "Type de profil"
 
+#. Your profile
+msgid "setup_profile_step_title"
+msgstr "Votre profil"
+
+#. What type of reader are you?
+msgid "setup_profile_step_desc"
+msgstr "Quel type de lecteur êtes-vous ?"
+
+#. Coming soon
+msgid "setup_profile_coming_soon"
+msgstr "Prochainement"
+
 #. Setting up your library...
 msgid "setup_progress"
 msgstr "Configuration en cours..."
@@ -5037,7 +5121,7 @@ msgstr "Partager mes stats"
 
 #. Allow connected peers to see your gamification progress.
 msgid "share_gamification_stats_desc"
-msgstr "Permettre aux pairs connectés de voir votre progression."
+msgstr "Permettre aux bibliothèques proches de voir votre progression."
 
 #. %d books
 msgid "shelf_books_count"
@@ -6063,13 +6147,13 @@ msgstr "Aucun score. Jouez une partie !"
 msgid "memory_no_network_scores"
 msgstr "Aucun score réseau disponible"
 
-#. Memory Game - Syncing with peers
+#. Memory Game - Syncing with nearby libraries
 msgid "memory_leaderboard_refreshing"
-msgstr "Synchronisation avec les pairs..."
+msgstr "Synchronisation avec les bibliothèques proches..."
 
 #. Memory Game - Empty network leaderboard
 msgid "memory_leaderboard_empty_network"
-msgstr "Aucun score de pair. Connectez-vous à des pairs pour voir leurs scores !"
+msgstr "Aucun score des proches. Connectez-vous à des bibliothèques proches pour voir leurs scores !"
 
 #. Memory Game - New personal best
 msgid "memory_rank_new_best"
@@ -6207,13 +6291,13 @@ msgstr "Mes scores"
 msgid "puzzle_network_tab"
 msgstr "Réseau"
 
-#. Sliding Puzzle - Syncing with peers
+#. Sliding Puzzle - Syncing with nearby libraries
 msgid "puzzle_leaderboard_refreshing"
-msgstr "Synchronisation avec les pairs..."
+msgstr "Synchronisation avec les bibliothèques proches..."
 
 #. Sliding Puzzle - Empty network leaderboard
 msgid "puzzle_leaderboard_empty_network"
-msgstr "Aucun score de pair. Connectez-vous à des pairs pour voir leurs scores !"
+msgstr "Aucun score des proches. Connectez-vous à des bibliothèques proches pour voir leurs scores !"
 
 #. Games section title
 msgid "games_section"
@@ -6642,9 +6726,9 @@ msgstr "Grouper par collection"
 msgid "group_by_collections_desc"
 msgstr "Afficher les livres groupés par collection dans la bibliothèque"
 
-#. Annuaire public (ADR-015)
+#. Découvrir des bibliothèques (ADR-015)
 msgid "directory_title"
-msgstr "Annuaire des bibliothèques"
+msgstr "Découvrir des bibliothèques"
 
 msgid "directory_browse_subtitle"
 msgstr "Découvrir et suivre d'autres bibliothèques BiblioGenius"
@@ -6659,10 +6743,10 @@ msgid "directory_tab_requests"
 msgstr "Demandes"
 
 msgid "directory_empty"
-msgstr "Aucune bibliothèque n'est encore référencée dans l'annuaire."
+msgstr "Aucune bibliothèque à découvrir pour le moment."
 
 msgid "directory_following_empty"
-msgstr "Vous ne suivez encore aucune bibliothèque. Explorez l'annuaire pour commencer."
+msgstr "Vous ne suivez encore aucune bibliothèque. Utilisez l'onglet Découvrir pour commencer."
 
 msgid "directory_requests_empty"
 msgstr "Aucune demande de suivi en attente."
@@ -6689,7 +6773,7 @@ msgid "directory_unfollow_title"
 msgstr "Ne plus suivre cette bibliothèque ?"
 
 msgid "directory_unfollow_confirm"
-msgstr "Vous n'aurez plus accès au catalogue de cette bibliothèque."
+msgstr "Vous n'aurez plus accès aux livres partagés de cette bibliothèque."
 
 msgid "directory_follow_error"
 msgstr "Impossible de suivre cette bibliothèque. Veuillez réessayer."
@@ -6711,22 +6795,22 @@ msgstr "Actifs"
 
 #. Section Paramètres
 msgid "directory_settings_title"
-msgstr "Annuaire public"
+msgstr "Partage en ligne"
 
 msgid "directory_listed_title"
-msgstr "Référencer ma bibliothèque dans l'annuaire"
+msgstr "Partager ma bibliothèque en ligne"
 
 msgid "directory_listed_desc"
 msgstr "Les autres bibliothèques peuvent vous découvrir et vous suivre"
 
 msgid "directory_browse_button"
-msgstr "Parcourir l'annuaire"
+msgstr "Découvrir des bibliothèques"
 
 msgid "directory_browse_anyway"
-msgstr "Parcourir l'annuaire"
+msgstr "Découvrir des bibliothèques"
 
 msgid "directory_browse_anyway_desc"
-msgstr "Explorer sans être référencé"
+msgstr "Explorer sans partager la vôtre"
 
 msgid "directory_advanced_settings"
 msgstr "Paramètres avancés"
@@ -6735,7 +6819,7 @@ msgid "directory_requires_approval_title"
 msgstr "Approbation requise pour les abonnés"
 
 msgid "directory_requires_approval_desc"
-msgstr "Les nouveaux abonnés doivent être approuvés avant d'accéder à votre catalogue"
+msgstr "Les nouveaux abonnés doivent être approuvés avant d'accéder à vos livres partagés"
 
 msgid "directory_requires_approval_short"
 msgstr "Approbation requise"
@@ -6755,9 +6839,9 @@ msgstr "Vérifiés"
 msgid "directory_accept_from_manual"
 msgstr "Manuel uniquement"
 
-#. Ecran catalogue
+#. Ecran livres partagés
 msgid "directory_catalog_title"
-msgstr "Catalogue de la bibliothèque"
+msgstr "Livres partagés"
 
 msgid "directory_catalog_empty"
 msgstr "Cette bibliothèque n'a encore partagé aucun livre."
@@ -6769,10 +6853,10 @@ msgid "directory_catalog_isbn_label"
 msgstr "ISBN"
 
 msgid "directory_catalog_pending"
-msgstr "Votre demande de suivi est en attente d'approbation. Vous pourrez voir le catalogue une fois que la bibliothèque aura accepté."
+msgstr "Votre demande de suivi est en attente d'approbation. Vous pourrez voir les livres partagés une fois que la bibliothèque aura accepté."
 
 msgid "directory_catalog_not_following"
-msgstr "Suivez cette bibliothèque pour accéder à son catalogue."
+msgstr "Suivez cette bibliothèque pour voir ses livres partagés."
 
 #. Générique
 msgid "action_retry"
@@ -6789,7 +6873,15 @@ msgid "lib_filter_peers"
 msgstr "Relations"
 
 msgid "lib_filter_following"
-msgstr "Suivis"
+msgstr "Suivies"
+
+#. Nearby libraries on WiFi
+msgid "lib_filter_nearby"
+msgstr "Proches"
+
+#. Discover libraries from the hub directory
+msgid "lib_filter_discover"
+msgstr "Découvrir"
 
 msgid "lib_connection_peer"
 msgstr "Jumelée"
@@ -6804,7 +6896,7 @@ msgid "lib_empty_title"
 msgstr "Aucune bibliothèque connectée"
 
 msgid "lib_empty_hint"
-msgstr "Découvrez des bibliothèques via l'annuaire, ou connectez-vous directement avec un pair sur votre réseau."
+msgstr "Utilisez l'onglet Découvrir pour trouver des bibliothèques, ou connectez-vous aux proches sur votre WiFi."
 
 msgid "lib_unfollow"
 msgstr "Ne plus suivre"

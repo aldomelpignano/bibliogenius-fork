@@ -15,6 +15,7 @@ import '../providers/theme_provider.dart';
 import '../providers/hub_directory_provider.dart';
 import '../services/auth_service.dart';
 import '../services/ffi_service.dart';
+import '../services/mdns_service.dart';
 import '../theme/app_design.dart';
 import '../themes/base/theme_registry.dart';
 import '../utils/app_constants.dart';
@@ -431,63 +432,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   themeProvider.audioEnabled,
                   (value) => themeProvider.setAudioEnabled(value),
                 ),
-                _buildModuleToggle(
-                  context,
-                  'network_module',
-                  'network_module_desc',
-                  Icons.hub,
-                  themeProvider.networkEnabled,
-                  (value) => themeProvider.setNetworkEnabled(value),
-                  tag: TranslationService.translate(
-                    context,
-                    'tag_experimental',
-                  ),
-                ),
-                // Sub-option for network module: peer offline caching
-                if (themeProvider.networkEnabled)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16.0),
-                    child: _buildModuleToggle(
-                      context,
-                      'peer_offline_caching',
-                      'peer_offline_caching_desc',
-                      Icons.cloud_off,
-                      themeProvider.peerOfflineCachingEnabled,
-                      (value) =>
-                          themeProvider.setPeerOfflineCachingEnabled(value),
-                    ),
-                  ),
-                // Sub-option for network module: allow own library caching
-                Padding(
-                  padding: const EdgeInsets.only(left: 16.0),
-                  child: _buildModuleToggle(
-                    context,
-                    'allow_library_caching',
-                    'allow_library_caching_desc',
-                    Icons.share,
-                    themeProvider.allowLibraryCaching,
-                    (value) => themeProvider.setAllowLibraryCaching(value),
-                  ),
-                ),
-                // Sub-option for network module: connection validation
-                if (themeProvider.networkEnabled)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16.0),
-                    child: _buildModuleToggle(
-                      context,
-                      'connection_validation',
-                      'connection_validation_desc',
-                      Icons.verified_user,
-                      themeProvider.connectionValidationEnabled,
-                      (value) =>
-                          themeProvider.setConnectionValidationEnabled(value),
-                    ),
-                  ),
-                  // Relay Hub section (within network module)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16.0),
-                    child: _buildRelayHubCard(context),
-                  ),
+                // Network module moved to dedicated "Network" section below
                 _buildModuleToggle(
                   context,
                   'auto_approve_loans_title',
@@ -550,9 +495,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   themeProvider.syncSafetyEnabled,
                   (value) => themeProvider.setSyncSafetyEnabled(value),
                 ),
-                // Public Directory section
-                const SizedBox(height: 16),
-                _buildDirectorySection(context),
+                // Public Directory moved to dedicated "Network" section below
 
                 // Developer Tools section
                 const SizedBox(height: 16),
@@ -629,6 +572,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
             ),
+
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 24),
+
+            // Network Section (unified)
+            _buildNetworkSection(context, themeProvider),
 
             const SizedBox(height: 24),
             const Divider(),
@@ -763,6 +713,138 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Unified Network section
+  // ---------------------------------------------------------------------------
+
+  Widget _buildNetworkSection(
+    BuildContext context,
+    ThemeProvider themeProvider,
+  ) {
+    String t(String key) => TranslationService.translate(context, key);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Semantics(
+          header: true,
+          child: Text(
+            t('settings_network_title'),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // --- Local network sub-group ---
+        Semantics(
+          header: true,
+          child: Text(
+            t('settings_network_local'),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            children: [
+              SwitchListTile(
+                secondary: const Icon(Icons.wifi),
+                title: Text(t('settings_network_discovery')),
+                subtitle: Text(t('settings_network_discovery_desc')),
+                value: themeProvider.networkEnabled,
+                onChanged: (value) => themeProvider.setNetworkEnabled(value),
+              ),
+              if (themeProvider.networkEnabled) ...[
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.devices),
+                  title: Text(t('settings_network_peers_detected')),
+                  trailing: Text(
+                    '${MdnsService.peers.length}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        // --- Extended network sub-group ---
+        const SizedBox(height: 12),
+        Semantics(
+          header: true,
+          child: Text(
+            t('settings_network_extended'),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
+        const SizedBox(height: 8),
+        _buildDirectorySection(context),
+
+        // --- Privacy & cache sub-group ---
+        const SizedBox(height: 12),
+        Semantics(
+          header: true,
+          child: Text(
+            t('settings_network_privacy'),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            children: [
+              if (themeProvider.networkEnabled) ...[
+                SwitchListTile(
+                  secondary: const Icon(Icons.cloud_off),
+                  title: Text(t('peer_offline_caching')),
+                  subtitle: Text(t('peer_offline_caching_desc')),
+                  value: themeProvider.peerOfflineCachingEnabled,
+                  onChanged: (value) =>
+                      themeProvider.setPeerOfflineCachingEnabled(value),
+                ),
+                const Divider(height: 1),
+                SwitchListTile(
+                  secondary: const Icon(Icons.share),
+                  title: Text(t('allow_library_caching')),
+                  subtitle: Text(t('allow_library_caching_desc')),
+                  value: themeProvider.allowLibraryCaching,
+                  onChanged: (value) =>
+                      themeProvider.setAllowLibraryCaching(value),
+                ),
+                const Divider(height: 1),
+                SwitchListTile(
+                  secondary: const Icon(Icons.verified_user),
+                  title: Text(t('connection_validation')),
+                  subtitle: Text(t('connection_validation_desc')),
+                  value: themeProvider.connectionValidationEnabled,
+                  onChanged: (value) =>
+                      themeProvider.setConnectionValidationEnabled(value),
+                ),
+              ],
+              if (!themeProvider.networkEnabled)
+                ListTile(
+                  leading: Icon(Icons.info_outline, color: Colors.grey[400]),
+                  title: Text(
+                    t('settings_network_enable_first'),
+                    style: TextStyle(color: Colors.grey[500]),
+                  ),
+                ),
+            ],
+          ),
+        ),
+
+        // Relay Hub (advanced)
+        if (themeProvider.networkEnabled) _buildRelayHubCard(context),
+      ],
     );
   }
 

@@ -822,6 +822,7 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
                       peerUrl: peer['url'],
                       hasRelayCredentials:
                           peer['hasRelayCredentials'] as bool? ?? false,
+                      nodeId: peer['nodeId'] as String?,
                     );
                   },
                 ),
