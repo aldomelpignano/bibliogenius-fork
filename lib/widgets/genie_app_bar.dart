@@ -147,7 +147,8 @@ class GenieAppBar extends StatelessWidget implements PreferredSizeWidget {
                                   softWrap: false,
                                 ),
                               // Subtitle (library name) - show even when title is null (mobile)
-                              if (!hideSubtitle && displaySubtitle.isNotEmpty)
+                              // When title is null, subtitle is the primary text: use hideTitle threshold
+                              if ((title != null ? !hideSubtitle : !hideTitle) && displaySubtitle.isNotEmpty)
                                 Text(
                                   displaySubtitle,
                                   style: TextStyle(

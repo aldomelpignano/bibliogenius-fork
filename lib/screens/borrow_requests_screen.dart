@@ -55,11 +55,15 @@ class _LoansScreenState extends State<LoansScreen>
   void initState() {
     super.initState();
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    // Show "Demandes" tab if LAN discovery OR relay sharing is enabled
+    // (relay peers can also send/receive loan requests)
+    final hasPeerNetwork =
+        themeProvider.networkEnabled || themeProvider.remoteReachableEnabled;
     // Tab count depends on:
-    // - networkEnabled: show "Demandes" tab only if mDNS is enabled
+    // - hasPeerNetwork: show "Demandes" tab if any peer connectivity is active
     // - canBorrowBooks: show "Empruntés" tab only if borrowing is enabled
     int tabCount = 1; // At minimum: Prêtés
-    if (themeProvider.networkEnabled) tabCount++; // +Demandes
+    if (hasPeerNetwork) tabCount++; // +Demandes
     if (themeProvider.canBorrowBooks) tabCount++; // +Empruntés
 
     // Calculate initial tab index based on initialTab parameter
@@ -67,7 +71,7 @@ class _LoansScreenState extends State<LoansScreen>
     if (widget.initialTab != null) {
       if (widget.initialTab == 'lent') {
         // Lent is after Requests (if enabled), otherwise first
-        initialIndex = themeProvider.networkEnabled ? 1 : 0;
+        initialIndex = hasPeerNetwork ? 1 : 0;
       } else if (widget.initialTab == 'borrowed' &&
           themeProvider.canBorrowBooks) {
         // Borrowed is last tab
@@ -105,8 +109,10 @@ class _LoansScreenState extends State<LoansScreen>
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
     try {
-      // Only fetch P2P requests if mDNS is enabled
-      if (themeProvider.networkEnabled) {
+      // Fetch P2P requests if any peer connectivity is active (LAN or relay)
+      final hasPeerNetwork =
+          themeProvider.networkEnabled || themeProvider.remoteReachableEnabled;
+      if (hasPeerNetwork) {
         final inRes = await api.getIncomingRequests();
         final outRes = await api.getOutgoingRequests();
         final connRes = await api.getPendingPeers();
@@ -229,7 +235,8 @@ class _LoansScreenState extends State<LoansScreen>
     final bool isMobile = width <= 600;
     final themeProvider = Provider.of<ThemeProvider>(context);
     final canBorrow = themeProvider.canBorrowBooks;
-    final networkEnabled = themeProvider.networkEnabled;
+    final networkEnabled =
+        themeProvider.networkEnabled || themeProvider.remoteReachableEnabled;
 
     if (widget.isTabView) {
       return Column(
@@ -659,14 +666,22 @@ class _LoansScreenState extends State<LoansScreen>
     final cover = book['cover'] as String?;
     final bookId = book['book_id'] as int? ?? book['id'] as int?;
 
-    // Extract contact name from notes (format: "Borrowed from: Name (ID: x)")
+    // Extract contact name and due date from notes
+    // Format: "Emprunté de Name jusqu'au YYYY-MM-DD"
     String borrowedFrom = '';
+    String dueDate = '';
     if (notes.isNotEmpty) {
-      final match = RegExp(
-        r'(?:Emprunté de|Borrowed from|Emprunté à)[:\s]*([^(]+)',
+      final nameMatch = RegExp(
+        r"(?:Emprunté de|Borrowed from|Emprunté à)[:\s]*(.+?)(?:\s+jusqu|$)",
       ).firstMatch(notes);
-      if (match != null) {
-        borrowedFrom = match.group(1)?.trim() ?? '';
+      if (nameMatch != null) {
+        borrowedFrom = nameMatch.group(1)?.trim() ?? '';
+      }
+      final dateMatch = RegExp(
+        r"jusqu'au\s+(\S+)",
+      ).firstMatch(notes);
+      if (dateMatch != null) {
+        dueDate = dateMatch.group(1)?.trim() ?? '';
       }
     }
 
@@ -708,9 +723,14 @@ class _LoansScreenState extends State<LoansScreen>
                 '${TranslationService.translate(context, 'loan_date')}: ${_formatDate(acquisitionDate)}',
                 style: TextStyle(color: Colors.grey[500], fontSize: 12),
               ),
+            if (dueDate.isNotEmpty)
+              Text(
+                '${TranslationService.translate(context, 'due_date')}: ${_formatDate(dueDate)}',
+                style: TextStyle(color: Colors.grey[500], fontSize: 12),
+              ),
           ],
         ),
-        isThreeLine: borrowedFrom.isNotEmpty || acquisitionDate.isNotEmpty,
+        isThreeLine: borrowedFrom.isNotEmpty || acquisitionDate.isNotEmpty || dueDate.isNotEmpty,
         trailing: IconButton(
           icon: const Icon(Icons.check_circle_outline, color: Colors.green),
           tooltip: TranslationService.translate(context, 'mark_returned'),
