@@ -48,6 +48,19 @@ class FfiService {
     }
   }
 
+  // ============ Library Name ============
+
+  /// Update the library name directly in the Rust DB (library_config + libraries).
+  /// Only touches the name field - no other settings are overwritten.
+  Future<void> updateLibraryName(String name) async {
+    try {
+      await frb.updateLibraryNameFfi(name: name);
+    } catch (e) {
+      debugPrint('FFI updateLibraryName error: $e');
+      rethrow;
+    }
+  }
+
   // ============ Books ============
 
   /// Get all books with optional filters
@@ -1147,6 +1160,20 @@ class FfiService {
     } catch (e) {
       debugPrint('❌ FfiService: Failed to start server: $e');
       return null;
+    }
+  }
+
+  // ============ View Stats ============
+
+  /// Get library view statistics (peer and follower views).
+  /// Returns parsed JSON map with total_peer, total_follower, total, daily.
+  Future<Map<String, dynamic>> getLibraryViewStats() async {
+    try {
+      final json = await frb.getLibraryViewStats();
+      return jsonDecode(json) as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('FFI getLibraryViewStats error: $e');
+      return {'total_peer': 0, 'total_follower': 0, 'total': 0, 'daily': []};
     }
   }
 }

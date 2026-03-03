@@ -220,9 +220,12 @@ class _LibraryScreenState extends State<LibraryScreen>
             'Scan multiple books in a row',
         style: TextStyle(fontSize: 12, color: Colors.grey[600]),
       ),
-      onTap: () {
+      onTap: () async {
         Navigator.pop(context);
-        context.push('/scan', extra: {'batch': true});
+        final result = await context.push('/scan', extra: {'batch': true});
+        if (result == true) {
+          _refreshNotifier.value++;
+        }
       },
     );
 

@@ -10,6 +10,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../services/api_service.dart';
 import '../services/translation_service.dart';
 import '../providers/theme_provider.dart';
+import '../widgets/app_snack_bar.dart';
 import '../widgets/genie_app_bar.dart';
 
 /// Beta Bug Reporting Screen
@@ -144,13 +145,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       if (mounted) {
         if (response.statusCode == 201) {
           final data = jsonDecode(response.body);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${TranslationService.translate(context, 'feedback_success')} (${data['issueKey']})',
-              ),
-              backgroundColor: Colors.green,
-            ),
+          AppSnackBar.success(
+            context,
+            '${TranslationService.translate(context, 'feedback_success')} (${data['issueKey']})',
           );
           Navigator.of(context).pop();
         } else {
@@ -160,13 +157,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${TranslationService.translate(context, 'feedback_error_sending')}: $e',
-            ),
-            backgroundColor: Colors.red,
-          ),
+        AppSnackBar.error(
+          context,
+          '${TranslationService.translate(context, 'feedback_error_sending')}: $e',
         );
       }
     } finally {
@@ -183,13 +176,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     await Clipboard.setData(ClipboardData(text: markdown));
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            TranslationService.translate(context, 'feedback_copied'),
-          ),
-          backgroundColor: Colors.green,
-        ),
+      AppSnackBar.success(
+        context,
+        TranslationService.translate(context, 'feedback_copied'),
       );
     }
   }

@@ -563,9 +563,9 @@ class _SetupScreenState extends State<SetupScreen> {
           }
         }
 
-        // Navigate directly to dashboard since user is now logged in
+        // Navigate directly to library since user is now logged in
         if (context.mounted) {
-          GoRouter.of(context).go('/dashboard');
+          GoRouter.of(context).go('/books');
         }
       } else {
         debugPrint(

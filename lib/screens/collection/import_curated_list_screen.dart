@@ -403,12 +403,57 @@ class _ImportCuratedListScreenState extends State<ImportCuratedListScreen> {
                       ? const Center(
                           child: Text('Aucune liste dans cette catégorie'),
                         )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _currentLists.length,
-                          itemBuilder: (context, index) {
-                            final list = _currentLists[index];
-                            return _buildListCard(list, langCode);
+                      : LayoutBuilder(
+                          builder: (context, constraints) {
+                            final crossAxisCount =
+                                constraints.maxWidth >= 600 ? 2 : 1;
+
+                            if (crossAxisCount == 1) {
+                              return ListView.builder(
+                                padding: const EdgeInsets.all(16),
+                                itemCount: _currentLists.length,
+                                itemBuilder: (context, index) {
+                                  return _buildListCard(
+                                    _currentLists[index],
+                                    langCode,
+                                  );
+                                },
+                              );
+                            }
+
+                            final rowCount =
+                                (_currentLists.length / crossAxisCount).ceil();
+                            return ListView.builder(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: rowCount,
+                              itemBuilder: (context, index) {
+                                final firstIndex = index * crossAxisCount;
+                                return IntrinsicHeight(
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      for (int i = 0;
+                                          i < crossAxisCount;
+                                          i++) ...[
+                                        if (i > 0) const SizedBox(width: 16),
+                                        Expanded(
+                                          child:
+                                              firstIndex + i <
+                                                      _currentLists.length
+                                                  ? _buildListCard(
+                                                      _currentLists[
+                                                          firstIndex + i],
+                                                      langCode,
+                                                    )
+                                                  : const SizedBox(),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                );
+                              },
+                            );
                           },
                         ),
                 ),

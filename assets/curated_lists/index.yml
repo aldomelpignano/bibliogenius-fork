@@ -131,6 +131,8 @@ categories:
     icon: import_contacts
     lists:
       - manga-essentiels
+      - naruto
+      - death-note
 
   - id: jeunesse
     title:

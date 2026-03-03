@@ -13,10 +13,12 @@ import '../utils/cover_camera_helper.dart';
 
 import '../audio/audio_module.dart';
 import '../data/repositories/book_repository.dart';
+import '../data/repositories/collection_repository.dart';
 import '../data/repositories/contact_repository.dart';
 import '../data/repositories/copy_repository.dart';
 import '../data/repositories/loan_repository.dart';
 import '../models/book.dart';
+import '../models/collection.dart';
 import '../models/contact.dart';
 import '../models/copy.dart';
 import '../models/cover_candidate.dart';
@@ -46,6 +48,7 @@ class BookDetailsScreen extends StatefulWidget {
 class _BookDetailsScreenState extends State<BookDetailsScreen> {
   Book? _book;
   List<Copy> _copies = [];
+  List<Collection> _collections = [];
   bool _isLoadingCopies = true;
   bool _isLoadingBook = false;
   bool _hasChanges = false;
@@ -84,8 +87,10 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
   Future<void> _fetchBookDetails({bool forceRefresh = false}) async {
     final bookRepo = Provider.of<BookRepository>(context, listen: false);
     final copyRepo = Provider.of<CopyRepository>(context, listen: false);
+    final collectionRepo = Provider.of<CollectionRepository>(context, listen: false);
     try {
       final copiesFuture = copyRepo.getBookCopies(widget.bookId);
+      final collectionsFuture = collectionRepo.getBookCollections(widget.bookId);
 
       // Fetch book if we don't have it OR if forced refresh is requested
       Future<Book>? bookFuture;
@@ -94,6 +99,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
       }
 
       final copies = await copiesFuture;
+      final collections = await collectionsFuture;
       final freshBook = bookFuture != null ? await bookFuture : null;
 
       if (mounted) {
@@ -104,6 +110,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
           }
 
           _copies = copies;
+          _collections = collections;
           _isLoadingCopies = false;
         });
       }
@@ -254,13 +261,31 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
   }
 
   Future<void> _searchCoverOnline(Book book) async {
-    if (book.id == null) return;
+    if (book.id == null || !mounted) return;
 
     final apiService = Provider.of<ApiService>(context, listen: false);
     final bookRepo = Provider.of<BookRepository>(context, listen: false);
+    final messenger = ScaffoldMessenger.of(context);
+
+    // Pre-capture translated strings before async gaps
+    final searchingText =
+        TranslationService.translate(context, 'cover_searching') ??
+            'Searching for cover...';
+    final searchingByTitleText =
+        TranslationService.translate(context, 'cover_searching_by_title') ??
+            'Searching by title...';
+    final notFoundText =
+        TranslationService.translate(context, 'cover_not_found') ??
+            'No cover found';
+    final foundText =
+        TranslationService.translate(context, 'cover_found') ??
+            'Cover found!';
+    final updatedText =
+        TranslationService.translate(context, 'cover_updated') ??
+            'Cover updated';
 
     // Show searching snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.showSnackBar(
       SnackBar(
         content: Row(
           children: [
@@ -270,8 +295,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
             ),
             const SizedBox(width: 12),
-            Text(TranslationService.translate(context, 'cover_searching') ??
-                'Searching for cover...'),
+            Text(searchingText),
           ],
         ),
         duration: const Duration(seconds: 20),
@@ -290,28 +314,24 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
 
       // Step 2: If ISBN gave < 2 results, also try title search
       if (candidates.length < 2) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(TranslationService.translate(
-                          context, 'cover_searching_by_title') ??
-                      'Searching by title...'),
-                ],
-              ),
-              duration: const Duration(seconds: 15),
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
+                ),
+                const SizedBox(width: 12),
+                Text(searchingByTitleText),
+              ],
             ),
-          );
-        }
+            duration: const Duration(seconds: 15),
+          ),
+        );
 
         bool googleBooksEnabled = false;
         try {
@@ -342,17 +362,12 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      messenger.hideCurrentSnackBar();
 
       if (candidates.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(TranslationService.translate(
-                        context, 'cover_not_found') ??
-                    'No cover found')),
-          );
-        }
+        messenger.showSnackBar(
+          SnackBar(content: Text(notFoundText)),
+        );
         return;
       }
 
@@ -364,14 +379,9 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
             book.id!, {'cover_url': candidates.first.url});
         await _fetchBookDetails(forceRefresh: true);
         _hasChanges = true;
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(
-                    TranslationService.translate(context, 'cover_found') ??
-                        'Cover found!')),
-          );
-        }
+        messenger.showSnackBar(
+          SnackBar(content: Text(foundText)),
+        );
         return;
       }
 
@@ -387,19 +397,14 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
         await bookRepo.updateBook(book.id!, {'cover_url': selectedUrl});
         await _fetchBookDetails(forceRefresh: true);
         _hasChanges = true;
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(
-                    TranslationService.translate(context, 'cover_updated') ??
-                        'Cover updated')),
-          );
-        }
+        messenger.showSnackBar(
+          SnackBar(content: Text(updatedText)),
+        );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
     }
@@ -1341,6 +1346,105 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                                   ),
                                 ),
                               ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (_collections.isNotEmpty) ...[
+            const Divider(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.collections_bookmark_outlined,
+                        size: 16,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        TranslationService.translate(context, 'collections_label')
+                            .toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 10,
+                    children: _collections.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final collection = entry.value;
+                      final colors = [
+                        Colors.amber,
+                        Colors.deepPurple,
+                        Colors.cyan,
+                        Colors.red,
+                        Colors.green,
+                        Colors.brown,
+                      ];
+                      final chipColor = colors[index % colors.length];
+
+                      return Semantics(
+                        button: true,
+                        label: collection.name,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              context.go('/collections/${collection.id}');
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    chipColor.withValues(alpha: 0.15),
+                                    chipColor.withValues(alpha: 0.08),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: chipColor.withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.collections_bookmark, size: 14, color: chipColor),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    collection.name,
+                                    style: TextStyle(
+                                      color: chipColor.shade700,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),

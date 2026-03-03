@@ -85,10 +85,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final configRes = await api.getLibraryConfig();
       if (configRes.statusCode == 200) {
         _config = configRes.data;
-        final name = _config?['library_name'] ?? _config?['name'];
-        if (name != null) {
-          themeProvider.setLibraryName(name);
-        }
+        // Library name is managed by ThemeProvider (SharedPreferences + FFI)
         final profileType = _config?['profile_type'];
         if (profileType != null) {
           themeProvider.setProfileType(profileType);
@@ -135,6 +132,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               relayRes.data['relay_url'] as String? ?? '';
         } else {
           _relayUrlController.text = ApiService.hubUrl;
+          // Auto-connect relay if remote reachable is enabled but not yet connected
+          final themeProvider =
+              Provider.of<ThemeProvider>(context, listen: false);
+          if (themeProvider.remoteReachableEnabled) {
+            _autoConnectRelay();
+          }
         }
       } catch (_) {
         _relayUrlController.text = ApiService.hubUrl;
@@ -226,25 +229,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // App Settings Section
-            Text(
-              TranslationService.translate(context, 'app_settings'),
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-
-            // Theme Selection
-            _buildThemeSelector(context, themeProvider),
-            const SizedBox(height: 24),
-
-            // Text Size
-            _buildTextScaleSlider(context, themeProvider),
-            const SizedBox(height: 24),
-
-            // Languages Section
-            _buildLanguageSection(context, themeProvider),
-            const SizedBox(height: 24),
-
             // Quick Presets Section
             Text(
               TranslationService.translate(context, 'quick_presets') ??
@@ -300,18 +284,181 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 24),
-
-            // Modules Section
-            Text(
-              TranslationService.translate(context, 'modules') ?? 'Modules',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
             const SizedBox(height: 16),
-            Column(
-              children: [
+
+            // Data Management
+            // Content accordion
+            Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ExpansionTile(
+                leading: const Icon(Icons.inventory_2_outlined),
+                title: Semantics(
+                  header: true,
+                  child: Text(
+                    TranslationService.translate(context, 'content'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.swap_calls, color: Colors.blue),
+                    title: const Text('Gestion de la bibliothèque & Migration'),
+                    subtitle: const Text(
+                      'Importer, exporter ou fusionner vos livres',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/settings/migration-wizard'),
+                  ),
+                ],
+              ),
+            ),
+
+            // Account accordion (security + session)
+            Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ExpansionTile(
+                leading: const Icon(Icons.person_outlined),
+                title: Semantics(
+                  header: true,
+                  child: Text(
+                    TranslationService.translate(context, 'account'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.lock),
+                    title: Text(
+                      TranslationService.translate(context, 'password') ??
+                          'Password',
+                    ),
+                    subtitle: Text(
+                      hasPassword
+                          ? '********'
+                          : (TranslationService.translate(context, 'not_set') ??
+                                'Not set'),
+                    ),
+                    trailing: TextButton(
+                      onPressed: _showChangePasswordDialog,
+                      child: Text(
+                        TranslationService.translate(context, 'change') ??
+                            'Change',
+                      ),
+                    ),
+                  ),
+                  if (!Provider.of<ApiService>(context, listen: false).useFfi)
+                    ListTile(
+                      leading: const Icon(Icons.security),
+                      title: Text(
+                        TranslationService.translate(
+                              context,
+                              'two_factor_auth',
+                            ) ??
+                            'Two-Factor Authentication',
+                      ),
+                      subtitle: Text(
+                        mfaEnabled
+                            ? (TranslationService.translate(
+                                    context, 'enabled') ??
+                                  'Enabled')
+                            : (TranslationService.translate(
+                                    context,
+                                    'disabled',
+                                  ) ??
+                                  'Disabled'),
+                      ),
+                      trailing: Switch(
+                        value: mfaEnabled,
+                        onChanged: (val) {
+                          if (val) {
+                            _setupMfa();
+                          }
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            // Theme accordion (theme + text size)
+            Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ExpansionTile(
+                leading: const Icon(Icons.palette_outlined),
+                title: Semantics(
+                  header: true,
+                  child: Text(
+                    TranslationService.translate(context, 'theme_title'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildThemeSelector(context, themeProvider),
+                        const SizedBox(height: 24),
+                        _buildTextScaleSlider(context, themeProvider),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Languages accordion
+            Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ExpansionTile(
+                leading: const Icon(Icons.translate),
+                title: Semantics(
+                  header: true,
+                  child: Text(
+                    TranslationService.translate(
+                      context,
+                      'languages_section',
+                    ),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: _buildLanguageSection(context, themeProvider),
+                  ),
+                ],
+              ),
+            ),
+
+            // Modules accordion
+            Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ExpansionTile(
+                leading: const Icon(Icons.extension_outlined),
+                title: Semantics(
+                  header: true,
+                  child: Text(
+                    TranslationService.translate(context, 'modules'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                children: [
                 // Simplified Mode toggle (coming soon)
                 _buildModuleToggle(
                   context,
@@ -571,111 +718,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               ],
+              ),
             ),
 
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 24),
-
-            // Network Section (unified)
-            _buildNetworkSection(context, themeProvider),
-
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 24),
-
-            // Security Section
-            Text(
-              TranslationService.translate(context, 'security') ?? 'Security',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
+            // Network accordion
             Card(
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.lock),
-                    title: Text(
-                      TranslationService.translate(context, 'password') ??
-                          'Password',
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ExpansionTile(
+                leading: const Icon(Icons.wifi),
+                title: Semantics(
+                  header: true,
+                  child: Text(
+                    TranslationService.translate(
+                      context,
+                      'settings_network_title',
                     ),
-                    subtitle: Text(
-                      hasPassword
-                          ? '********'
-                          : (TranslationService.translate(context, 'not_set') ??
-                                'Not set'),
-                    ),
-                    trailing: TextButton(
-                      onPressed: _showChangePasswordDialog,
-                      child: Text(
-                        TranslationService.translate(context, 'change') ??
-                            'Change',
-                      ),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.security),
-                    title: Text(
-                      TranslationService.translate(
-                            context,
-                            'two_factor_auth',
-                          ) ??
-                          'Two-Factor Authentication',
-                    ),
-                    subtitle: Text(
-                      mfaEnabled
-                          ? (TranslationService.translate(context, 'enabled') ??
-                                'Enabled')
-                          : (TranslationService.translate(
-                                  context,
-                                  'disabled',
-                                ) ??
-                                'Disabled'),
-                    ),
-                    trailing: Switch(
-                      value: mfaEnabled,
-                      onChanged: (val) {
-                        if (val) {
-                          _setupMfa();
-                        }
-                      },
-                    ),
+                ),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: _buildNetworkSection(context, themeProvider),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 24),
-
-            // Search Configuration
-            _buildSearchConfiguration(context),
-
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 24),
-
-            // Data Management
-            Text(
-              TranslationService.translate(context, 'content') ?? 'Content',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
+            // Search Sources accordion
             Card(
-              child: ListTile(
-                leading: const Icon(Icons.swap_calls, color: Colors.blue),
-                title: const Text('Gestion de la bibliothèque & Migration'),
-                subtitle: const Text(
-                  'Importer, exporter ou fusionner vos livres',
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ExpansionTile(
+                leading: const Icon(Icons.saved_search),
+                title: Semantics(
+                  header: true,
+                  child: Text(
+                    TranslationService.translate(context, 'search_sources'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/settings/migration-wizard'),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: _buildSearchConfiguration(context),
+                  ),
+                ],
               ),
             ),
 
-            const SizedBox(height: 24),
-            const Divider(),
             const SizedBox(height: 24),
 
             // Session / Logout
@@ -729,16 +825,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // --- Explanation card ---
+        _buildSharingModesCard(context, t),
+
+        // --- Remote reachability (relay) ---
         Semantics(
           header: true,
           child: Text(
-            t('settings_network_title'),
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            t('settings_remote_reachable'),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
+        Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            children: [
+              SwitchListTile(
+                secondary: const Icon(Icons.cell_tower),
+                title: Text(t('settings_remote_reachable')),
+                subtitle: Text(t('settings_remote_reachable_desc')),
+                value: themeProvider.remoteReachableEnabled,
+                onChanged: (value) async {
+                  await themeProvider.setRemoteReachableEnabled(value);
+                  if (value) {
+                    _autoConnectRelay();
+                  }
+                },
+              ),
+              if (themeProvider.remoteReachableEnabled) ...[
+                const Divider(height: 1),
+                ExpansionTile(
+                  leading: const Icon(Icons.tune, size: 20),
+                  title: Text(
+                    t('settings_remote_reachable_details'),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  children: [
+                    _buildRelayDetails(context),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
 
         // --- Local network sub-group ---
+        const SizedBox(height: 12),
         Semantics(
           header: true,
           child: Text(
@@ -798,53 +931,311 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: Column(
-            children: [
-              if (themeProvider.networkEnabled) ...[
-                SwitchListTile(
-                  secondary: const Icon(Icons.cloud_off),
-                  title: Text(t('peer_offline_caching')),
-                  subtitle: Text(t('peer_offline_caching_desc')),
-                  value: themeProvider.peerOfflineCachingEnabled,
-                  onChanged: (value) =>
-                      themeProvider.setPeerOfflineCachingEnabled(value),
-                ),
-                const Divider(height: 1),
-                SwitchListTile(
-                  secondary: const Icon(Icons.share),
-                  title: Text(t('allow_library_caching')),
-                  subtitle: Text(t('allow_library_caching_desc')),
-                  value: themeProvider.allowLibraryCaching,
-                  onChanged: (value) =>
-                      themeProvider.setAllowLibraryCaching(value),
-                ),
-                const Divider(height: 1),
-                SwitchListTile(
-                  secondary: const Icon(Icons.verified_user),
-                  title: Text(t('connection_validation')),
-                  subtitle: Text(t('connection_validation_desc')),
-                  value: themeProvider.connectionValidationEnabled,
-                  onChanged: (value) =>
-                      themeProvider.setConnectionValidationEnabled(value),
-                ),
-              ],
-              if (!themeProvider.networkEnabled)
-                ListTile(
-                  leading: Icon(Icons.info_outline, color: Colors.grey[400]),
-                  title: Text(
-                    t('settings_network_enable_first'),
-                    style: TextStyle(color: Colors.grey[500]),
+        Consumer<HubDirectoryProvider>(
+          builder: (context, dirProvider, _) {
+            final isHubActive = dirProvider.config?.isListed ?? false;
+            final anyNetworkActive = themeProvider.networkEnabled ||
+                isHubActive ||
+                themeProvider.remoteReachableEnabled;
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                children: [
+                  if (anyNetworkActive) ...[
+                    SwitchListTile(
+                      secondary: const Icon(Icons.cloud_off),
+                      title: Text(t('peer_offline_caching')),
+                      subtitle: Text(t('peer_offline_caching_desc')),
+                      value: themeProvider.peerOfflineCachingEnabled,
+                      onChanged: (value) =>
+                          themeProvider.setPeerOfflineCachingEnabled(value),
+                    ),
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      secondary: const Icon(Icons.share),
+                      title: Text(t('allow_library_caching')),
+                      subtitle: Text(t('allow_library_caching_desc')),
+                      value: themeProvider.allowLibraryCaching,
+                      onChanged: (value) =>
+                          themeProvider.setAllowLibraryCaching(value),
+                    ),
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      secondary: const Icon(Icons.verified_user),
+                      title: Text(t('connection_validation')),
+                      subtitle: Text(t('connection_validation_desc')),
+                      value: themeProvider.connectionValidationEnabled,
+                      onChanged: (value) =>
+                          themeProvider.setConnectionValidationEnabled(value),
+                    ),
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      secondary: Icon(themeProvider.showViewCount
+                          ? Icons.visibility
+                          : Icons.visibility_off),
+                      title: Text(t('show_view_count')),
+                      subtitle: Text(t('show_view_count_desc')),
+                      value: themeProvider.showViewCount,
+                      onChanged: (value) =>
+                          themeProvider.setShowViewCount(value),
+                    ),
+                  ],
+                  if (!anyNetworkActive)
+                    ListTile(
+                      leading:
+                          Icon(Icons.info_outline, color: Colors.grey[400]),
+                      title: Text(
+                        t('settings_network_enable_first'),
+                        style: TextStyle(color: Colors.grey[500]),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSharingModesCard(BuildContext context, String Function(String) t) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      color: theme.colorScheme.surfaceContainerLow,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.info_outline,
+                    size: 22, color: theme.colorScheme.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    t('settings_sharing_modes_title'),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 15),
                   ),
                 ),
-            ],
+              ],
+            ),
+            const SizedBox(height: 12),
+            _buildModeRow(
+                context, Icons.link, t('settings_mode_invite_title'), t('settings_mode_invite_desc')),
+            const SizedBox(height: 10),
+            _buildModeRow(
+                context, Icons.wifi, t('settings_mode_wifi_title'), t('settings_mode_wifi_desc')),
+            const SizedBox(height: 10),
+            _buildModeRow(
+                context, Icons.public, t('settings_mode_directory_title'), t('settings_mode_directory_desc')),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModeRow(
+      BuildContext context, IconData icon, String title, String desc) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: Colors.grey),
+        const SizedBox(width: 8),
+        Expanded(
+          child: RichText(
+            text: TextSpan(
+              style: Theme.of(context).textTheme.bodySmall,
+              children: [
+                TextSpan(
+                    text: title,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                TextSpan(text: ' - $desc'),
+              ],
+            ),
           ),
         ),
-
-        // Relay Hub (advanced)
-        if (themeProvider.networkEnabled) _buildRelayHubCard(context),
       ],
+    );
+  }
+
+  /// Auto-connect relay when remote reachable is enabled.
+  Future<void> _autoConnectRelay() async {
+    if (_relayConnected) return;
+    final api = Provider.of<ApiService>(context, listen: false);
+    final url = _relayUrlController.text.trim().isNotEmpty
+        ? _relayUrlController.text.trim()
+        : ApiService.hubUrl;
+    try {
+      final res = await api.setupRelay(relayUrl: url);
+      if (!mounted) return;
+      if (res.statusCode == 200 && res.data is Map) {
+        setState(() {
+          _relayConnected = true;
+          _relayMailboxUuid = res.data['mailbox_uuid'] as String?;
+          _relayUrlController.text = url;
+        });
+      }
+    } catch (e) {
+      debugPrint('Auto-connect relay failed: $e');
+    }
+  }
+
+  /// Relay technical details shown inside the accordion.
+  Widget _buildRelayDetails(BuildContext context) {
+    final api = Provider.of<ApiService>(context, listen: false);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.circle,
+                size: 10,
+                color: _relayConnected ? Colors.green : Colors.grey,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _relayConnected
+                    ? (TranslationService.translate(context, 'relay_connected') ??
+                        'Connected')
+                    : (TranslationService.translate(
+                            context, 'relay_disconnected') ??
+                        'Not connected'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _relayUrlController,
+            decoration: InputDecoration(
+              labelText: TranslationService.translate(
+                        context, 'relay_url_label') ??
+                    'Hub URL',
+              hintText: ApiService.hubUrl,
+              isDense: true,
+              border: const OutlineInputBorder(),
+            ),
+            enabled: !_relayLoading,
+          ),
+          if (_relayMailboxUuid != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Mailbox: ${_relayMailboxUuid!.substring(0, 8)}...',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontFamily: 'monospace',
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: _relayConnected
+                ? OutlinedButton.icon(
+                    onPressed: _relayLoading
+                        ? null
+                        : () async {
+                            setState(() => _relayLoading = true);
+                            try {
+                              await api.disconnectRelay();
+                              if (!mounted) return;
+                              setState(() {
+                                _relayConnected = false;
+                                _relayMailboxUuid = null;
+                              });
+                            } catch (e) {
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.toString())),
+                              );
+                            } finally {
+                              if (mounted) {
+                                setState(() => _relayLoading = false);
+                              }
+                            }
+                          },
+                    icon: _relayLoading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.link_off),
+                    label: Text(
+                      TranslationService.translate(
+                              context, 'relay_disconnect') ??
+                          'Disconnect',
+                    ),
+                  )
+                : ElevatedButton.icon(
+                    onPressed: _relayLoading
+                        ? null
+                        : () async {
+                            final url = _relayUrlController.text.trim();
+                            if (url.isEmpty) return;
+
+                            setState(() => _relayLoading = true);
+                            try {
+                              final res =
+                                  await api.setupRelay(relayUrl: url);
+                              if (!mounted) return;
+                              if (res.statusCode == 200 &&
+                                  res.data is Map) {
+                                setState(() {
+                                  _relayConnected = true;
+                                  _relayMailboxUuid =
+                                      res.data['mailbox_uuid'] as String?;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      TranslationService.translate(
+                                              context, 'relay_connected') ??
+                                          'Connected',
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                final error =
+                                    res.data?['error'] ?? 'Connection failed';
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(error.toString())),
+                                );
+                              }
+                            } catch (e) {
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.toString())),
+                              );
+                            } finally {
+                              if (mounted) {
+                                setState(() => _relayLoading = false);
+                              }
+                            }
+                          },
+                    icon: _relayLoading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.link),
+                    label: Text(
+                      TranslationService.translate(
+                              context, 'relay_connect') ??
+                          'Connect',
+                    ),
+                  ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -946,25 +1337,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     requiresApproval: value,
                                   ),
                         ),
-                        // Accept-from filter
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                TranslationService.translate(
-                                      context,
-                                      'directory_accept_from_title',
-                                    ) ??
-                                    'Accept connections from',
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                              const SizedBox(height: 8),
-                              _buildAcceptFromSelector(context, dirProvider),
-                            ],
-                          ),
-                        ),
+                        // accept_from selector removed (non-functional)
                       ],
                     ),
                   ],
@@ -978,34 +1351,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildAcceptFromSelector(
-    BuildContext context,
-    HubDirectoryProvider dirProvider,
-  ) {
-    final current = dirProvider.config?.acceptFrom ?? 'all';
-    const options = ['all', 'verified', 'manual'];
-
-    return SegmentedButton<String>(
-      segments: options.map((o) {
-        return ButtonSegment<String>(
-          value: o,
-          label: Text(
-            TranslationService.translate(
-                  context,
-                  'directory_accept_from_$o',
-                ) ??
-                o,
-          ),
-        );
-      }).toList(),
-      selected: {current},
-      onSelectionChanged: (selected) => _updateDirectoryConfig(
-        context,
-        dirProvider,
-        acceptFrom: selected.first,
-      ),
-    );
-  }
+  // _buildAcceptFromSelector removed (dead code: hub ignores these values)
 
   Future<void> _toggleDirectoryListing(
     BuildContext context,
@@ -1034,7 +1380,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (ok && newValue) {
       // Push the full ISBN catalog to the hub after listing.
-      dirProvider.syncCatalog();
+      await dirProvider.syncCatalog();
+
+      // Auto-enable caching when activating hub sharing
+      if (!themeProvider.peerOfflineCachingEnabled) {
+        themeProvider.setPeerOfflineCachingEnabled(true);
+      }
+      if (!themeProvider.allowLibraryCaching) {
+        themeProvider.setAllowLibraryCaching(true);
+      }
     }
 
     if (!ok && mounted) {
@@ -1210,11 +1564,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          TranslationService.translate(context, 'theme_title') ?? 'Theme',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 12),
         Row(
           children: themes.map((theme) {
             final isSelected = theme.id == currentId;
@@ -1436,13 +1785,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          TranslationService.translate(context, 'languages_section') ??
-              'Languages',
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-
         // Reading languages subtitle
         Text(
           TranslationService.translate(context, 'languages_reading') ??
@@ -1552,169 +1894,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         themeId;
   }
 
-  Widget _buildRelayHubCard(BuildContext context) {
-    final api = Provider.of<ApiService>(context, listen: false);
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.cloud_outlined,
-                  color: _relayConnected ? Colors.green : null,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        TranslationService.translate(
-                              context,
-                              'relay_hub_title',
-                            ) ??
-                            'Relay Hub',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      Text(
-                        TranslationService.translate(
-                              context,
-                              'relay_hub_desc',
-                            ) ??
-                            'Connect to a relay for communication outside your local network',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                ),
-                if (_relayConnected)
-                  Chip(
-                    label: Text(
-                      TranslationService.translate(
-                            context,
-                            'relay_connected',
-                          ) ??
-                          'Connected',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    backgroundColor: Colors.green.withValues(alpha: 0.15),
-                    side: BorderSide.none,
-                    padding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
-                  )
-                else
-                  Chip(
-                    label: Text(
-                      TranslationService.translate(
-                            context,
-                            'relay_disconnected',
-                          ) ??
-                          'Not connected',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    side: BorderSide.none,
-                    padding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _relayUrlController,
-              decoration: InputDecoration(
-                labelText: TranslationService.translate(
-                      context,
-                      'relay_url_label',
-                    ) ??
-                    'Hub URL',
-                hintText: ApiService.hubUrl,
-                isDense: true,
-                border: const OutlineInputBorder(),
-              ),
-              enabled: !_relayLoading,
-            ),
-            if (_relayMailboxUuid != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Mailbox: ${_relayMailboxUuid!.substring(0, 8)}...',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontFamily: 'monospace',
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-              ),
-            ],
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _relayLoading
-                    ? null
-                    : () async {
-                        final url = _relayUrlController.text.trim();
-                        if (url.isEmpty) return;
-
-                        setState(() => _relayLoading = true);
-                        try {
-                          final res = await api.setupRelay(relayUrl: url);
-                          if (!mounted) return;
-                          if (res.statusCode == 200 && res.data is Map) {
-                            setState(() {
-                              _relayConnected = true;
-                              _relayMailboxUuid =
-                                  res.data['mailbox_uuid'] as String?;
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  TranslationService.translate(
-                                        context,
-                                        'relay_connected',
-                                      ) ??
-                                      'Connected',
-                                ),
-                              ),
-                            );
-                          } else {
-                            final error =
-                                res.data?['error'] ?? 'Connection failed';
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(error.toString())),
-                            );
-                          }
-                        } catch (e) {
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(e.toString())),
-                          );
-                        } finally {
-                          if (mounted) {
-                            setState(() => _relayLoading = false);
-                          }
-                        }
-                      },
-                icon: _relayLoading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.link),
-                label: Text(
-                  TranslationService.translate(context, 'relay_connect') ??
-                      'Connect',
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // _buildRelayHubCard removed - relay details now inline in _buildRelayDetails
 
   Widget _buildModuleToggle(
     BuildContext context,
@@ -1726,7 +1906,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String? tag,
   }) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: SwitchListTile(
         secondary: Icon(icon),
         title: Row(
@@ -1769,12 +1949,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          TranslationService.translate(context, 'search_sources') ??
-              'Search Sources',
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
         Card(
           child: Column(
             children: [
@@ -1984,36 +2158,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _setupMfa() async {
     final apiService = Provider.of<ApiService>(context, listen: false);
-
-    if (apiService.useFfi) {
-      if (!mounted) return;
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.info_outline, color: Theme.of(context).primaryColor),
-              const SizedBox(width: 8),
-              Text(
-                TranslationService.translate(context, 'two_factor_auth') ??
-                    'Two-Factor Authentication',
-              ),
-            ],
-          ),
-          content: Text(
-            TranslationService.translate(context, 'mfa_requires_server') ??
-                'Two-factor authentication is only available when connected to a remote BiblioGenius server. In local mode, your data is already secured on your device.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(TranslationService.translate(context, 'ok') ?? 'OK'),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
 
     try {
       final response = await apiService.setup2Fa();

@@ -45,6 +45,9 @@ class NetworkMember {
   /// Whether this peer has relay credentials (reachable via hub)
   final bool hasRelayCredentials;
 
+  /// User-defined display name (overrides name in the UI)
+  final String? customDisplayName;
+
   // V4 Future: Association link
   final int? linkedPeerId;
   final int? linkedContactId;
@@ -72,12 +75,16 @@ class NetworkMember {
     this.keyExchangeDone = false,
     this.libraryUuid,
     this.hasRelayCredentials = false,
+    this.customDisplayName,
     this.linkedPeerId,
     this.linkedContactId,
   });
 
-  /// Get display name: firstName + name if available, otherwise just name
+  /// Get display name: customDisplayName > firstName + name > name
   String get displayName {
+    if (customDisplayName != null && customDisplayName!.isNotEmpty) {
+      return customDisplayName!;
+    }
     if (firstName != null && firstName!.isNotEmpty) {
       return '$firstName $name';
     }
@@ -130,6 +137,7 @@ class NetworkMember {
       hasRelayCredentials: (peer['relay_url'] as String?)?.isNotEmpty == true &&
           (peer['mailbox_id'] as String?)?.isNotEmpty == true &&
           (peer['relay_write_token'] as String?)?.isNotEmpty == true,
+      customDisplayName: peer['display_name'] as String?,
     );
   }
 

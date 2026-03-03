@@ -5,6 +5,7 @@ import '../../data/repositories/copy_repository.dart';
 import '../../services/api_service.dart';
 import '../../services/collection_export_service.dart';
 import '../../services/translation_service.dart';
+import '../../widgets/app_snack_bar.dart';
 import '../../widgets/cached_book_cover.dart';
 import '../../widgets/premium_empty_state.dart';
 import 'package:flutter/material.dart';
@@ -76,12 +77,9 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${TranslationService.translate(context, 'error_deleting_collection')}: $e',
-              ),
-            ),
+          AppSnackBar.error(
+            context,
+            '${TranslationService.translate(context, 'error_deleting_collection')}: $e',
           );
         }
       }
@@ -167,12 +165,9 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
         if (shouldImport != true) return;
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                TranslationService.translate(context, 'importing_books'),
-              ),
-            ),
+          AppSnackBar.loading(
+            context,
+            TranslationService.translate(context, 'importing_books'),
           );
         }
 
@@ -199,9 +194,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
               msg +=
                   ' ${TranslationService.translate(context, 'books_skipped_count', params: {'count': errors.length.toString()})}';
             }
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(msg)));
+            AppSnackBar.success(context, msg);
           }
           _refreshBooks();
         } else {
@@ -210,12 +203,9 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${TranslationService.translate(context, 'error_importing_books')}: $e',
-            ),
-          ),
+        AppSnackBar.error(
+          context,
+          '${TranslationService.translate(context, 'error_importing_books')}: $e',
         );
       }
     }
@@ -228,21 +218,15 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
         listen: false,
       ).removeBookFromCollection(widget.collection.id, book.bookId);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '"${book.title}" ${TranslationService.translate(context, 'removed_from_collection')}',
-          ),
-        ),
+      AppSnackBar.success(
+        context,
+        '"${book.title}" ${TranslationService.translate(context, 'removed_from_collection')}',
       );
       _refreshBooks();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${TranslationService.translate(context, 'error_removing_book')}: $e',
-          ),
-        ),
+      AppSnackBar.error(
+        context,
+        '${TranslationService.translate(context, 'error_removing_book')}: $e',
       );
     }
   }
@@ -255,23 +239,16 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
       await exportService.shareCollection(widget.collection);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              TranslationService.translate(context, 'collection_exported'),
-            ),
-          ),
+        AppSnackBar.success(
+          context,
+          TranslationService.translate(context, 'collection_exported'),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${TranslationService.translate(context, 'error_sharing_collection')}: $e',
-            ),
-            backgroundColor: Colors.red,
-          ),
+        AppSnackBar.error(
+          context,
+          '${TranslationService.translate(context, 'error_sharing_collection')}: $e',
         );
       }
     }
@@ -673,20 +650,21 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
                                             ],
                                           ),
                                         ),
-                                        // Status Logic
-                                        Material(
-                                          color: Colors.transparent,
-                                          child: InkWell(
-                                            onTap: () =>
-                                                _toggleBookStatus(book),
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
+                                        // Status badge with label
+                                        GestureDetector(
+                                          onTap: () =>
+                                              _toggleBookStatus(book),
+                                          child: Tooltip(
+                                            message: book.isOwned
+                                                ? TranslationService.translate(
+                                                    context, 'status_owned')
+                                                : TranslationService.translate(
+                                                    context, 'status_wanted'),
                                             child: Container(
                                               padding:
                                                   const EdgeInsets.symmetric(
-                                                    horizontal: 10,
-                                                    vertical: 6,
+                                                    horizontal: 8,
+                                                    vertical: 4,
                                                   ),
                                               decoration: BoxDecoration(
                                                 color: book.isOwned
@@ -710,6 +688,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
                                                 ),
                                               ),
                                               child: Row(
+                                                mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   Icon(
                                                     book.isOwned
@@ -720,10 +699,94 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
                                                         ? Colors.green
                                                         : Colors.orange,
                                                   ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    book.isOwned
+                                                        ? TranslationService
+                                                            .translate(context,
+                                                                'status_owned')
+                                                        : TranslationService
+                                                            .translate(context,
+                                                                'status_wanted'),
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: book.isOwned
+                                                          ? Colors.green
+                                                          : Colors.orange,
+                                                    ),
+                                                  ),
                                                 ],
                                               ),
                                             ),
                                           ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        // Remove from collection button
+                                        PopupMenuButton<String>(
+                                          icon: Icon(
+                                            Icons.more_vert,
+                                            size: 20,
+                                            color: Colors.grey[400],
+                                          ),
+                                          tooltip: '',
+                                          padding: EdgeInsets.zero,
+                                          onSelected: (value) {
+                                            if (value == 'remove') {
+                                              _confirmAndRemoveBook(book);
+                                            } else if (value == 'toggle') {
+                                              _toggleBookStatus(book);
+                                            }
+                                          },
+                                          itemBuilder: (context) => [
+                                            PopupMenuItem<String>(
+                                              value: 'toggle',
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                    book.isOwned
+                                                        ? Icons.bookmark_border
+                                                        : Icons.check_circle,
+                                                    size: 18,
+                                                    color: book.isOwned
+                                                        ? Colors.orange
+                                                        : Colors.green,
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    book.isOwned
+                                                        ? TranslationService
+                                                            .translate(context,
+                                                                'status_wanted')
+                                                        : TranslationService
+                                                            .translate(context,
+                                                                'status_owned'),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            PopupMenuItem<String>(
+                                              value: 'remove',
+                                              child: Row(
+                                                children: [
+                                                  const Icon(
+                                                    Icons.remove_circle_outline,
+                                                    size: 18,
+                                                    color: Colors.red,
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    TranslationService.translate(
+                                                        context,
+                                                        'remove_from_collection'),
+                                                    style: const TextStyle(
+                                                        color: Colors.red),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
@@ -782,6 +845,38 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
     );
   }
 
+  Future<void> _confirmAndRemoveBook(CollectionBook book) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          TranslationService.translate(context, 'remove_book_title'),
+        ),
+        content: Text(
+          '${TranslationService.translate(context, 'remove_book_confirm')} "${book.title}"',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              TranslationService.translate(context, 'cancel'),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(
+              TranslationService.translate(context, 'remove'),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      _removeBook(book);
+    }
+  }
+
   Future<void> _toggleBookStatus(CollectionBook book) async {
     try {
       final newStatus = !book.isOwned;
@@ -818,24 +913,21 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Marked "${book.title}" as ${newStatus ? 'Owned' : 'Wanted'}',
-            ),
-            duration: const Duration(seconds: 1),
-          ),
+        final statusMsg = newStatus
+            ? TranslationService.translate(context, 'marked_as_owned')
+            : TranslationService.translate(context, 'marked_as_wanted');
+        AppSnackBar.success(
+          context,
+          '"${book.title}" - $statusMsg',
+          duration: const Duration(seconds: 1),
         );
         _refreshBooks();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${TranslationService.translate(context, 'error_updating_status')}: $e',
-            ),
-          ),
+        AppSnackBar.error(
+          context,
+          '${TranslationService.translate(context, 'error_updating_status')}: $e',
         );
       }
     }

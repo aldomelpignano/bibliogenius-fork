@@ -54,6 +54,7 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
   int _relayBooksLoaded = 0;
   int _relayBooksTotal = 0;
   Timer? _pollTimer;
+  bool _pollRequestInFlight = false;
 
   /// Hub catalog fallback state (hub-only data: title + author + ISBN)
   bool _isHubOnly = false;
@@ -152,7 +153,8 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
           debugPrint('Loaded ${_books.length} books live from peer');
 
           // Cache displayed books locally (avoids redundant re-fetch from syncPeer)
-          if (_offlineCachingEnabled) {
+          // Skip caching for unsaved mDNS peers (peerId == 0)
+          if (_offlineCachingEnabled && widget.peerId > 0) {
             api.cachePeerBooks(widget.peerId, _books).then((_) {
               debugPrint('Cached ${_books.length} live books for peer ${widget.peerId}');
             }).catchError((e) {
@@ -359,13 +361,21 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
   /// Adaptive polling: poll relay every 5s, retry manifest after each poll.
   /// When the relay response arrives, continues with page fetching.
   /// Gives up after 3 minutes (ADR-012).
+  /// Uses _pollRequestInFlight guard to prevent concurrent requests that
+  /// would flood the relay with different correlation IDs.
   void _startAdaptivePolling() {
     _pollTimer?.cancel();
+    _pollRequestInFlight = false;
     final api = Provider.of<ApiService>(context, listen: false);
     int pollCount = 0;
     const maxPolls = 36; // 36 * 5s = 3 minutes
 
     _pollTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      if (_pollRequestInFlight) {
+        debugPrint('Relay: skipping poll tick (previous request still in flight)');
+        return;
+      }
+
       pollCount++;
       if (pollCount > maxPolls || !mounted) {
         timer.cancel();
@@ -376,6 +386,7 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
         return;
       }
 
+      _pollRequestInFlight = true;
       try {
         // 1. Tell the backend to check relay inbox
         await api.pollRelayNow();
@@ -389,6 +400,8 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
         }
       } catch (e) {
         debugPrint('Adaptive poll error: $e');
+      } finally {
+        _pollRequestInFlight = false;
       }
     });
   }

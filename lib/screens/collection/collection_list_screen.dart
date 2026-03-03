@@ -316,7 +316,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
               ),
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 180,
-                childAspectRatio: 0.55,
+                childAspectRatio: 0.62,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 12,
               ),
@@ -327,11 +327,12 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                 return CollectionCoverCard(
                   collection: collection,
                   coverUrls: covers,
-                  onTap: () {
-                    context.push(
+                  onTap: () async {
+                    await context.push(
                       '/collections/${collection.id}',
                       extra: collection,
                     );
+                    if (mounted) _loadCollections();
                   },
                   onLongPress: () => _deleteCollection(collection),
                 );

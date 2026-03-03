@@ -594,17 +594,14 @@ class _BookListScreenState extends State<BookListScreen>
       final books = await bookRepo.getBooks();
 
       final configRes = await apiService.getLibraryConfig();
-      String? libraryName;
       if (configRes.statusCode == 200) {
         _showBorrowedConfig = configRes.data['show_borrowed_books'] != false;
-        libraryName = configRes.data['library_name'] as String?;
-        if (libraryName != null) {
-          Provider.of<ThemeProvider>(
-            context,
-            listen: false,
-          ).setLibraryName(libraryName);
-        }
       }
+      // Library name comes from ThemeProvider (set via SharedPreferences + FFI)
+      final libraryName = Provider.of<ThemeProvider>(
+        context,
+        listen: false,
+      ).libraryName;
 
       if (mounted) {
         // Also load tags for hierarchy navigation

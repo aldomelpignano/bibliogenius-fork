@@ -31,7 +31,7 @@ class ThemeProvider with ChangeNotifier {
   String _themeStyle = 'default';
   String get themeStyle => _themeStyle;
 
-  double _textScaleFactor = 1.0;
+  double _textScaleFactor = 1.05;
   double get textScaleFactor => _textScaleFactor;
 
   String _currentAvatarId = 'individual';
@@ -123,14 +123,19 @@ class ThemeProvider with ChangeNotifier {
   bool get syncSafetyEnabled => _syncSafetyEnabled;
 
   // Peer Offline Caching: allows viewing cached peer libraries when they're offline
-  // Disabled by default for privacy (peer's books are cached locally)
-  bool _peerOfflineCachingEnabled = false;
+  // Enabled by default for better UX (instant display on revisit)
+  bool _peerOfflineCachingEnabled = true;
   bool get peerOfflineCachingEnabled => _peerOfflineCachingEnabled;
 
   // Allow Library Caching: allows others to cache YOUR library for offline viewing
-  // Disabled by default for privacy (your book list stored on others' devices)
-  bool _allowLibraryCaching = false;
+  // Enabled by default for better peer experience
+  bool _allowLibraryCaching = true;
   bool get allowLibraryCaching => _allowLibraryCaching;
+
+  // Remote Reachable: relay-based connectivity for invited contacts
+  // Enabled by default (safe: only invited contacts can reach via relay)
+  bool _remoteReachableEnabled = true;
+  bool get remoteReachableEnabled => _remoteReachableEnabled;
 
   // Connection Validation: require approval before new peers can access library
   // Disabled by default (open access)
@@ -151,6 +156,11 @@ class ThemeProvider with ChangeNotifier {
   // Disabled by default for privacy
   bool _shareGamificationStats = false;
   bool get shareGamificationStats => _shareGamificationStats;
+
+  // Show View Count: display library view counter on profile
+  // Enabled by default (visible on own profile only)
+  bool _showViewCount = true;
+  bool get showViewCount => _showViewCount;
 
   ThemeData get themeData {
     // Initialize registry if needed
@@ -196,7 +206,7 @@ class ThemeProvider with ChangeNotifier {
     }
     _isSetupComplete = prefs.getBool('isSetupComplete') ?? false;
     _themeStyle = prefs.getString('themeStyle') ?? 'default';
-    _textScaleFactor = prefs.getDouble('textScaleFactor') ?? 1.0;
+    _textScaleFactor = prefs.getDouble('textScaleFactor') ?? 1.05;
 
     // Load username
     String? storedUsername = prefs.getString('username');
@@ -280,10 +290,13 @@ class ThemeProvider with ChangeNotifier {
     // Default to false (opt-in) for privacy
     _networkDiscoveryEnabled =
         prefs.getBool('networkDiscoveryEnabled') ?? false;
-    // Default to true — required for relay to be useful (offline peer browsing)
+    // Default to true - better UX (instant display of peer libraries on revisit)
     _peerOfflineCachingEnabled =
         prefs.getBool('peerOfflineCachingEnabled') ?? true;
     _allowLibraryCaching = prefs.getBool('allowLibraryCaching') ?? true;
+    // Default to true - safe (only invited contacts can reach via relay)
+    _remoteReachableEnabled =
+        prefs.getBool('remoteReachableEnabled') ?? true;
     _connectionValidationEnabled =
         prefs.getBool('connectionValidationEnabled') ?? false;
     _autoApproveLoanRequests =
@@ -292,6 +305,7 @@ class ThemeProvider with ChangeNotifier {
         prefs.getBool('networkGamificationEnabled') ?? false;
     _shareGamificationStats =
         prefs.getBool('shareGamificationStats') ?? false;
+    _showViewCount = prefs.getBool('showViewCount') ?? true;
     _collectionsEnabled = prefs.getBool('collectionsEnabled') ?? false;
     _groupByCollections = prefs.getBool('groupByCollections') ?? false;
     _quotesEnabled = prefs.getBool('quotesEnabled') ?? true;
@@ -662,8 +676,24 @@ class ThemeProvider with ChangeNotifier {
   Future<void> resetSetup() async {
     _isSetupComplete = false;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('isSetupComplete');
+    await prefs.clear();
     resetSetupState();
+    // Reset in-memory state to defaults
+    _gamificationEnabled = true;
+    _quotesEnabled = true;
+    _collectionsEnabled = false;
+    _groupByCollections = false;
+    _gamesEnabled = true;
+    _memoryGameEnabled = true;
+    _slidingPuzzleEnabled = true;
+    _commerceEnabled = false;
+    _audioEnabled = false;
+    _networkDiscoveryEnabled = false;
+    _networkGamificationEnabled = false;
+    _canBorrowBooks = true;
+    _syncSafetyEnabled = true;
+    _simplifiedMode = false;
+    _operationLogViewerEnabled = false;
     notifyListeners();
   }
 
@@ -756,12 +786,13 @@ class ThemeProvider with ChangeNotifier {
   Future<void> applyPreset(String presetName) async {
     switch (presetName) {
       case 'reader':
-        // Reader preset: gamification, quotes, collections, audio
+        // Reader preset: gamification, quotes, collections, audio, borrowing
         await setGamificationEnabled(true);
         await setQuotesEnabled(true);
         await setCollectionsEnabled(true);
         await setAudioEnabled(true);
         await setCommerceEnabled(false);
+        await setCanBorrowBooks(true);
         break;
       case 'librarian':
         // Librarian preset: collections, network, no gamification, no borrowing
@@ -773,12 +804,13 @@ class ThemeProvider with ChangeNotifier {
         await setCanBorrowBooks(false);
         break;
       case 'bookseller':
-        // Bookseller preset: commerce, collections, no gamification
+        // Bookseller preset: commerce, collections, no gamification, no borrowing
         await setCommerceEnabled(true);
         await setCollectionsEnabled(true);
         await setGamificationEnabled(false);
         await setQuotesEnabled(false);
         await setAudioEnabled(false);
+        await setCanBorrowBooks(false);
         break;
     }
     notifyListeners();
@@ -792,6 +824,17 @@ class ThemeProvider with ChangeNotifier {
     _networkDiscoveryEnabled = enabled;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('networkDiscoveryEnabled', enabled);
+
+    // Auto-enable caching when activating network
+    if (enabled && !_peerOfflineCachingEnabled) {
+      _peerOfflineCachingEnabled = true;
+      await prefs.setBool('peerOfflineCachingEnabled', true);
+    }
+    if (enabled && !_allowLibraryCaching) {
+      _allowLibraryCaching = true;
+      await prefs.setBool('allowLibraryCaching', true);
+    }
+
     notifyListeners();
 
     if (enabled) {
@@ -818,6 +861,27 @@ class ThemeProvider with ChangeNotifier {
         debugPrint('Error stopping mDNS: $e');
       }
     }
+  }
+
+  /// Enable/disable remote reachability via relay
+  /// When enabled, invited contacts can reach you on any network (4G, 5G, WiFi)
+  /// Safe by default: only people with your invite link can contact you
+  Future<void> setRemoteReachableEnabled(bool enabled) async {
+    _remoteReachableEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('remoteReachableEnabled', enabled);
+
+    // Auto-enable caching when activating remote reachability
+    if (enabled && !_peerOfflineCachingEnabled) {
+      _peerOfflineCachingEnabled = true;
+      await prefs.setBool('peerOfflineCachingEnabled', true);
+    }
+    if (enabled && !_allowLibraryCaching) {
+      _allowLibraryCaching = true;
+      await prefs.setBool('allowLibraryCaching', true);
+    }
+
+    notifyListeners();
   }
 
   /// Enable/disable peer offline caching
@@ -886,6 +950,13 @@ class ThemeProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('shareGamificationStats', enabled);
     await _updateEnabledModules();
+    notifyListeners();
+  }
+
+  Future<void> setShowViewCount(bool enabled) async {
+    _showViewCount = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('showViewCount', enabled);
     notifyListeners();
   }
 

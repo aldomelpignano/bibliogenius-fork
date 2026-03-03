@@ -174,6 +174,10 @@ msgstr "Ajoutez des livres pour voir vos statistiques de lecture"
 msgid "add_collection"
 msgstr "Ajouter une collection"
 
+#. Add collection hint (inline field placeholder)
+msgid "add_collection_hint"
+msgstr "Nom de la collection..."
+
 #. Add Contact
 msgid "add_contact"
 msgstr "Ajouter un contact"
@@ -391,7 +395,7 @@ msgstr "Gérez vos livres audio et lectures à voix haute."
 
 #. Audio Module
 msgid "audio_module_title"
-msgstr "Module Audio"
+msgstr "Audio"
 
 #. Searching for audiobook...
 msgid "audio_searching"
@@ -955,6 +959,10 @@ msgstr "Collections"
 #. Collections
 msgid "collections"
 msgstr "Collections"
+
+#. Tag collection (vue groupée bibliothèque)
+msgid "collection_tag"
+msgstr "Collection"
 
 #. Regroupez vos livres, ex. : Lectures d'été, Club de lecture
 msgid "collections_helper"
@@ -1719,7 +1727,7 @@ msgstr "Activer les livres audio"
 
 #. Enable Borrowing
 msgid "enable_borrowing_module"
-msgstr "Activer les emprunts"
+msgstr "Emprunts"
 
 #. Enable Gamification
 msgid "enable_gamification"
@@ -4138,6 +4146,18 @@ msgstr "Bibliothécaire"
 msgid "preset_reader"
 msgstr "Lecteur"
 
+#. Reader preset legend
+msgid "preset_reader_legend"
+msgstr "J'aime lire et je veux suivre mes livres"
+
+#. Librarian preset legend
+msgid "preset_librarian_legend"
+msgstr "Je gère une bibliothèque ou une grande collection"
+
+#. Bookseller preset legend
+msgid "preset_bookseller_legend"
+msgstr "Je vends des livres, en pro ou en amateur"
+
 #. Price
 msgid "price"
 msgstr "Prix"
@@ -4541,6 +4561,18 @@ msgstr "Retirer le livre ?"
 msgid "removed_from_collection"
 msgstr "Retiré de la collection"
 
+#. Remove from collection (action label)
+msgid "remove_from_collection"
+msgstr "Retirer de la collection"
+
+#. Marked as owned (snackbar)
+msgid "marked_as_owned"
+msgstr "Marqué comme possédé"
+
+#. Marked as wanted (snackbar)
+msgid "marked_as_wanted"
+msgstr "Marqué comme souhaité"
+
 #. Manual reorder (drag & drop)
 msgid "reorder_manual"
 msgstr "Réordonner (glisser-déposer)"
@@ -4640,6 +4672,10 @@ msgstr "Se connecter à un relais pour communiquer hors du réseau local"
 #. Connect to relay
 msgid "relay_connect"
 msgstr "Connecter"
+
+#. Disconnect from relay
+msgid "relay_disconnect"
+msgstr "Déconnecter"
 
 #. Relay connected status
 msgid "relay_connected"
@@ -4836,6 +4872,10 @@ msgstr "Liste"
 msgid "search_title_label"
 msgstr "Titre"
 
+#. Account section in settings
+msgid "account"
+msgstr "Compte"
+
 #. Security
 msgid "security"
 msgstr "Sécurité"
@@ -4962,6 +5002,50 @@ msgstr "Paramètres enregistrés"
 #. Network
 msgid "settings_network_title"
 msgstr "Réseau"
+
+#. How sharing works
+msgid "settings_sharing_modes_title"
+msgstr "Comment fonctionne le partage"
+
+#. Invite link
+msgid "settings_mode_invite_title"
+msgstr "Lien d'invitation"
+
+#. Works on any network (WiFi, 4G, 5G). Share a link or QR code privately.
+msgid "settings_mode_invite_desc"
+msgstr "Fonctionne sur tout réseau (WiFi, 4G, 5G). Partagez un lien ou QR code en privé."
+
+#. WiFi discovery
+msgid "settings_mode_wifi_title"
+msgstr "Découverte WiFi"
+
+#. Auto-detect nearby libraries on your local WiFi.
+msgid "settings_mode_wifi_desc"
+msgstr "Détecte automatiquement les bibliothèques proches sur votre WiFi local."
+
+#. Public directory
+msgid "settings_mode_directory_title"
+msgstr "Annuaire public"
+
+#. Be listed for anyone to discover and follow.
+msgid "settings_mode_directory_desc"
+msgstr "Être référencée pour que d'autres puissent vous découvrir."
+
+#. Reachable remotely
+msgid "settings_remote_reachable"
+msgstr "Joignable à distance"
+
+#. Your invited contacts can reach you on any network
+msgid "settings_remote_reachable_desc"
+msgstr "Vos contacts invités peuvent vous joindre sur tout réseau"
+
+#. Technical details
+msgid "settings_remote_reachable_details"
+msgstr "Détails techniques"
+
+#. This link works on any network
+msgid "invite_works_everywhere"
+msgstr "Ce lien fonctionne sur tout réseau : WiFi, 4G ou 5G. Le destinataire n'a pas besoin d'être à proximité."
 
 #. Local network
 msgid "settings_network_local"
@@ -6858,6 +6942,25 @@ msgstr "Votre demande de suivi est en attente d'approbation. Vous pourrez voir l
 msgid "directory_catalog_not_following"
 msgstr "Suivez cette bibliothèque pour voir ses livres partagés."
 
+#. Catalogue - détail
+msgid "catalog_book_details"
+msgstr "Détails du livre"
+
+msgid "catalog_add_to_library"
+msgstr "Ajouter à ma bibliothèque"
+
+msgid "catalog_added_success"
+msgstr "Livre ajouté à votre bibliothèque"
+
+msgid "catalog_details_unavailable"
+msgstr "Détails non disponibles en ligne"
+
+msgid "catalog_loading_details"
+msgstr "Chargement des détails..."
+
+msgid "catalog_already_in_library"
+msgstr "Déjà dans votre bibliothèque"
+
 #. Générique
 msgid "action_retry"
 msgstr "Réessayer"
@@ -6865,6 +6968,24 @@ msgstr "Réessayer"
 #. Onglet Bibliothèques
 msgid "tab_libraries"
 msgstr "Bibliothèques"
+
+#. Onglets ecran Reseau
+msgid "network_tab_my_network"
+msgstr "Mon réseau"
+
+msgid "network_tab_discover"
+msgstr "Découvrir"
+
+#. Filtres reseau
+msgid "network_filter_all"
+msgstr "Tous"
+
+msgid "network_filter_borrowers"
+msgstr "Emprunteurs"
+
+#. Demandes de suivi hub
+msgid "network_hub_requests_title"
+msgstr "Demandes de suivi"
 
 msgid "lib_filter_all"
 msgstr "Tout"
@@ -6900,3 +7021,137 @@ msgstr "Utilisez l'onglet Découvrir pour trouver des bibliothèques, ou connect
 
 msgid "lib_unfollow"
 msgstr "Ne plus suivre"
+
+#. Flash message: dismiss tooltip
+msgid "flash_dismiss_tooltip"
+msgstr "Masquer"
+
+#. Flash message: customize library name
+msgid "flash_customize_library_name"
+msgstr "Personnalisez le nom de votre bibliothèque :"
+
+#. Flash message: library name text field hint
+msgid "flash_library_name_hint"
+msgstr "Nom de la bibliothèque"
+
+#. Flash message: discover configuration profiles
+msgid "flash_discover_presets"
+msgstr "Configuration rapide - choisissez votre profil :"
+
+#. Flash message: peer paired (prefix before peer name)
+msgid "flash_peer_connected"
+msgstr "Jumelé avec"
+
+#. Flash message: pending connection request (prefix before peer name)
+msgid "flash_peer_pending"
+msgstr "Demande de connexion de"
+
+#. Flash message: browse peer's library action
+msgid "flash_peer_browse"
+msgstr "Parcourir"
+
+#. Flash message: review pending connection action
+msgid "flash_peer_review"
+msgstr "Examiner"
+
+#. Flash message: pending connection hint in dialog
+msgid "flash_peer_pending_hint"
+msgstr "En attente de votre approbation"
+
+#. Flash message: see more connections overflow link
+msgid "flash_peer_see_more"
+msgstr "connexions supplementaires"
+
+#. Flash message: semantic label for see more link
+msgid "flash_peer_see_more_semantic"
+msgstr "Voir toutes les nouvelles connexions"
+
+#. Flash message: dialog title for all connections
+msgid "flash_peer_dialog_title"
+msgstr "Nouvelles connexions"
+
+#. Flash message: dismiss all ephemeral flashes
+msgid "flash_peer_dismiss_all"
+msgstr "Tout ignorer"
+
+#. Peer detail screen
+msgid "peer_details_title"
+msgstr "Détails de la bibliothèque"
+
+msgid "peer_edit_display_name"
+msgstr "Modifier le nom"
+
+msgid "peer_display_name_label"
+msgstr "Nom d'affichage"
+
+msgid "peer_display_name_hint"
+msgstr "Entrez un nom personnalisé pour cette bibliothèque"
+
+msgid "peer_e2ee_status"
+msgstr "Chiffrement de bout en bout"
+
+msgid "peer_e2ee_active"
+msgstr "Actif - les communications sont chiffrées"
+
+msgid "peer_e2ee_inactive"
+msgstr "Inactif - échange de clés non terminé"
+
+msgid "peer_last_seen"
+msgstr "Dernière connexion"
+
+msgid "peer_has_relay"
+msgstr "Joignable via relais"
+
+msgid "peer_node_id"
+msgstr "Identifiant du noeud"
+
+msgid "peer_name_saved"
+msgstr "Nom enregistré"
+
+msgid "peer_custom_name_indicator"
+msgstr "Nom personnalisé"
+
+#. Empty state: no nearby peers
+msgid "no_nearby_peers"
+msgstr "Aucune bibliothèque à proximité"
+
+msgid "no_nearby_peers_hint"
+msgstr "Vérifiez que le Wi-Fi est activé et que d'autres utilisateurs BiblioGenius sont sur le même réseau."
+
+#. Empty state: no followed libraries
+msgid "no_following_yet"
+msgstr "Aucune bibliothèque suivie"
+
+msgid "no_following_hint"
+msgstr "Parcourez l'annuaire pour trouver et suivre des bibliothèques qui vous intéressent."
+
+msgid "browse_directory_btn"
+msgstr "Parcourir l'annuaire"
+
+#. Empty state: no borrowers
+msgid "no_borrowers_yet"
+msgstr "Aucun emprunteur"
+
+msgid "no_borrowers_hint"
+msgstr "Ajoutez des contacts qui empruntent des livres de votre bibliothèque."
+
+#. ISBN validation
+msgid "isbn_checksum_warning"
+msgstr "Cet ISBN semble invalide (erreur de checksum)"
+
+#. Show library views toggle
+msgid "show_view_count"
+msgstr "Afficher les vues"
+
+msgid "show_view_count_desc"
+msgstr "Afficher le compteur de vues sur votre profil"
+
+#. Profile view counter
+msgid "profile_views"
+msgstr "vues"
+
+msgid "profile_views_peers"
+msgstr "depuis les pairs"
+
+msgid "profile_views_followers"
+msgstr "depuis les abonnés"

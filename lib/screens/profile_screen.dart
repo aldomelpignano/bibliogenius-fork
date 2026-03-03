@@ -5,9 +5,12 @@ import 'package:provider/provider.dart';
 import '../models/avatar_config.dart';
 import '../models/gamification_status.dart';
 import '../models/leaderboard_entry.dart';
+import '../providers/hub_directory_provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import '../services/ffi_service.dart';
+import '../services/mdns_service.dart';
 import '../services/translation_service.dart';
 import '../widgets/avatar_customizer.dart';
 import '../widgets/gamification_widgets.dart';
@@ -55,11 +58,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, List<LeaderboardEntry>>? _leaderboard;
   String? _lastRefreshed;
   String? _error;
+  int _peerViews = 0;
+  int _followerViews = 0;
 
   @override
   void initState() {
     super.initState();
     _fetchStatus();
+    _fetchViewStats();
   }
 
   Future<void> _fetchStatus() async {
@@ -101,17 +107,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (!mounted) return;
 
-      // Sync library name from backend
-      final dbName = configRes.data['library_name'] ?? configRes.data['name'];
+      // Library name is managed by ThemeProvider (SharedPreferences + FFI)
       final themeProvider = Provider.of<ThemeProvider>(
         context,
         listen: false,
       );
-      final localName = themeProvider.libraryName;
-
-      if (dbName != null && localName == 'My Library') {
-        themeProvider.setLibraryName(dbName);
-      }
 
       // Sync profile type
       final profileType = configRes.data['profile_type'];
@@ -128,7 +128,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       // Defer leaderboard (non-blocking)
       if (themeProvider.networkGamificationEnabled) {
-        _fetchLeaderboard(apiService, localName);
+        _fetchLeaderboard(apiService, themeProvider.libraryName);
       }
     } catch (e) {
       if (mounted) {
@@ -191,6 +191,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _refreshStatus() async {
     _ProfileCache.invalidate();
     await _fetchFresh(showLoading: false);
+    _fetchViewStats();
+  }
+
+  Future<void> _fetchViewStats() async {
+    try {
+      final apiService = Provider.of<ApiService>(context, listen: false);
+      if (apiService.useFfi) {
+        final data = await FfiService().getLibraryViewStats();
+        if (!mounted) return;
+        setState(() {
+          _peerViews = (data['total_peer'] as num?)?.toInt() ?? 0;
+          _followerViews = (data['total_follower'] as num?)?.toInt() ?? 0;
+        });
+      }
+    } catch (e) {
+      debugPrint('View stats fetch failed: $e');
+    }
+  }
+
+  Widget _buildViewCountChip(BuildContext context) {
+    final total = _peerViews + _followerViews;
+    if (total == 0) return const SizedBox(height: 8);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Semantics(
+        label:
+            '${TranslationService.translate(context, 'profile_views')}: $total',
+        child: Tooltip(
+          message: _peerViews > 0 && _followerViews > 0
+              ? '$_peerViews ${TranslationService.translate(context, 'profile_views_peers')}, '
+                  '$_followerViews ${TranslationService.translate(context, 'profile_views_followers')}'
+              : '',
+          child: Chip(
+            avatar: Icon(
+              Icons.visibility_outlined,
+              size: 18,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            label: Text(
+              '$total ${TranslationService.translate(context, 'profile_views')}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+            side: BorderSide.none,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -380,6 +431,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
+
+                // Library View Counter
+                Consumer<ThemeProvider>(
+                  builder: (context, themeProvider, _) {
+                    if (!themeProvider.showViewCount) {
+                      return const SizedBox.shrink();
+                    }
+                    return _buildViewCountChip(context);
+                  },
+                ),
 
                 // Gamification Card
                 Consumer<ThemeProvider>(
@@ -830,10 +891,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final api = Provider.of<ApiService>(context, listen: false);
         await api.updateLibraryConfig(name: result);
         if (mounted) {
-          Provider.of<ThemeProvider>(
+          final themeProvider = Provider.of<ThemeProvider>(
             context,
             listen: false,
-          ).setLibraryName(result);
+          );
+          themeProvider.setLibraryName(result);
+          // Restart mDNS with updated library name
+          if (themeProvider.networkDiscoveryEnabled) {
+            try {
+              await MdnsService.stop();
+              final authService =
+                  Provider.of<AuthService>(context, listen: false);
+              final libraryUuid =
+                  await authService.getOrCreateLibraryUuid();
+              await MdnsService.startAnnouncing(
+                result,
+                ApiService.httpPort,
+                libraryId: libraryUuid,
+              );
+              await MdnsService.startDiscovery();
+            } catch (e) {
+              debugPrint('mDNS restart after name change failed: $e');
+            }
+          }
+          // Update hub profile with new name (if registered)
+          try {
+            final hubProvider = Provider.of<HubDirectoryProvider>(
+              context,
+              listen: false,
+            );
+            final hubConfig = hubProvider.config;
+            if (hubConfig != null) {
+              final bookCount = await FfiService().countBooks();
+              await hubProvider.register(
+                nodeId: hubConfig.nodeId,
+                displayName: result,
+                bookCount: bookCount,
+                isListed: hubConfig.isListed,
+                requiresApproval: hubConfig.requiresApproval,
+                acceptFrom: hubConfig.acceptFrom,
+              );
+            }
+          } catch (e) {
+            debugPrint('Hub name update failed: $e');
+          }
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(

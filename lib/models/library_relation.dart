@@ -1,8 +1,8 @@
 import 'network_member.dart';
 import 'hub_directory.dart';
 
-/// Filter for the unified libraries list.
-enum LibraryFilter { nearby, following, discover }
+/// Filter for the unified network list.
+enum LibraryFilter { all, nearby, following, borrowers }
 
 /// A unified view of a remote library, regardless of how we're connected to it.
 ///
@@ -30,11 +30,16 @@ class LibraryRelation {
   bool get isPeer => peer != null;
   bool get isFollowing => follow != null;
 
-  /// Display name: explicit > peer name > truncated node_id.
+  /// Display name: explicit > peer customDisplayName > peer name > truncated node_id.
   String get name =>
       _displayName ??
-      peer?.name ??
+      peer?.displayName ??
       (nodeId.length >= 8 ? '…${nodeId.substring(nodeId.length - 8)}' : nodeId);
+
+  /// Whether the display name has been customized by the user.
+  bool get hasCustomName =>
+      _displayName != null ||
+      (peer?.customDisplayName != null && peer!.customDisplayName!.isNotEmpty);
 
   /// Can browse the catalog (active follow or any peer connection).
   bool get canBrowseCatalog =>

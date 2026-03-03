@@ -162,9 +162,10 @@ class _StackedCovers extends StatelessWidget {
         final availW = constraints.maxWidth;
         final availH = constraints.maxHeight;
 
-        // Front cover occupies 82% of the available width.
-        // Standard book ratio: width / height = 0.67.
-        final coverW = availW * 0.82;
+        // When stacking multiple covers, the front cover uses 82% of the width
+        // to leave room for the fan effect. A single cover fills more space.
+        final widthRatio = visibleCount == 1 ? 0.94 : 0.82;
+        final coverW = availW * widthRatio;
         final coverH = math.min(availH * 0.94, coverW / 0.67);
 
         return Stack(
@@ -181,6 +182,33 @@ class _StackedCovers extends StatelessWidget {
                 isTop: i == visibleCount - 1,
                 theme: theme,
               ),
+
+            // "Collection" tag, anchored to the top-right of the front cover.
+            Positioned(
+              top: (availH - coverH) / 2 + 4,
+              right: (availW - coverW) / 2 + 4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  TranslationService.translate(context, 'collection_tag')
+                      .toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 8,
+                    fontWeight: FontWeight.bold,
+                    height: 1,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ),
 
             // Book count badge, anchored to the top-right of the front cover.
             if (bookCount > 1)
@@ -743,7 +771,7 @@ class _CollectionCoverCardState extends State<CollectionCoverCard> {
     final color = _colorFromName(widget.collection.name);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final w = constraints.maxWidth * 0.82;
+        final w = constraints.maxWidth * 0.94;
         final h = math.min(constraints.maxHeight * 0.94, w / 0.67);
         return Center(
           child: Container(
@@ -764,35 +792,12 @@ class _CollectionCoverCardState extends State<CollectionCoverCard> {
                 ),
               ],
             ),
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.collections_bookmark,
-                  color: Colors.white70,
-                  size: 28,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  widget.collection.name,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    shadows: [
-                      Shadow(
-                        offset: Offset(0, 1),
-                        blurRadius: 2,
-                        color: Colors.black45,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            child: const Center(
+              child: Icon(
+                Icons.collections_bookmark,
+                color: Colors.white70,
+                size: 32,
+              ),
             ),
           ),
         );

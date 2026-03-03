@@ -13,6 +13,7 @@ import '../data/repositories/tag_repository.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../theme/app_design.dart';
+import '../providers/flash_message_provider.dart';
 import '../providers/theme_provider.dart';
 
 class MigrationWizardScreen extends StatefulWidget {
@@ -633,6 +634,11 @@ class _MigrationWizardScreenState extends State<MigrationWizardScreen> {
       await apiService.resetApp();
       await authService.clearAll(); // Clear all auth data
       await themeProvider.resetSetup(); // Reset setup state
+
+      // Clear flash message dismissed state so they reappear after reset
+      if (mounted) {
+        Provider.of<FlashMessageProvider>(context, listen: false).reset();
+      }
 
       if (mounted) {
         setState(() => _isProcessing = false);

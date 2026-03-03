@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../providers/theme_provider.dart';
 import '../services/api_service.dart';
 import '../services/mdns_service.dart';
 import '../services/translation_service.dart';
@@ -52,7 +53,7 @@ class _InviteShareSheetState extends State<InviteShareSheet> {
     try {
       final apiService = Provider.of<ApiService>(context, listen: false);
 
-      // Resolve local IP (same strategy as ShareContactView)
+      // Resolve local IP (best-effort for LAN connections)
       String? localIp;
       try {
         final info = NetworkInfo();
@@ -63,14 +64,9 @@ class _InviteShareSheetState extends State<InviteShareSheet> {
       } catch (_) {}
       localIp ??= await MdnsService.getValidLanIp();
 
-      if (localIp == null) {
-        if (mounted) setState(() => _isLoading = false);
-        return;
-      }
-
       final configRes = await apiService.getLibraryConfig();
-      final libraryName =
-          configRes.data['library_name'] as String? ?? 'My Library';
+      // Library name from ThemeProvider (single source of truth)
+      final libraryName = Provider.of<ThemeProvider>(context, listen: false).libraryName;
       final libraryUuid = configRes.data['library_uuid'] as String?;
       final ed25519Key = configRes.data['ed25519_public_key'] as String?;
       final x25519Key = configRes.data['x25519_public_key'] as String?;
@@ -78,9 +74,20 @@ class _InviteShareSheetState extends State<InviteShareSheet> {
       final mailboxId = configRes.data['mailbox_id'] as String?;
       final relayWriteToken = configRes.data['relay_write_token'] as String?;
 
+      // No WiFi IP AND no relay credentials: cannot generate invite
+      if (localIp == null && (relayUrl == null || mailboxId == null)) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+
+      // Build URL: use LAN URL if available, empty string for relay-only
+      final peerUrl = localIp != null
+          ? "http://$localIp:${ApiService.httpPort}"
+          : "";
+
       final payload = buildInvitePayload(
         name: libraryName,
-        url: "http://$localIp:${ApiService.httpPort}",
+        url: peerUrl,
         libraryUuid: libraryUuid,
         ed25519PublicKey: ed25519Key,
         x25519PublicKey: x25519Key,
@@ -269,7 +276,32 @@ class _InviteShareSheetState extends State<InviteShareSheet> {
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
+        // Info: works on any network
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.cell_tower,
+                  size: 16, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  TranslationService.translate(
+                      context, 'invite_works_everywhere'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
         // Buttons row
         Row(
           children: [

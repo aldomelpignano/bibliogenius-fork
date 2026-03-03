@@ -9,7 +9,7 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'frb.freezed.dart';
 
 // These functions are ignored because they are not marked as `pub`: `db`, `device_pairing_svc`, `device_sync_svc`, `entries_to_frb`, `hub_db`, `hub_directory_svc`, `install_panic_hook`, `load_google_books_api_key`, `runtime`, `track_to_frb`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Initialize the FFI backend with database at the given path
 /// Must be called before any other FFI functions
@@ -114,6 +114,12 @@ Future<String> generateInviteLinkFfi({
 /// Parse an invite link, extracting the JSON payload from the URL fragment.
 Future<String> parseInviteLinkFfi({required String link}) =>
     RustLib.instance.api.crateApiFrbParseInviteLinkFfi(link: link);
+
+/// Update only the library name in the database (library_config + libraries tables).
+/// This is the FFI-direct path used by the flash editor on the home screen.
+/// Only touches the `name` and `updated_at` fields - no other settings are overwritten.
+Future<void> updateLibraryNameFfi({required String name}) =>
+    RustLib.instance.api.crateApiFrbUpdateLibraryNameFfi(name: name);
 
 /// Create a new book
 Future<FrbBook> createBook({required FrbBook book}) =>
@@ -525,12 +531,13 @@ Future<FrbDirectoryConfig> hubDirectoryRegister({
   required FrbRegisterParams params,
 }) => RustLib.instance.api.crateApiFrbHubDirectoryRegister(params: params);
 
-/// Pushes the local ISBN list to the hub catalog cache.
+/// Pushes the local ISBN list to the hub catalog cache (legacy, ISBN-only).
 Future<void> hubDirectoryPushCatalog({required List<String> isbnList}) =>
     RustLib.instance.api.crateApiFrbHubDirectoryPushCatalog(isbnList: isbnList);
 
-/// Reads all non-null ISBNs from the local books table and pushes the catalog
-/// to the hub. Returns the number of ISBNs pushed.
+/// Reads all books with ISBNs from the local database, collects title and
+/// first author, and pushes the enriched catalog to the hub.
+/// Returns the number of entries pushed.
 Future<int> hubDirectorySyncCatalog() =>
     RustLib.instance.api.crateApiFrbHubDirectorySyncCatalog();
 
@@ -551,8 +558,9 @@ Future<FrbHubProfile> hubDirectoryGetProfile({required String nodeId}) =>
 
 /// Gets the catalog of a library (public or approved follow).
 /// Returns enriched entries (ISBN + title + author) when available.
-Future<List<FrbCatalogEntry>> hubDirectoryGetCatalog({required String nodeId}) =>
-    RustLib.instance.api.crateApiFrbHubDirectoryGetCatalog(nodeId: nodeId);
+Future<List<FrbCatalogEntry>> hubDirectoryGetCatalog({
+  required String nodeId,
+}) => RustLib.instance.api.crateApiFrbHubDirectoryGetCatalog(nodeId: nodeId);
 
 /// Sends a follow request to a library.
 Future<FrbHubFollow> hubDirectoryFollow({required String nodeId}) =>
@@ -629,6 +637,11 @@ Future<void> removeBookFromCollection({
   bookId: bookId,
 );
 
+/// Get library view statistics (peer and follower views).
+/// Returns a JSON string with total_peer, total_follower, total, and daily breakdown.
+Future<String> getLibraryViewStats() =>
+    RustLib.instance.api.crateApiFrbGetLibraryViewStats();
+
 /// Returns all collections a book belongs to.
 Future<List<FrbCollection>> getBookCollections({required int bookId}) =>
     RustLib.instance.api.crateApiFrbGetBookCollections(bookId: bookId);
@@ -683,29 +696,13 @@ sealed class FrbBookMetadata with _$FrbBookMetadata {
   }) = _FrbBookMetadata;
 }
 
-/// Enriched catalog entry (ISBN + title + author) for hub-stored book data.
-class FrbCatalogEntry {
-  final String isbn;
-  final String title;
-  final String? author;
-
-  const FrbCatalogEntry({
-    required this.isbn,
-    required this.title,
-    this.author,
-  });
-
-  @override
-  int get hashCode => isbn.hashCode ^ title.hashCode ^ author.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is FrbCatalogEntry &&
-          runtimeType == other.runtimeType &&
-          isbn == other.isbn &&
-          title == other.title &&
-          author == other.author;
+@freezed
+sealed class FrbCatalogEntry with _$FrbCatalogEntry {
+  const factory FrbCatalogEntry({
+    required String isbn,
+    required String title,
+    String? author,
+  }) = _FrbCatalogEntry;
 }
 
 /// Collection data exposed to Flutter.

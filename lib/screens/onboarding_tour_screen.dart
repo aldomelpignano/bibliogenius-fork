@@ -122,9 +122,8 @@ class _OnboardingTourScreenState extends State<OnboardingTourScreen>
 
   void _finishTour() {
     WizardService.markOnboardingTourSeen();
-    // Navigate to the main dashboard after onboarding completes
-    // Using GoRouter to replace the onboarding route with the dashboard route
-    GoRouter.of(context).go('/dashboard');
+    // Navigate to the library after onboarding completes
+    GoRouter.of(context).go('/books');
   }
 
   void _onPageChanged(int index) {

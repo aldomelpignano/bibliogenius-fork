@@ -159,6 +159,21 @@ class _FilterBar extends StatelessWidget {
 // AVOID: Business logic in widgets
 ```
 
+### DRY - No Duplicated Styling
+
+When multiple widgets share the same visual style (colors, decorations, paddings), extract shared values into file-level helpers (constants, functions, or a small utility class). Do NOT copy-paste `BoxDecoration`, color definitions, or icon badge patterns across widgets.
+
+```dart
+// GOOD: shared helpers at top of file
+const _cardBg = Color(0xFFE8F6F5);
+BoxDecoration _cardDecoration(bool isDark) => BoxDecoration(...);
+Widget _iconBadge(ColorScheme cs, IconData icon) => Container(...);
+
+// BAD: same decoration duplicated in 3 widgets
+// Widget A: decoration: BoxDecoration(color: Color(0xFFE8F6F5), ...)
+// Widget B: decoration: BoxDecoration(color: Color(0xFFE8F6F5), ...)
+```
+
 ### Const Constructors
 
 ```dart

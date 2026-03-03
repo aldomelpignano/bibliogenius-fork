@@ -64,7 +64,7 @@ class HubDirectoryProvider extends ChangeNotifier {
   // ── Catalog sync ────────────────────────────────────────────────────────
 
   /// True when the local book list has changed since the last catalog push.
-  bool _catalogDirty = false;
+  bool _catalogDirty = true;
 
   bool get catalogDirty => _catalogDirty;
 
