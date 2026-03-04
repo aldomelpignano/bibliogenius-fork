@@ -9,6 +9,7 @@ import '../data/repositories/tag_repository.dart';
 import '../services/api_service.dart';
 import '../models/tag.dart';
 import '../theme/app_design.dart';
+import '../providers/hub_directory_provider.dart';
 import '../providers/theme_provider.dart';
 
 /// Represents a book candidate for import
@@ -779,6 +780,9 @@ class _GleephImportScreenState extends State<GleephImportScreen> {
     }
 
     if (mounted) {
+      if (_importSuccessCount > 0) {
+        context.read<HubDirectoryProvider>().markCatalogDirty();
+      }
       setState(() {
         _isImporting = false;
         _currentImportingTitle = null;

@@ -5,6 +5,7 @@ import '../providers/pending_peers_provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/translation_service.dart';
 import 'app_drawer.dart';
+import 'flash_message_bar.dart';
 import '../utils/global_keys.dart';
 
 class ScaffoldWithNav extends StatelessWidget {
@@ -84,7 +85,14 @@ class ScaffoldWithNav extends StatelessWidget {
             width: 1,
             color: theme.dividerColor,
           )),
-          Expanded(child: child),
+          Expanded(
+            child: Column(
+              children: [
+                FlashMessageBar(applyTopSafeArea: !useRail),
+                Expanded(child: child),
+              ],
+            ),
+          ),
         ],
       ),
       ),
@@ -116,7 +124,7 @@ class ScaffoldWithNav extends StatelessWidget {
               );
             },
           ),
-          label: Text(TranslationService.translate(context, 'network')),
+          label: Text(TranslationService.translate(context, 'nav_network')),
         ),
       ),
       _NavItem(

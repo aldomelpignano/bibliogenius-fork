@@ -21,8 +21,10 @@ import '../models/tag.dart';
 import '../widgets/collection_selector.dart';
 import '../models/collection.dart';
 
+import '../widgets/app_snack_bar.dart';
 import '../widgets/book_complete_animation.dart';
 import '../utils/global_keys.dart';
+import '../utils/isbn_validator.dart';
 
 class EditBookScreen extends StatefulWidget {
   final Book book;
@@ -244,9 +246,13 @@ class _EditBookScreenState extends State<EditBookScreen> {
 
   void _onIsbnChanged() {
     if (!mounted || _isSaving) return;
-    final isbn = _isbnController.text.replaceAll(RegExp(r'[^0-9X]'), '');
+    final isbn = IsbnValidator.clean(_isbnController.text).replaceAll(RegExp(r'[^0-9X]'), '');
     if ((isbn.length == 10 || isbn.length == 13) && !_isFetchingDetails) {
       _fetchBookDetails(isbn);
+      // Non-blocking validation feedback
+      if (!IsbnValidator.isValid(isbn)) {
+        AppSnackBar.info(context, TranslationService.translate(context, 'isbn_checksum_warning'));
+      }
     }
   }
 
@@ -382,7 +388,7 @@ class _EditBookScreenState extends State<EditBookScreen> {
       'title': _titleController.text,
       'publisher': _publisherController.text,
       'publication_year': int.tryParse(_yearController.text),
-      'isbn': _isbnController.text,
+      'isbn': IsbnValidator.clean(_isbnController.text),
       'summary': _summaryController.text,
       'reading_status': _readingStatus,
       'cover_url': _coverUrl,
@@ -684,7 +690,7 @@ class _EditBookScreenState extends State<EditBookScreen> {
                     ),
                   )
                 : ElevatedButton.icon(
-                    onPressed: _saveBook,
+                    onPressed: _isFetchingDetails ? null : _saveBook,
                     icon: const Icon(Icons.check, size: 18),
                     label: Text(
                       TranslationService.translate(context, 'save_changes') ??

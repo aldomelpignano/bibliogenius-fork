@@ -209,48 +209,6 @@ class _AddContactScreenState extends State<AddContactScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            SizedBox(
-              width: double.infinity,
-              child: SegmentedButton<String>(
-                segments: [
-                  ButtonSegment<String>(
-                    value: 'borrower',
-                    label: Text(
-                      TranslationService.translate(context, 'role_borrower'),
-                    ),
-                    icon: const Icon(Icons.person),
-                  ),
-                  ButtonSegment<String>(
-                    value: 'library',
-                    label: Text(
-                      TranslationService.translate(context, 'role_library'),
-                    ),
-                    icon: const Icon(Icons.library_books),
-                  ),
-                ],
-                selected: {_type},
-                onSelectionChanged: (selection) {
-                  setState(() => _type = selection.first);
-                },
-              ),
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                TranslationService.translate(
-                      context,
-                      _type == 'borrower'
-                          ? 'contact_type_person_hint'
-                          : 'contact_type_library_hint',
-                    ) ??
-                    '',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-            ),
-            const SizedBox(height: 16),
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(

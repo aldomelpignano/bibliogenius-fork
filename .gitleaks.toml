@@ -1,0 +1,5 @@
+[allowlist]
+  description = "Flutter/Dart false positives"
+  paths = ['''\.dart$''']
+  regexTarget = "match"
+  regexes = ['''Color\(0x[0-9A-Fa-f]{8,10}\)''']

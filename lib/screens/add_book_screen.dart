@@ -17,6 +17,8 @@ import '../data/repositories/copy_repository.dart';
 import '../services/api_service.dart';
 import '../services/translation_service.dart';
 import '../services/sync_service.dart';
+import '../providers/book_refresh_notifier.dart';
+import '../providers/hub_directory_provider.dart';
 import '../providers/theme_provider.dart';
 import '../utils/book_status.dart';
 import '../models/book.dart';
@@ -28,6 +30,8 @@ import '../widgets/collection_selector.dart';
 import '../widgets/shimmer_loading.dart';
 import '../widgets/edition_picker_sheet.dart';
 import '../models/collection.dart';
+import '../utils/isbn_validator.dart';
+import '../widgets/app_snack_bar.dart';
 
 class AddBookScreen extends StatefulWidget {
   final String? isbn;
@@ -168,7 +172,7 @@ class _AddBookScreenState extends State<AddBookScreen> {
 
   void _onIsbnChanged() {
     if (!mounted || _isSaving) return;
-    final isbn = _isbnController.text.replaceAll(RegExp(r'[^0-9X]'), '');
+    final isbn = IsbnValidator.clean(_isbnController.text).replaceAll(RegExp(r'[^0-9X]'), '');
 
     // Reset last lookup if ISBN changed significantly (not just adding digits)
     if (_lastLookedUpIsbn != null && !isbn.startsWith(_lastLookedUpIsbn!)) {
@@ -180,6 +184,10 @@ class _AddBookScreenState extends State<AddBookScreen> {
         !_isFetchingDetails &&
         isbn != _lastLookedUpIsbn) {
       _fetchBookDetails(isbn);
+      // Non-blocking validation feedback
+      if (!IsbnValidator.isValid(isbn)) {
+        AppSnackBar.info(context, TranslationService.translate(context, 'isbn_checksum_warning'));
+      }
     }
   }
 
@@ -348,7 +356,7 @@ class _AddBookScreenState extends State<AddBookScreen> {
           : _authorController.text,
       publisher: _publisherController.text,
       publicationYear: int.tryParse(_publicationYearController.text),
-      isbn: _isbnController.text,
+      isbn: IsbnValidator.clean(_isbnController.text),
       readingStatus: _readingStatus,
       summary: _summaryController.text,
       coverUrl: _coverUrl,
@@ -388,31 +396,10 @@ class _AddBookScreenState extends State<AddBookScreen> {
       }
 
       if (mounted) {
-        // Remove listener before clearing to prevent _onIsbnChanged from firing
-        _isbnController.removeListener(_onIsbnChanged);
         _debounce?.cancel();
 
-        // Clear all form fields to prevent Android autofill from retaining values
-        _titleController.clear();
-        _authorController.clear();
-        _publisherController.clear();
-        _publicationYearController.clear();
-        _isbnController.clear();
-        _summaryController.clear();
-        _priceController.clear();
-        _tagsController.clear();
-
-        // Reset all state variables
-        _authors.clear();
-        _selectedTags.clear();
-        _selectedCollections.clear();
-        _coverUrl = null;
-        _tempCoverPath = null;
-        _authorsData = null;
-        _isDuplicate = false;
-        _duplicateBook = null;
-        _lastLookedUpIsbn = null;
-        _selectedDigitalFormats.clear();
+        // Mark catalog dirty so the hub gets updated on next sync
+        context.read<HubDirectoryProvider>().markCatalogDirty();
 
         // Trigger sync with peers in background (dont await to keep UI snappy)
         try {
@@ -427,8 +414,13 @@ class _AddBookScreenState extends State<AddBookScreen> {
         // Small delay to let animation be visible before navigation
         await Future.delayed(const Duration(milliseconds: 400));
         if (mounted) {
+          context.read<BookRefreshNotifier>().refresh();
           context.pop(newBookId); // Return the new book ID
         }
+        // No need to clear controllers - they are disposed with the screen.
+        // Clearing before pop triggers RawAutocomplete listeners on an
+        // unmounted widget, causing an unhandled exception that prevents
+        // navigation and leaves the user on a blank form.
       }
     } catch (e) {
       if (mounted) {
@@ -559,13 +551,18 @@ class _AddBookScreenState extends State<AddBookScreen> {
                 : isMobile
                 // Mobile: shorter button with just "Enregistrer"
                 ? TextButton(
-                    onPressed: _saveBook,
+                    onPressed: (_isAutocompleteFetching || _isFetchingDetails)
+                        ? null
+                        : _saveBook,
                     key: const Key('saveBookButton'),
                     style: TextButton.styleFrom(
                       backgroundColor: Colors.white.withValues(alpha: 0.2),
                       foregroundColor: Theme.of(
                         context,
                       ).appBarTheme.foregroundColor,
+                      disabledForegroundColor: Theme.of(
+                        context,
+                      ).appBarTheme.foregroundColor?.withValues(alpha: 0.4),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 8,
@@ -581,7 +578,9 @@ class _AddBookScreenState extends State<AddBookScreen> {
                   )
                 // Desktop: full button
                 : ElevatedButton(
-                    onPressed: _saveBook,
+                    onPressed: (_isAutocompleteFetching || _isFetchingDetails)
+                        ? null
+                        : _saveBook,
                     key: const Key('saveBookButton'),
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.zero,
@@ -1781,32 +1780,21 @@ class _AddBookScreenState extends State<AddBookScreen> {
                   child: isLoading
                       ? _buildShimmerPlaceholder()
                       : hasCover
-                          ? _coverUrl!.startsWith('/')
-                              ? Image.file(
-                                  File(_coverUrl!),
-                                  key: ValueKey(_coverUrl),
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(
-                                    color: Colors.grey[200],
-                                    child: const Icon(Icons.broken_image,
-                                        color: Colors.grey),
-                                  ),
-                                )
-                              : CachedBookCover(
-                                  key: ValueKey(_coverUrl),
-                                  imageUrl: _coverUrl!,
-                                  fit: BoxFit.cover,
-                                  placeholder: Container(
-                                    color: Colors.grey[200],
-                                    child: const Icon(Icons.image,
-                                        color: Colors.grey),
-                                  ),
-                                  errorWidget: Container(
-                                    color: Colors.grey[200],
-                                    child: const Icon(Icons.broken_image,
-                                        color: Colors.grey),
-                                  ),
-                                )
+                          ? CachedBookCover(
+                              key: ValueKey(_coverUrl),
+                              imageUrl: _coverUrl!,
+                              fit: BoxFit.cover,
+                              placeholder: Container(
+                                color: Colors.grey[200],
+                                child: const Icon(Icons.image,
+                                    color: Colors.grey),
+                              ),
+                              errorWidget: Container(
+                                color: Colors.grey[200],
+                                child: const Icon(Icons.broken_image,
+                                    color: Colors.grey),
+                              ),
+                            )
                           : Container(
                               key: const ValueKey('no_cover'),
                               color: Colors.grey[200],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/collection.dart';
 
+import '../../providers/hub_directory_provider.dart';
 import '../../services/translation_service.dart';
 import '../../data/repositories/collection_repository.dart';
 import '../../services/api_service.dart';
@@ -286,6 +287,7 @@ class _ImportFromSearchScreenState extends State<ImportFromSearchScreen>
       }
 
       if (mounted) {
+        context.read<HubDirectoryProvider>().markCatalogDirty();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -402,6 +404,7 @@ class _ImportFromSearchScreenState extends State<ImportFromSearchScreen>
       );
 
       if (successCount > 0) {
+        context.read<HubDirectoryProvider>().markCatalogDirty();
         Navigator.pop(context, true);
       }
     }

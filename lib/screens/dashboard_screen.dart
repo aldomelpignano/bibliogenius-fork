@@ -110,10 +110,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           if (config['show_borrowed_books'] != true) {
             books = books.where((b) => b.readingStatus != 'borrowed').toList();
           }
-          final name = config['library_name'] ?? config['name'];
-          if (name != null) {
-            themeProvider.setLibraryName(name);
-          }
+          // Library name is managed by ThemeProvider (SharedPreferences + FFI)
         }
 
         if (mounted) {
@@ -212,10 +209,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         if (mounted) {
           setState(() {
             final config = configRes.data;
-            final name = config?['library_name'] ?? config?['name'];
-            if (name != null) {
-              themeProvider.setLibraryName(name);
-            }
+            // Library name is managed by ThemeProvider (SharedPreferences + FFI)
             final profileType = config?['profile_type'];
             if (profileType != null) {
               themeProvider.setProfileType(profileType);
@@ -365,22 +359,105 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     // EMPTY STATE Check
     if (_allBooks.isEmpty) {
-      // Import PremiumEmptyState if not already imported, or use a basic one if not available.
-      // Assuming PremiumEmptyState is available in the project structure at widgets/premium_empty_state.dart
-      // If imports are missing, I'll need to add them, but I'm editing the state class here.
-      // Since I see it used in other files in context, it should be importable.
-      // NOTE: I need to ensure the import exists at the top of the file!
+      final colorScheme = Theme.of(context).colorScheme;
       return Center(
-        child: PremiumEmptyState(
-          message: TranslationService.translate(context, 'empty_library_title'),
-          description: TranslationService.translate(
-            context,
-            'empty_library_subtitle',
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.auto_stories_rounded,
+                  size: 72,
+                  color: colorScheme.primary.withValues(alpha: 0.7),
+                ),
+              ),
+              const SizedBox(height: 32),
+              Text(
+                TranslationService.translate(context, 'welcome_title'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                TranslationService.translate(
+                  context,
+                  'empty_library_subtitle',
+                ),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 36),
+              FilledButton.icon(
+                onPressed: () => context.push('/scan'),
+                icon: const Icon(Icons.qr_code_scanner_rounded),
+                label: Text(
+                  TranslationService.translate(context, 'scan_first_book'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 28,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              OutlinedButton.icon(
+                  onPressed: () => context.push('/search/external'),
+                  icon: Icon(
+                    Icons.travel_explore_rounded,
+                    color: colorScheme.primary,
+                  ),
+                  label: Text(
+                    TranslationService.translate(
+                      context,
+                      'btn_search_book_online',
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 28,
+                      vertical: 14,
+                    ),
+                    side: BorderSide(
+                      color: colorScheme.primary.withValues(alpha: 0.3),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                  ),
+                ),
+            ],
           ),
-          icon: Icons.library_books_outlined,
-          buttonLabel: TranslationService.translate(context, 'scan_first_book'),
-          onAction: () => context.push('/books/add'),
-          colorOverride: Colors.white,
         ),
       );
     }
@@ -426,7 +503,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                         (_stats['active_loans'] ?? 0).toString(),
                         Icons.arrow_upward,
                         isAccent: true,
-                        onTap: () => context.push('/network?tab=lent'),
+                        onTap: () => context.push('/requests?tab=lent'),
                       ),
                       if (!themeProvider.isLibrarian)
                         _buildStatCard(
@@ -437,7 +514,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           ),
                           (_stats['borrowed_count'] ?? 0).toString(),
                           Icons.arrow_downward,
-                          onTap: () => context.push('/network?tab=borrowed'),
+                          onTap: () => context.push('/requests?tab=borrowed'),
                         ),
                       if (!isKid)
                         _buildStatCard(

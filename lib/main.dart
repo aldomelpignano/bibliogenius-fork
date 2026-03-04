@@ -56,6 +56,8 @@ import 'screens/profile_screen.dart';
 import 'screens/setup_screen.dart';
 
 import 'screens/peer_book_list_screen.dart';
+import 'screens/peer_detail_screen.dart';
+import 'models/library_relation.dart';
 import 'screens/shelf_management_screen.dart';
 import 'screens/search_peer_screen.dart';
 import 'screens/memory_game_screen.dart';
@@ -68,6 +70,7 @@ import 'screens/help_screen.dart';
 import 'screens/network_search_screen.dart';
 import 'screens/onboarding_tour_screen.dart';
 import 'screens/network_screen.dart';
+import 'screens/borrow_requests_screen.dart';
 import 'screens/library_screen.dart';
 import 'screens/feedback_screen.dart';
 import 'screens/settings_screen.dart';
@@ -78,9 +81,9 @@ import 'screens/device_pairing_screen.dart';
 import 'screens/sync_review_screen.dart';
 import 'screens/external_search_screen.dart';
 import 'screens/invite_acceptance_screen.dart';
-import 'screens/directory_screen.dart';
 import 'screens/library_catalog_screen.dart';
 import 'providers/hub_directory_provider.dart';
+import 'providers/flash_message_provider.dart';
 import 'package:app_links/app_links.dart';
 
 import 'services/wizard_service.dart';
@@ -205,30 +208,41 @@ void main([List<String>? args]) async {
       debugPrint('FFI: Failed to start HTTP server: $e');
     }
 
+    // Initialize E2EE identity if any network feature is active
+    // (local discovery OR remote reachable via relay).
+    // Identity is required for both mDNS key exchange and relay E2EE.
+    String? ed25519Key;
+    String? x25519Key;
+    String? libraryUuid;
+
+    if (themeProvider.networkDiscoveryEnabled ||
+        themeProvider.remoteReachableEnabled) {
+      try {
+        final authService = AuthService();
+        libraryUuid = await authService.getOrCreateLibraryUuid();
+
+        await frb.initIdentityFfi(libraryUuid: libraryUuid);
+        final keysJson = await frb.getPublicKeysFfi();
+        final keys = Map<String, dynamic>.from(
+          const JsonDecoder().convert(keysJson) as Map,
+        );
+        ed25519Key = keys['ed25519'] as String?;
+        x25519Key = keys['x25519'] as String?;
+        debugPrint(
+            'E2EE: Identity initialized (hasKeys=${ed25519Key != null})');
+      } catch (e) {
+        debugPrint('E2EE: Identity init failed (non-blocking): $e');
+      }
+    }
+
     // Auto-initialize mDNS for local network discovery (Native Bonjour)
     // This makes the app discoverable on the local WiFi network
     // Only start if user has enabled network discovery in settings
     if (themeProvider.networkDiscoveryEnabled) {
       try {
-        final authService = AuthService();
-        final libraryUuid = await authService.getOrCreateLibraryUuid();
-
-        // Initialize E2EE identity (generates or loads keypair)
-        String? ed25519Key;
-        String? x25519Key;
-        if (useFfi) {
-          try {
-            await frb.initIdentityFfi(libraryUuid: libraryUuid);
-            final keysJson = await frb.getPublicKeysFfi();
-            final keys = Map<String, dynamic>.from(
-              const JsonDecoder().convert(keysJson) as Map,
-            );
-            ed25519Key = keys['ed25519'] as String?;
-            x25519Key = keys['x25519'] as String?;
-            debugPrint('E2EE: Identity initialized (hasKeys=${ed25519Key != null})');
-          } catch (e) {
-            debugPrint('E2EE: Identity init failed (non-blocking): $e');
-          }
+        if (libraryUuid == null) {
+          final authService = AuthService();
+          libraryUuid = await authService.getOrCreateLibraryUuid();
         }
 
         // Use clean library name for mDNS (no hostname suffix).
@@ -247,8 +261,14 @@ void main([List<String>? args]) async {
       } catch (mdnsError) {
         debugPrint('mDNS: Init failed (non-blocking): $mdnsError');
       }
+    } else {
+      debugPrint('mDNS: Disabled by user preference');
+    }
 
-      // Auto-setup relay hub for WAN communication (if not already configured)
+    // Auto-setup relay hub for WAN communication (if not already configured)
+    // Relay is independent of mDNS: it enables connectivity via the hub
+    // even without local network discovery (e.g. on cellular/different WiFi)
+    if (themeProvider.remoteReachableEnabled) {
       try {
         final localDio = Dio(
           BaseOptions(baseUrl: 'http://localhost:$httpPort'),
@@ -263,7 +283,7 @@ void main([List<String>? args]) async {
             debugPrint('Relay: Already configured (${configRes.data['relay_url']})');
           }
         } on DioException {
-          // 404 = no config yet → needs setup
+          // 404 = no config yet - needs setup
         }
         if (needsSetup) {
           await localDio.post(
@@ -275,8 +295,6 @@ void main([List<String>? args]) async {
       } catch (e) {
         debugPrint('Relay: Auto-setup failed (non-blocking): $e');
       }
-    } else {
-      debugPrint('mDNS: Disabled by user preference');
     }
   }
 
@@ -381,7 +399,13 @@ class MyApp extends StatelessWidget {
           create: (_) => DeviceSyncProvider(),
         ),
         ChangeNotifierProvider<HubDirectoryProvider>(
-          create: (_) => HubDirectoryProvider(),
+          create: (_) => HubDirectoryProvider()
+            ..loadHubEnabled()
+            ..loadContactInfo()
+            ..loadCustomFollowNames(),
+        ),
+        ChangeNotifierProvider<FlashMessageProvider>(
+          create: (_) => FlashMessageProvider(),
         ),
       ],
       child: const AppRouter(),
@@ -479,7 +503,7 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
         }
 
         // Auth check
-        final isLoggedIn = await authService.isLoggedIn();
+        var isLoggedIn = await authService.isLoggedIn();
 
         if (!isLoggedIn) {
           final hasPassword = await authService.hasPasswordSet();
@@ -494,6 +518,7 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
           await authService.saveToken(
             'local-auto-token-${DateTime.now().millisecondsSinceEpoch}',
           );
+          isLoggedIn = true;
           debugPrint('✅ Redirect: auto-logged in (no password set)');
           // Continue to destination (now logged in)
         }
@@ -693,15 +718,18 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
             ),
             GoRoute(
               path: '/network',
+              redirect: (context, state) {
+                // Loans tabs moved to /requests
+                final tab = state.uri.queryParameters['tab'];
+                if (tab == 'lent' || tab == 'borrowed') {
+                  return '/requests?tab=$tab';
+                }
+                return null;
+              },
               builder: (context, state) {
-                // Support query parameter for initial loans tab: ?tab=lent or ?tab=borrowed
-                final loansTab = state.uri.queryParameters['tab'];
-                // If a loans tab is specified, go to Loans tab (index 1)
-                final initialIndex = loansTab != null ? 1 : 0;
-                return NetworkScreen(
-                  initialIndex: initialIndex,
-                  initialLoansTab: loansTab,
-                );
+                final tab = state.uri.queryParameters['tab'];
+                final initialIndex = tab == 'discover' ? 1 : 0;
+                return NetworkScreen(initialIndex: initialIndex);
               },
               routes: [
                 GoRoute(
@@ -792,7 +820,10 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
             GoRoute(path: '/p2p', redirect: (context, state) => '/network'),
             GoRoute(
               path: '/requests',
-              builder: (context, state) => const NetworkScreen(initialIndex: 1),
+              builder: (context, state) {
+                final tab = state.uri.queryParameters['tab'];
+                return LoansScreen(isTabView: false, initialTab: tab);
+              },
             ),
             GoRoute(
               path: '/profile',
@@ -820,7 +851,17 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
                       peerId: peer['id'],
                       peerName: peer['name'],
                       peerUrl: peer['url'],
+                      hasRelayCredentials:
+                          peer['hasRelayCredentials'] as bool? ?? false,
+                      nodeId: peer['nodeId'] as String?,
                     );
+                  },
+                ),
+                GoRoute(
+                  path: ':id/details',
+                  builder: (context, state) {
+                    final relation = state.extra as LibraryRelation;
+                    return PeerDetailScreen(relation: relation);
                   },
                 ),
                 GoRoute(
@@ -845,7 +886,15 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
             ),
             GoRoute(
               path: '/directory',
-              builder: (context, state) => const DirectoryScreen(),
+              redirect: (context, state) {
+                // DirectoryScreen absorbed into NetworkScreen Discover tab
+                if (state.uri.path == '/directory') {
+                  return '/network?tab=discover';
+                }
+                return null;
+              },
+              builder: (context, state) =>
+                  const NetworkScreen(initialIndex: 1),
               routes: [
                 GoRoute(
                   path: ':nodeId',
@@ -902,6 +951,62 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
     );
 
     _initDeepLinks();
+    _registerFlashMessages();
+  }
+
+  void _registerFlashMessages() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final flashProvider =
+          Provider.of<FlashMessageProvider>(context, listen: false);
+
+      // Flash A: Inline library name editor
+      flashProvider.register(FlashMessageDefinition(
+        key: 'flash_customize_library_name',
+        textKey: 'flash_customize_library_name',
+        icon: Icons.edit_outlined,
+        condition: (ctx) {
+          final tp = Provider.of<ThemeProvider>(ctx, listen: false);
+          return tp.libraryName == 'My Library';
+        },
+        excludedRoutes: ['/settings', '/setup', '/onboarding', '/profile'],
+        contentBuilder: (ctx, dismiss) => _FlashLibraryNameEditor(
+          onDismiss: dismiss,
+        ),
+      ));
+
+      // Flash B: Inline preset selector chips
+      flashProvider.register(FlashMessageDefinition(
+        key: 'flash_discover_presets',
+        textKey: 'flash_discover_presets',
+        icon: Icons.tune,
+        condition: (_) => true,
+        allowedRoutes: ['/books', '/dashboard', '/shelves', '/collections'],
+        contentBuilder: (ctx, dismiss) => _FlashPresetSelector(
+          onDismiss: dismiss,
+        ),
+      ));
+
+      flashProvider.loadDismissedFlags();
+
+      // Wire incoming peer detection to ephemeral flashes
+      final pendingProvider =
+          Provider.of<PendingPeersProvider>(context, listen: false);
+      pendingProvider.onNewPeerDetected = (peer) {
+        final isPending =
+            (peer['connection_status'] as String?) == 'pending';
+        flashProvider.addEphemeralPeer(EphemeralPeerFlash(
+          peerId: peer['id'] as int,
+          peerName: peer['name'] as String? ?? 'Unknown',
+          peerUrl: peer['url'] as String?,
+          nodeId: peer['library_uuid'] as String?,
+          hasRelayCredentials:
+              (peer['relay_url'] as String?)?.isNotEmpty == true &&
+                  (peer['mailbox_id'] as String?)?.isNotEmpty == true,
+          connectedAt: DateTime.now(),
+          isPending: isPending,
+        ));
+      };
+    });
   }
 
   void _initDeepLinks() {
@@ -1006,6 +1111,13 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
           debugPrint('Server unavailable after app resume');
         }
       });
+
+      // Push catalog to hub if books changed since last sync
+      try {
+        context.read<HubDirectoryProvider>().syncCatalogIfDirty();
+      } catch (e) {
+        debugPrint('Catalog sync on resume skipped: $e');
+      }
     }
   }
 
@@ -1048,6 +1160,264 @@ class _AppRouterState extends State<AppRouter> with WidgetsBindingObserver {
         );
       },
       routerConfig: _router,
+    );
+  }
+}
+
+/// Inline library name editor for Flash A.
+/// Shows a compact TextField pre-filled with the current name.
+/// An "OK" button appears when the text differs from the current value.
+class _FlashLibraryNameEditor extends StatefulWidget {
+  final VoidCallback onDismiss;
+  const _FlashLibraryNameEditor({required this.onDismiss});
+
+  @override
+  State<_FlashLibraryNameEditor> createState() =>
+      _FlashLibraryNameEditorState();
+}
+
+class _FlashLibraryNameEditorState extends State<_FlashLibraryNameEditor> {
+  late final TextEditingController _controller;
+  bool _dirty = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final tp = context.read<ThemeProvider>();
+    _controller = TextEditingController(text: tp.libraryName);
+    _controller.addListener(_onChanged);
+  }
+
+  void _onChanged() {
+    final current = context.read<ThemeProvider>().libraryName;
+    final dirty = _controller.text.trim() != current &&
+        _controller.text.trim().isNotEmpty;
+    if (dirty != _dirty) {
+      setState(() => _dirty = dirty);
+    }
+  }
+
+  Future<void> _save() async {
+    final name = _controller.text.trim();
+    if (name.isEmpty) return;
+    try {
+      // 1. Persist to SharedPreferences FIRST (frontend reads from here)
+      final tp = context.read<ThemeProvider>();
+      await tp.setLibraryName(name);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('ffi_library_name', name);
+      if (!mounted) return;
+      // 2. Persist to Rust DB via FFI (so HTTP /api/config also returns it)
+      try {
+        await FfiService().updateLibraryName(name);
+      } catch (e) {
+        debugPrint('FFI library name update failed (non-fatal): $e');
+      }
+      if (!mounted) return;
+      // 3. Update hub profile with new name (if registered)
+      try {
+        final hubProvider = context.read<HubDirectoryProvider>();
+        final hubConfig = hubProvider.config;
+        if (hubConfig != null) {
+          final bookCount = await FfiService().countBooks();
+          await hubProvider.register(
+            nodeId: hubConfig.nodeId,
+            displayName: name,
+            bookCount: bookCount,
+            isListed: hubConfig.isListed,
+            requiresApproval: hubConfig.requiresApproval,
+            acceptFrom: hubConfig.acceptFrom,
+            allowBorrowing: hubConfig.allowBorrowing,
+          );
+        }
+      } catch (e) {
+        debugPrint('Hub name update failed: $e');
+      }
+      if (!mounted) return;
+      widget.onDismiss();
+    } catch (e) {
+      debugPrint('Flash name save failed: $e');
+      if (!mounted) return;
+      widget.onDismiss();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Flexible(
+          child: Text(
+            TranslationService.translate(
+              context,
+              'flash_customize_library_name',
+            ),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: colorScheme.onSurface,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        SizedBox(
+          width: 160,
+          height: 34,
+          child: TextField(
+            controller: _controller,
+            style: TextStyle(
+              fontSize: 13,
+              color: colorScheme.onSurface,
+            ),
+            decoration: InputDecoration(
+              isDense: true,
+              filled: true,
+              fillColor: colorScheme.onSurface.withValues(alpha: 0.05),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: colorScheme.primary.withValues(alpha: 0.5),
+                  width: 1.5,
+                ),
+              ),
+              hintText: TranslationService.translate(
+                context,
+                'flash_library_name_hint',
+              ),
+              hintStyle: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+            ),
+          ),
+        ),
+        if (_dirty) ...[
+          const SizedBox(width: 6),
+          SizedBox(
+            height: 34,
+            child: FilledButton.tonal(
+              onPressed: _save,
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                minimumSize: const Size(0, 34),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'OK',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Inline preset selector for Flash B.
+/// Shows a compact text followed by wrapping chips with tooltips.
+class _FlashPresetSelector extends StatelessWidget {
+  final VoidCallback onDismiss;
+  const _FlashPresetSelector({required this.onDismiss});
+
+  static const _presets = [
+    (key: 'reader', icon: Icons.menu_book),
+    (key: 'librarian', icon: Icons.local_library),
+    (key: 'bookseller', icon: Icons.storefront),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Wrap(
+      spacing: 8,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text(
+          TranslationService.translate(context, 'flash_discover_presets'),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: colorScheme.onSurface,
+          ),
+        ),
+        ..._presets.map((preset) {
+          final label = TranslationService.translate(
+            context,
+            'preset_${preset.key}',
+          );
+          final legend = TranslationService.translate(
+            context,
+            'preset_${preset.key}_legend',
+          );
+          return Tooltip(
+            message: legend,
+            child: ActionChip(
+              avatar: Icon(preset.icon, size: 15, color: colorScheme.primary),
+              label: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              backgroundColor: colorScheme.primary.withValues(alpha: 0.06),
+              side: BorderSide(
+                color: colorScheme.primary.withValues(alpha: 0.15),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              onPressed: () async {
+                final tp = context.read<ThemeProvider>();
+                await tp.applyPreset(preset.key);
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      TranslationService.translate(
+                        context,
+                        'preset_applied',
+                      ),
+                    ),
+                  ),
+                );
+                onDismiss();
+              },
+            ),
+          );
+        }),
+      ],
     );
   }
 }

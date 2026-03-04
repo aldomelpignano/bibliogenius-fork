@@ -4,12 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart'; // For HapticFeedback
 import 'package:provider/provider.dart';
 import '../data/repositories/book_repository.dart';
+import '../providers/hub_directory_provider.dart';
 import '../data/repositories/copy_repository.dart';
 import '../services/translation_service.dart';
 import '../services/api_service.dart';
 import '../utils/isbn_validator.dart';
 import '../utils/book_url_helper.dart';
 import '../models/book.dart';
+import '../providers/book_refresh_notifier.dart';
 
 /// Scan screen with optional batch mode and pre-selected destination.
 ///
@@ -273,6 +275,9 @@ class _ScanScreenState extends State<ScanScreen> {
         final copyRepo = Provider.of<CopyRepository>(context, listen: false);
         await copyRepo.createCopy({'book_id': bookId, 'status': 'available'});
       }
+
+      // Mark catalog dirty so the hub gets updated on next sync
+      context.read<HubDirectoryProvider>().markCatalogDirty();
 
       setState(() {
         _batchCount++;
@@ -799,7 +804,12 @@ class _ScanScreenState extends State<ScanScreen> {
                     label: Text(
                       TranslationService.translate(context, 'done'),
                     ),
-                    onPressed: () => context.pop(_batchCount > 0),
+                    onPressed: () {
+                      if (_batchCount > 0) {
+                        context.read<BookRefreshNotifier>().refresh();
+                      }
+                      context.pop(_batchCount > 0);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: Colors.black,

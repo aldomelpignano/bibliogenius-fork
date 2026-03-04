@@ -8,33 +8,68 @@ import 'import_curated_list_screen.dart' as import_curated;
 import 'import_shared_list_screen.dart';
 import '../../widgets/genie_app_bar.dart';
 import '../../widgets/contextual_help_sheet.dart';
+import '../../widgets/collection_stack_widget.dart';
 
 class CollectionListScreen extends StatefulWidget {
   final bool isTabView;
   final VoidCallback? onImportSuccess;
 
-  const CollectionListScreen({super.key, this.isTabView = false, this.onImportSuccess});
+  const CollectionListScreen({
+    super.key,
+    this.isTabView = false,
+    this.onImportSuccess,
+  });
 
   @override
   State<CollectionListScreen> createState() => _CollectionListScreenState();
 }
 
 class _CollectionListScreenState extends State<CollectionListScreen> {
-  late Future<List<Collection>> _collectionsFuture;
+  List<Collection> _collections = [];
+  Map<String, List<String?>> _coverUrls = {};
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _refreshCollections();
+    _loadCollections();
   }
 
-  void _refreshCollections() {
+  Future<void> _loadCollections() async {
     setState(() {
-      _collectionsFuture = Provider.of<CollectionRepository>(
-        context,
-        listen: false,
-      ).getCollections();
+      _isLoading = true;
+      _error = null;
     });
+
+    try {
+      final collectionRepo = context.read<CollectionRepository>();
+      final collections = await collectionRepo.getCollections();
+
+      // Fetch cover URLs for each collection (up to 4 per collection).
+      final Map<String, List<String?>> covers = {};
+      for (final collection in collections) {
+        final books = await collectionRepo.getCollectionBooks(collection.id);
+        covers[collection.id] = books
+            .where((b) => b.coverUrl != null && b.coverUrl!.isNotEmpty)
+            .map((b) => b.coverUrl)
+            .take(4)
+            .toList();
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _collections = collections;
+        _coverUrls = covers;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _createCollection() async {
@@ -89,7 +124,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                     );
                     if (context.mounted) {
                       Navigator.pop(context);
-                      _refreshCollections();
+                      _loadCollections();
                     }
                   } catch (e) {
                     if (context.mounted) {
@@ -106,6 +141,51 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
         );
       },
     );
+  }
+
+  Future<void> _deleteCollection(Collection collection) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          TranslationService.translate(context, 'confirm_delete'),
+        ),
+        content: Text(
+          TranslationService.translate(context, 'delete_collection_confirm'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              TranslationService.translate(context, 'cancel'),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(
+              TranslationService.translate(context, 'delete'),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      try {
+        await Provider.of<CollectionRepository>(
+          context,
+          listen: false,
+        ).deleteCollection(collection.id);
+        _loadCollections();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        }
+      }
+    }
   }
 
   @override
@@ -145,16 +225,15 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                 ),
               );
               if (result == true) {
-                _refreshCollections();
+                _loadCollections();
                 widget.onImportSuccess?.call();
               }
             },
           ),
           const SizedBox(width: 4),
-          // Import shared file button
           IconButton(
             icon: const Icon(Icons.file_open, color: Colors.white),
-            tooltip: 'Import shared list',
+            tooltip: TranslationService.translate(context, 'import'),
             onPressed: () async {
               final result = await Navigator.push(
                 context,
@@ -163,7 +242,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                 ),
               );
               if (result == true) {
-                _refreshCollections();
+                _loadCollections();
                 widget.onImportSuccess?.call();
               }
             },
@@ -195,424 +274,235 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
     return Scaffold(
       extendBodyBehindAppBar: !widget.isTabView,
       appBar: appBar,
-      body: FutureBuilder<List<Collection>>(
-        future: _collectionsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            // Calculate top padding for app bar + status bar
-            final topPadding = widget.isTabView
-                ? 24.0
-                : MediaQuery.of(context).padding.top + kToolbarHeight + 24;
-            return CustomScrollView(
-              slivers: [
-                SliverPadding(
-                  padding: EdgeInsets.only(
-                    top: topPadding,
-                    left: 24,
-                    right: 24,
-                    bottom: 24,
-                  ),
-                  sliver: SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Empty state
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.collections_bookmark,
-                              size: 64,
-                              color: Colors.blue,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            TranslationService.translate(
-                              context,
-                              'no_collections',
-                            ),
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                          ),
-                          const SizedBox(height: 12),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              TranslationService.translate(
-                                context,
-                                'collection_empty_state_desc',
-                              ),
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[600],
-                                height: 1.5,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-                          ElevatedButton.icon(
-                            onPressed: _createCollection,
-                            icon: const Icon(Icons.add),
-                            label: Text(
-                              TranslationService.translate(
-                                context,
-                                'create_collection',
-                              ),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 32,
-                                vertical: 16,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 48),
-
-                          // Promotional banner
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Theme.of(
-                                    context,
-                                  ).primaryColor.withValues(alpha: 0.8),
-                                  Theme.of(context).primaryColor,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Column(
-                              children: [
-                                const Icon(
-                                  Icons.auto_awesome,
-                                  size: 48,
-                                  color: Colors.white,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  TranslationService.translate(
-                                    context,
-                                    'discover_collections_title',
-                                  ),
-                                  style: Theme.of(context).textTheme.titleLarge
-                                      ?.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  TranslationService.translate(
-                                    context,
-                                    'discover_collections_subtitle',
-                                  ),
-                                  style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.9,
-                                        ),
-                                      ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 16),
-                                FilledButton.tonal(
-                                  onPressed: () async {
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const import_curated.ImportCuratedListScreen(),
-                                      ),
-                                    );
-                                    if (result == true) {
-                                      _refreshCollections();
-                                    }
-                                  },
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: Theme.of(
-                                      context,
-                                    ).primaryColor,
-                                  ),
-                                  child: Text(
-                                    TranslationService.translate(
-                                      context,
-                                      'explore_collections',
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          }
-
-          final collections = snapshot.data!;
-          final topPadding = widget.isTabView
-              ? 8.0
-              : MediaQuery.of(context).padding.top + kToolbarHeight;
-          return Column(
-            children: [
-              // Collections count badge
-              if (collections.isNotEmpty)
-                _buildCollectionsCountBadge(context, collections.length),
-              Expanded(
-                child: ListView.builder(
-                  padding: EdgeInsets.only(top: topPadding, bottom: 80),
-                  itemCount: collections.length,
-                  itemBuilder: (context, index) {
-                    final collection = collections[index];
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
-                  child: InkWell(
-                    onTap: () {
-                      context.push(
-                        '/collections/${collection.id}',
-                        extra: collection,
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(16),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          // Collection Icon / Avatar
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.blue.shade400,
-                                  Colors.blue.shade700,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.blue.withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.folder_special,
-                              color: Colors.white,
-                              size: 30,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          // Content
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  collection.name,
-                                  style: Theme.of(context).textTheme.titleMedium
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                if (collection.description != null &&
-                                    collection.description!.isNotEmpty) ...[
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    collection.description!,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(color: Colors.grey),
-                                  ),
-                                ],
-                                const SizedBox(height: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(
-                                      context,
-                                    ).primaryColor.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    '${collection.totalBooks} ${TranslationService.translate(context, "books")}',
-                                    style: TextStyle(
-                                      color: Theme.of(context).primaryColor,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Actions
-                          MenuAnchor(
-                            builder:
-                                (
-                                  BuildContext context,
-                                  MenuController controller,
-                                  Widget? child,
-                                ) {
-                                  return IconButton(
-                                    onPressed: () {
-                                      if (controller.isOpen) {
-                                        controller.close();
-                                      } else {
-                                        controller.open();
-                                      }
-                                    },
-                                    icon: const Icon(Icons.more_vert),
-                                    tooltip: 'Options',
-                                  );
-                                },
-                            menuChildren: [
-                              MenuItemButton(
-                                onPressed: () async {
-                                  final confirm = await showDialog<bool>(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: Text(
-                                        TranslationService.translate(
-                                          context,
-                                          'confirm_delete',
-                                        ),
-                                      ),
-                                      content: Text(
-                                        TranslationService.translate(
-                                          context,
-                                          'delete_collection_confirm',
-                                        ),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, false),
-                                          child: Text(
-                                            TranslationService.translate(
-                                              context,
-                                              'cancel',
-                                            ),
-                                          ),
-                                        ),
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, true),
-                                          style: TextButton.styleFrom(
-                                            foregroundColor: Colors.red,
-                                          ),
-                                          child: Text(
-                                            TranslationService.translate(
-                                              context,
-                                              'delete',
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-
-                                  if (confirm == true && context.mounted) {
-                                    try {
-                                      await Provider.of<CollectionRepository>(
-                                        context,
-                                        listen: false,
-                                      ).deleteCollection(collection.id);
-                                      _refreshCollections();
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(content: Text('Error: $e')),
-                                        );
-                                      }
-                                    }
-                                  }
-                                },
-                                leadingIcon: const Icon(
-                                  Icons.delete_outline,
-                                  color: Colors.red,
-                                ),
-                                child: Text(
-                                  TranslationService.translate(
-                                    context,
-                                    'delete',
-                                  ),
-                                  style: const TextStyle(color: Colors.red),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-                  },
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+      body: _buildBody(context),
       floatingActionButton: FloatingActionButton(
         heroTag: 'collection_add_fab',
         onPressed: _createCollection,
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null) {
+      return Center(child: Text('Error: $_error'));
+    }
+    if (_collections.isEmpty) {
+      return _buildEmptyState(context);
+    }
+    return _buildGrid(context);
+  }
+
+  Widget _buildGrid(BuildContext context) {
+    final topPadding = widget.isTabView
+        ? 8.0
+        : MediaQuery.of(context).padding.top + kToolbarHeight;
+
+    return Column(
+      children: [
+        _buildCollectionsCountBadge(context, _collections.length),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _loadCollections,
+            child: GridView.builder(
+              padding: EdgeInsets.only(
+                top: topPadding,
+                left: 16,
+                right: 16,
+                bottom: 80,
+              ),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 180,
+                childAspectRatio: 0.62,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 12,
+              ),
+              itemCount: _collections.length,
+              itemBuilder: (context, index) {
+                final collection = _collections[index];
+                final covers = _coverUrls[collection.id] ?? [];
+                return CollectionCoverCard(
+                  collection: collection,
+                  coverUrls: covers,
+                  onTap: () async {
+                    await context.push(
+                      '/collections/${collection.id}',
+                      extra: collection,
+                    );
+                    if (mounted) _loadCollections();
+                  },
+                  onLongPress: () => _deleteCollection(collection),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    final topPadding = widget.isTabView
+        ? 24.0
+        : MediaQuery.of(context).padding.top + kToolbarHeight + 24;
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: EdgeInsets.only(
+            top: topPadding,
+            left: 24,
+            right: 24,
+            bottom: 24,
+          ),
+          sliver: SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.collections_bookmark,
+                      size: 64,
+                      color: Colors.blue,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    TranslationService.translate(context, 'no_collections'),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      TranslationService.translate(
+                        context,
+                        'collection_empty_state_desc',
+                      ),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[600],
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton.icon(
+                    onPressed: _createCollection,
+                    icon: const Icon(Icons.add),
+                    label: Text(
+                      TranslationService.translate(
+                        context,
+                        'create_collection',
+                      ),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).primaryColor.withValues(alpha: 0.8),
+                          Theme.of(context).primaryColor,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        const Icon(
+                          Icons.auto_awesome,
+                          size: 48,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          TranslationService.translate(
+                            context,
+                            'discover_collections_title',
+                          ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          TranslationService.translate(
+                            context,
+                            'discover_collections_subtitle',
+                          ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                  ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        FilledButton.tonal(
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const import_curated.ImportCuratedListScreen(),
+                              ),
+                            );
+                            if (result == true) {
+                              _loadCollections();
+                            }
+                          },
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Theme.of(context).primaryColor,
+                          ),
+                          child: Text(
+                            TranslationService.translate(
+                              context,
+                              'explore_collections',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -628,7 +518,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: theme.primaryColor.withOpacity(0.1),
+              color: theme.primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
@@ -643,12 +533,16 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                 Text(
                   count == 1
                       ? (TranslationService.translate(
-                              context, 'displayed_collections_count') ??
-                          '%d collection')
+                                context,
+                                'displayed_collections_count',
+                              ) ??
+                              '%d collection')
                           .replaceAll('%d', '$count')
                       : (TranslationService.translate(
-                              context, 'displayed_collections_count_plural') ??
-                          '%d collections')
+                                context,
+                                'displayed_collections_count_plural',
+                              ) ??
+                              '%d collections')
                           .replaceAll('%d', '$count'),
                   style: TextStyle(
                     color: theme.primaryColor,

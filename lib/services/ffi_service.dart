@@ -3,6 +3,7 @@
 // Used on native platforms (iOS, Android, macOS, Windows, Linux)
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart' show Int64List;
 import '../models/book.dart';
 import '../models/collection.dart';
 import '../models/collection_book.dart';
@@ -45,6 +46,19 @@ class FfiService {
     } catch (e) {
       debugPrint('FFI getVersion error: $e');
       return 'unknown';
+    }
+  }
+
+  // ============ Library Name ============
+
+  /// Update the library name directly in the Rust DB (library_config + libraries).
+  /// Only touches the name field - no other settings are overwritten.
+  Future<void> updateLibraryName(String name) async {
+    try {
+      await frb.updateLibraryNameFfi(name: name);
+    } catch (e) {
+      debugPrint('FFI updateLibraryName error: $e');
+      rethrow;
     }
   }
 
@@ -1019,13 +1033,29 @@ class FfiService {
     }
   }
 
-  /// List libraries in the public directory (paginated).
+  /// Read all non-null ISBNs from the local DB and push them to the hub.
+  /// Returns the number of ISBNs pushed, or -1 on error.
+  Future<int> hubDirectorySyncCatalog() async {
+    try {
+      return await frb.hubDirectorySyncCatalog();
+    } catch (e) {
+      debugPrint('FFI hubDirectorySyncCatalog error: $e');
+      return -1;
+    }
+  }
+
+  /// List libraries in the public directory (paginated, with optional search).
   Future<List<frb.FrbHubProfile>> hubDirectoryList({
     required int limit,
     required int offset,
+    String? search,
   }) async {
     try {
-      return await frb.hubDirectoryList(limit: limit, offset: offset);
+      return await frb.hubDirectoryList(
+        limit: limit,
+        offset: offset,
+        search: search,
+      );
     } catch (e) {
       debugPrint('FFI hubDirectoryList error: $e');
       return [];
@@ -1042,8 +1072,8 @@ class FfiService {
     }
   }
 
-  /// Get the public catalog (ISBNs) of a followed library.
-  Future<List<String>> hubDirectoryGetCatalog(String nodeId) async {
+  /// Get the enriched catalog (ISBN + title + author) of a followed library.
+  Future<List<frb.FrbCatalogEntry>> hubDirectoryGetCatalog(String nodeId) async {
     try {
       return await frb.hubDirectoryGetCatalog(nodeId: nodeId);
     } catch (e) {
@@ -1053,12 +1083,13 @@ class FfiService {
   }
 
   /// Follow (or request to follow) a library.
+  /// Throws on error so the caller can display the message.
   Future<frb.FrbHubFollow?> hubDirectoryFollow(String nodeId) async {
     try {
       return await frb.hubDirectoryFollow(nodeId: nodeId);
     } catch (e) {
       debugPrint('FFI hubDirectoryFollow error: $e');
-      return null;
+      rethrow;
     }
   }
 
@@ -1084,14 +1115,17 @@ class FfiService {
   }
 
   /// Resolve a follow request: resolution is "approve", "reject", or "block".
+  /// When approving, [encryptedContact] is an optional sealed blob.
   Future<frb.FrbHubFollow?> hubDirectoryResolveFollow(
     int followId,
-    String resolution,
-  ) async {
+    String resolution, {
+    String? encryptedContact,
+  }) async {
     try {
       return await frb.hubDirectoryResolveFollow(
         followId: followId,
         resolution: resolution,
+        encryptedContact: encryptedContact,
       );
     } catch (e) {
       debugPrint('FFI hubDirectoryResolveFollow error: $e');
@@ -1119,6 +1153,88 @@ class FfiService {
     }
   }
 
+  // ============ Hub Borrow Requests (ADR-018) ============
+
+  /// Create a hub-mediated borrow request for a book from a followed library.
+  Future<frb.FrbHubBorrowRequest> hubDirectoryCreateBorrowRequest(
+    String lenderNodeId,
+    String isbn,
+    String bookTitle,
+  ) async {
+    return await frb.hubDirectoryCreateBorrowRequest(
+      lenderNodeId: lenderNodeId,
+      isbn: isbn,
+      bookTitle: bookTitle,
+    );
+  }
+
+  /// Fetch incoming borrow requests (pending) for the local library as lender.
+  Future<List<frb.FrbHubBorrowRequest>> hubDirectoryIncomingBorrowRequests() async {
+    try {
+      return await frb.hubDirectoryIncomingBorrowRequests();
+    } catch (e) {
+      debugPrint('FFI hubDirectoryIncomingBorrowRequests error: $e');
+      return [];
+    }
+  }
+
+  /// Fetch outgoing borrow requests sent by the local library as requester.
+  Future<List<frb.FrbHubBorrowRequest>> hubDirectoryOutgoingBorrowRequests() async {
+    try {
+      return await frb.hubDirectoryOutgoingBorrowRequests();
+    } catch (e) {
+      debugPrint('FFI hubDirectoryOutgoingBorrowRequests error: $e');
+      return [];
+    }
+  }
+
+  /// Resolve a borrow request: resolution is "accept" or "reject".
+  Future<frb.FrbHubBorrowRequest> hubDirectoryResolveBorrowRequest(
+    int requestId,
+    String resolution,
+  ) async {
+    return await frb.hubDirectoryResolveBorrowRequest(
+      requestId: requestId,
+      resolution: resolution,
+    );
+  }
+
+  // ============ E2EE Sealed Blob ============
+
+  /// Encrypt plaintext for a recipient identified by their X25519 public key (hex).
+  Future<String> sealBlob(String recipientX25519Hex, String plaintext) async {
+    return await frb.sealBlob(
+      recipientX25519Hex: recipientX25519Hex,
+      plaintext: plaintext,
+    );
+  }
+
+  /// Decrypt a sealed blob using the local node identity's X25519 secret key.
+  Future<String> openBlob(String sealedBase64) async {
+    return await frb.openBlob(sealedBase64: sealedBase64);
+  }
+
+  /// Batch-update encrypted contact blobs for active followers.
+  Future<int> hubDirectorySyncContacts(
+    List<int> followIds,
+    List<String> encryptedContacts,
+  ) async {
+    return await frb.hubDirectorySyncContacts(
+      followIds: Int64List.fromList(followIds),
+      encryptedContacts: encryptedContacts,
+    );
+  }
+
+  /// Returns the local X25519 public key as hex string, or null if no identity.
+  Future<String?> getLocalX25519PublicKey() async {
+    try {
+      return await frb.getLocalX25519PublicKey();
+    } catch (e) {
+      debugPrint('FFI getLocalX25519PublicKey error: $e');
+      return null;
+    }
+  }
+
   // ============ HTTP Server ============
 
   /// Start the HTTP server on the specified port
@@ -1135,6 +1251,20 @@ class FfiService {
     } catch (e) {
       debugPrint('❌ FfiService: Failed to start server: $e');
       return null;
+    }
+  }
+
+  // ============ View Stats ============
+
+  /// Get library view statistics (peer and follower views).
+  /// Returns parsed JSON map with total_peer, total_follower, total, daily.
+  Future<Map<String, dynamic>> getLibraryViewStats() async {
+    try {
+      final json = await frb.getLibraryViewStats();
+      return jsonDecode(json) as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('FFI getLibraryViewStats error: $e');
+      return {'total_peer': 0, 'total_follower': 0, 'total': 0, 'daily': []};
     }
   }
 }

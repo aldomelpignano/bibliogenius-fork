@@ -1,4 +1,9 @@
 class IsbnValidator {
+  /// Strip formatting characters (hyphens, spaces), keep only digits and trailing X.
+  static String clean(String isbn) {
+    return isbn.replaceAll(RegExp(r'[\s-]'), '');
+  }
+
   static bool isValid(String? isbn) {
     if (isbn == null || isbn.isEmpty) return false;
 

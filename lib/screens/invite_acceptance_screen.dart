@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../models/book.dart';
+import '../providers/flash_message_provider.dart';
 import '../services/api_service.dart';
 import '../services/translation_service.dart';
 
@@ -34,14 +36,19 @@ class _InviteAcceptanceScreenState extends State<InviteAcceptanceScreen> {
       widget.payload['ed25519_public_key'] as String?;
   String? get _x25519Key =>
       widget.payload['x25519_public_key'] as String?;
+  String? get _libraryUuid => widget.payload['library_uuid'] as String?;
   String? get _relayUrl => widget.payload['relay_url'] as String?;
   String? get _mailboxId => widget.payload['mailbox_id'] as String?;
   String? get _relayWriteToken =>
       widget.payload['relay_write_token'] as String?;
 
   Future<void> _acceptInvite() async {
-    if (_url == null || _url!.isEmpty) {
-      setState(() => _error = 'Invalid invite: missing URL');
+    // Accept if we have a LAN URL or relay credentials (or both)
+    final hasLanUrl = _url != null && _url!.isNotEmpty;
+    final hasRelay = _relayUrl != null && _mailboxId != null;
+
+    if (!hasLanUrl && !hasRelay) {
+      setState(() => _error = 'Invalid invite: missing URL and relay credentials');
       return;
     }
 
@@ -68,9 +75,13 @@ class _InviteAcceptanceScreenState extends State<InviteAcceptanceScreen> {
         return;
       }
 
+      // Use empty URL for relay-only connections
+      final connectUrl = _url ?? '';
+
       final response = await api.connectPeer(
         _libraryName,
-        _url!,
+        connectUrl,
+        libraryUuid: _libraryUuid,
         ed25519PublicKey: _ed25519Key,
         x25519PublicKey: _x25519Key,
         relayUrl: _relayUrl,
@@ -88,29 +99,24 @@ class _InviteAcceptanceScreenState extends State<InviteAcceptanceScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.green.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle, color: Colors.white),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  '${TranslationService.translate(context, 'invite_success')} $_libraryName',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
+      // Extract peer ID from connect response for prefetch
+      final peerId = response.data is Map ? response.data['id'] as int? : null;
+
+      context.read<FlashMessageProvider>().addEphemeralPeer(
+        EphemeralPeerFlash(
+          peerId: peerId ?? (connectUrl).hashCode & 0x7FFFFFFF,
+          peerName: _libraryName,
+          peerUrl: hasLanUrl ? _url : null,
+          hasRelayCredentials: hasRelay,
+          connectedAt: DateTime.now(),
         ),
       );
+
+      // Prefetch peer's library in background so it's cached when user browses
+      if (peerId != null && hasRelay) {
+        _prefetchPeerLibrary(api, peerId);
+      }
+
       context.go('/network');
     } catch (e) {
       if (!mounted) return;
@@ -118,6 +124,63 @@ class _InviteAcceptanceScreenState extends State<InviteAcceptanceScreen> {
         _isConnecting = false;
         _error = e.toString();
       });
+    }
+  }
+
+  /// Fire-and-forget: prefetch peer library via relay so it's cached
+  /// when the user navigates to the peer's book list.
+  void _prefetchPeerLibrary(ApiService api, int peerId) {
+    debugPrint('Prefetch: starting background library fetch for peer $peerId');
+    () async {
+      try {
+        final manifest = await api.requestPeerManifest(peerId);
+        if (manifest == null) {
+          // Relay pending - poll and retry once
+          await api.pollRelayNow();
+          await Future.delayed(const Duration(seconds: 5));
+          final retry = await api.requestPeerManifest(peerId);
+          if (retry == null) {
+            debugPrint('Prefetch: manifest not available yet, will load on browse');
+            return;
+          }
+          await _prefetchPages(api, peerId, retry);
+        } else {
+          await _prefetchPages(api, peerId, manifest);
+        }
+      } catch (e) {
+        debugPrint('Prefetch error: $e');
+      }
+    }();
+  }
+
+  Future<void> _prefetchPages(
+    ApiService api,
+    int peerId,
+    Map<String, dynamic> manifest,
+  ) async {
+    final totalBooks = manifest['total_books'] as int? ?? 0;
+    if (totalBooks == 0) return;
+
+    List<Map<String, dynamic>> allBooksJson = [];
+    int? cursor;
+
+    while (true) {
+      final page = await api.requestPeerPage(peerId, cursor: cursor);
+      if (page == null) break;
+
+      final books = page['books'] as List? ?? [];
+      allBooksJson.addAll(books.cast<Map<String, dynamic>>());
+
+      cursor = page['next_cursor'] as int?;
+      if (cursor == null) break;
+    }
+
+    if (allBooksJson.isNotEmpty) {
+      final books = allBooksJson
+          .map((json) => Book.fromJson(json))
+          .toList();
+      await api.cachePeerBooks(peerId, books);
+      debugPrint('Prefetch: cached ${books.length} books for peer $peerId');
     }
   }
 

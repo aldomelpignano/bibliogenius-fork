@@ -594,17 +594,14 @@ class _BookListScreenState extends State<BookListScreen>
       final books = await bookRepo.getBooks();
 
       final configRes = await apiService.getLibraryConfig();
-      String? libraryName;
       if (configRes.statusCode == 200) {
         _showBorrowedConfig = configRes.data['show_borrowed_books'] != false;
-        libraryName = configRes.data['library_name'] as String?;
-        if (libraryName != null) {
-          Provider.of<ThemeProvider>(
-            context,
-            listen: false,
-          ).setLibraryName(libraryName);
-        }
       }
+      // Library name comes from ThemeProvider (set via SharedPreferences + FFI)
+      final libraryName = Provider.of<ThemeProvider>(
+        context,
+        listen: false,
+      ).libraryName;
 
       if (mounted) {
         // Also load tags for hierarchy navigation
@@ -763,7 +760,7 @@ class _BookListScreenState extends State<BookListScreen>
         }
       }
 
-      // Bucket each filtered book into its collection (or null).
+      // Bucket each filtered book into its collection (or uncollected).
       final Map<String, List<Book>> byCollectionId = {
         for (final c in collections) c.id: <Book>[],
       };
@@ -779,7 +776,7 @@ class _BookListScreenState extends State<BookListScreen>
         }
       }
 
-      // Build the ordered group list (non-empty collections first, then singletons).
+      // Build ordered group list: collections first, then individual uncollected books.
       final groups = <CollectionGroup>[];
       for (final collection in collections) {
         final books = byCollectionId[collection.id] ?? [];
@@ -2053,7 +2050,10 @@ class _BookListScreenState extends State<BookListScreen>
             await _fetchBooks();
             await _fetchCollectionGroups();
           },
-          child: CollectionGroupGrid(groups: _collectionGroups),
+          child: CollectionGroupGrid(
+            groups: _collectionGroups,
+            onBookTap: _onBookTap,
+          ),
         );
     }
   }

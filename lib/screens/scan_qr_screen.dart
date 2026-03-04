@@ -6,6 +6,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../providers/flash_message_provider.dart';
 import '../services/api_service.dart';
 import '../services/translation_service.dart';
 import '../utils/invite_payload.dart';
@@ -151,6 +152,7 @@ class _ScanContactViewState extends State<ScanContactView> {
             _connect(
               data['name'] as String,
               data['url'] as String,
+              libraryUuid: data['library_uuid'] as String?,
               ed25519PublicKey: data['ed25519_public_key'] as String?,
               x25519PublicKey: data['x25519_public_key'] as String?,
               relayUrl: data['relay_url'] as String?,
@@ -167,6 +169,7 @@ class _ScanContactViewState extends State<ScanContactView> {
   Future<void> _connect(
     String name,
     String url, {
+    String? libraryUuid,
     String? ed25519PublicKey,
     String? x25519PublicKey,
     String? relayUrl,
@@ -179,6 +182,7 @@ class _ScanContactViewState extends State<ScanContactView> {
       final response = await api.connectPeer(
         name,
         url,
+        libraryUuid: libraryUuid,
         ed25519PublicKey: ed25519PublicKey,
         x25519PublicKey: x25519PublicKey,
         relayUrl: relayUrl,
@@ -196,39 +200,13 @@ class _ScanContactViewState extends State<ScanContactView> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.green.shade700,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "${TranslationService.translate(context, 'connected_to')} $name",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        TranslationService.translate(context, 'connection_success_hint'),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+        context.read<FlashMessageProvider>().addEphemeralPeer(
+          EphemeralPeerFlash(
+            peerId: url.hashCode & 0x7FFFFFFF,
+            peerName: name,
+            peerUrl: url,
+            hasRelayCredentials: relayUrl != null && mailboxId != null,
+            connectedAt: DateTime.now(),
           ),
         );
         context.pop(true);

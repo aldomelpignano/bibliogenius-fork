@@ -133,26 +133,33 @@ class GenieAppBar extends StatelessWidget implements PreferredSizeWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                title,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: titleFontSize,
-                                  color: Colors.white,
-                                  letterSpacing: 0.5,
+                              if (title != null)
+                                Text(
+                                  title.toString(),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: titleFontSize,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.fade,
+                                  softWrap: false,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.fade,
-                                softWrap: false,
-                              ),
-                              // Hide subtitle on narrower screens
-                              if (!hideSubtitle && displaySubtitle.isNotEmpty)
+                              // Subtitle (library name) - show even when title is null (mobile)
+                              // When title is null, subtitle is the primary text: use hideTitle threshold
+                              if ((title != null ? !hideSubtitle : !hideTitle) && displaySubtitle.isNotEmpty)
                                 Text(
                                   displaySubtitle,
                                   style: TextStyle(
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: subtitleFontSize,
-                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontWeight: title != null
+                                        ? FontWeight.w400
+                                        : FontWeight.w600,
+                                    fontSize: title != null
+                                        ? subtitleFontSize
+                                        : titleFontSize,
+                                    color: Colors.white.withValues(
+                                        alpha: title != null ? 0.8 : 1.0),
                                     letterSpacing: 0.3,
                                   ),
                                   maxLines: 1,

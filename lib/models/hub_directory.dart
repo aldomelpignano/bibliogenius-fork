@@ -16,12 +16,14 @@ class DirectoryConfig {
   final bool isListed;
   final bool requiresApproval;
   final String acceptFrom;
+  final bool allowBorrowing;
 
   const DirectoryConfig({
     required this.nodeId,
     required this.isListed,
     required this.requiresApproval,
     required this.acceptFrom,
+    required this.allowBorrowing,
   });
 
   factory DirectoryConfig.fromFrb(frb.FrbDirectoryConfig f) => DirectoryConfig(
@@ -29,6 +31,7 @@ class DirectoryConfig {
         isListed: f.isListed,
         requiresApproval: f.requiresApproval,
         acceptFrom: f.acceptFrom,
+        allowBorrowing: f.allowBorrowing,
       );
 }
 
@@ -44,7 +47,10 @@ class HubProfile {
   final int bookCount;
   final String? locationCountry;
   final bool requiresApproval;
+  final bool? allowBorrowing;
   final String? lastSeenAt;
+  final String? x25519PublicKey;
+  final String? website;
 
   const HubProfile({
     required this.nodeId,
@@ -53,7 +59,10 @@ class HubProfile {
     required this.bookCount,
     this.locationCountry,
     required this.requiresApproval,
+    this.allowBorrowing,
     this.lastSeenAt,
+    this.x25519PublicKey,
+    this.website,
   });
 
   factory HubProfile.fromFrb(frb.FrbHubProfile f) => HubProfile(
@@ -63,7 +72,10 @@ class HubProfile {
         bookCount: f.bookCount,
         locationCountry: f.locationCountry,
         requiresApproval: f.requiresApproval,
+        allowBorrowing: f.allowBorrowing,
         lastSeenAt: f.lastSeenAt,
+        x25519PublicKey: f.x25519PublicKey,
+        website: f.website,
       );
 }
 
@@ -82,6 +94,15 @@ class HubFollow {
   final String createdAt;
   final String? resolvedAt;
 
+  /// Display name of the follower (enriched by the hub for pending requests).
+  final String? followerDisplayName;
+
+  /// E2EE sealed blob: followed library's contact info, encrypted for this follower.
+  final String? encryptedContact;
+
+  /// X25519 public key of the follower (for encrypting contact info).
+  final String? followerX25519PublicKey;
+
   const HubFollow({
     required this.id,
     required this.followerNodeId,
@@ -89,6 +110,9 @@ class HubFollow {
     required this.status,
     required this.createdAt,
     this.resolvedAt,
+    this.followerDisplayName,
+    this.encryptedContact,
+    this.followerX25519PublicKey,
   });
 
   factory HubFollow.fromFrb(frb.FrbHubFollow f) => HubFollow(
@@ -98,6 +122,9 @@ class HubFollow {
         status: f.status,
         createdAt: f.createdAt,
         resolvedAt: f.resolvedAt,
+        followerDisplayName: f.followerDisplayName,
+        encryptedContact: f.encryptedContact,
+        followerX25519PublicKey: f.followerX25519PublicKey,
       );
 
   bool get isPending => status == 'pending';

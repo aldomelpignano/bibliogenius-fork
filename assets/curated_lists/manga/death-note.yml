@@ -1,0 +1,37 @@
+# Death Note - Serie complete (12 tomes)
+id: death-note
+version: 1
+title:
+  fr: "Death Note - Serie complete"
+  en: "Death Note - Complete Series"
+description:
+  fr: "L'integrale du manga Death Note de Tsugumi Ohba et Takeshi Obata. Light Yagami, un lyceen surdoue, trouve un cahier surnaturel : quiconque y voit son nom inscrit meurt. Un thriller psychologique haletant."
+  en: "The complete Death Note manga by Tsugumi Ohba and Takeshi Obata. Light Yagami, a gifted high schooler, finds a supernatural notebook: anyone whose name is written in it dies. A gripping psychological thriller."
+cover_url: "https://covers.openlibrary.org/b/isbn/9782505000327-L.jpg"
+contributor: BiblioGenius
+tags: [manga, shonen, thriller, serie-complete, death-note]
+books:
+  - isbn: "9782505000327"
+    note: "Death Note - Tome 1"
+  - isbn: "9782505000426"
+    note: "Death Note - Tome 2"
+  - isbn: "9782505000792"
+    note: "Death Note - Tome 3"
+  - isbn: "9782505001065"
+    note: "Death Note - Tome 4"
+  - isbn: "9782505001614"
+    note: "Death Note - Tome 5"
+  - isbn: "9782505001812"
+    note: "Death Note - Tome 6"
+  - isbn: "9782505001997"
+    note: "Death Note - Tome 7"
+  - isbn: "9782505002697"
+    note: "Death Note - Tome 8"
+  - isbn: "9782505002970"
+    note: "Death Note - Tome 9"
+  - isbn: "9782505003038"
+    note: "Death Note - Tome 10"
+  - isbn: "9782505003694"
+    note: "Death Note - Tome 11"
+  - isbn: "9782505004295"
+    note: "Death Note - Tome 12"
