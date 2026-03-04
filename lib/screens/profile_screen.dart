@@ -60,12 +60,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _error;
   int _peerViews = 0;
   int _followerViews = 0;
+  int _followerCount = 0;
 
   @override
   void initState() {
     super.initState();
     _fetchStatus();
     _fetchViewStats();
+    _fetchFollowerCount();
   }
 
   Future<void> _fetchStatus() async {
@@ -192,6 +194,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _ProfileCache.invalidate();
     await _fetchFresh(showLoading: false);
     _fetchViewStats();
+    _fetchFollowerCount();
   }
 
   Future<void> _fetchViewStats() async {
@@ -208,6 +211,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       debugPrint('View stats fetch failed: $e');
     }
+  }
+
+  Future<void> _fetchFollowerCount() async {
+    try {
+      final dirProvider =
+          Provider.of<HubDirectoryProvider>(context, listen: false);
+      await dirProvider.loadFollowers();
+      if (!mounted) return;
+      setState(() {
+        _followerCount =
+            dirProvider.followers.where((f) => f.isActive).length;
+      });
+    } catch (e) {
+      debugPrint('Follower count fetch failed: $e');
+    }
+  }
+
+  Widget _buildFollowerCountChip(BuildContext context) {
+    if (_followerCount == 0) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Semantics(
+        label:
+            '$_followerCount ${TranslationService.translate(context, _followerCount == 1 ? 'profile_follower' : 'profile_followers')}',
+        child: Chip(
+          avatar: Icon(
+            Icons.people_outlined,
+            size: 18,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          label: Text(
+            '$_followerCount ${TranslationService.translate(context, _followerCount == 1 ? 'profile_follower' : 'profile_followers')}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+          side: BorderSide.none,
+        ),
+      ),
+    );
   }
 
   Widget _buildViewCountChip(BuildContext context) {
@@ -231,7 +276,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             label: Text(
-              '$total ${TranslationService.translate(context, 'profile_views')}',
+              '$total ${TranslationService.translate(context, total == 1 ? 'profile_view' : 'profile_views')}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -441,6 +486,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     return _buildViewCountChip(context);
                   },
                 ),
+
+                // Follower count
+                _buildFollowerCountChip(context),
 
                 // Gamification Card
                 Consumer<ThemeProvider>(
@@ -930,6 +978,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 isListed: hubConfig.isListed,
                 requiresApproval: hubConfig.requiresApproval,
                 acceptFrom: hubConfig.acceptFrom,
+                allowBorrowing: hubConfig.allowBorrowing,
               );
             }
           } catch (e) {

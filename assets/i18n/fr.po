@@ -4605,6 +4605,62 @@ msgstr "À"
 msgid "request_to_borrow"
 msgstr "Emprunter"
 
+#. Hub Borrow - Via Hub badge
+msgid "hub_borrow_via_hub"
+msgstr "Via le hub"
+
+#. Hub Borrow - Follow required
+msgid "hub_borrow_no_follow"
+msgstr "Suivez cette bibliotheque pour demander un emprunt"
+
+#. Hub Borrow - Duplicate pending request
+msgid "hub_borrow_duplicate"
+msgstr "Vous avez deja une demande en cours pour ce livre"
+
+#. Hub - Allow borrowing toggle
+msgid "hub_allow_borrowing"
+msgstr "Autoriser les demandes d'emprunt"
+
+#. Hub - Allow borrowing description
+msgid "hub_allow_borrowing_desc"
+msgstr "Permettre a vos followers de demander a emprunter vos livres via le hub"
+
+#. Hub - Borrowing disabled message
+msgid "hub_borrowing_disabled"
+msgstr "Cette bibliotheque n'accepte pas les demandes d'emprunt"
+
+#. Hub - Experimental toggle
+msgid "hub_experimental_toggle"
+msgstr "Annuaire public (Experimental)"
+
+msgid "hub_experimental_desc"
+msgstr "Inscrivez votre bibliotheque dans l'annuaire public et decouvrez d'autres lecteurs"
+
+msgid "hub_experimental_chip"
+msgstr "Experimental"
+
+#. Hub - Contact info
+msgid "hub_contact_label"
+msgstr "Contact (visible par vos abonnes approuves)"
+
+msgid "hub_contact_hint"
+msgstr "Email, telephone, adresse..."
+
+msgid "hub_contact_encrypted_notice"
+msgstr "Chiffre - visible uniquement par vos abonnes approuves"
+
+#. Hub - Website
+msgid "hub_website_label"
+msgstr "Site web (optionnel)"
+
+#. Hub - Contact info title (peer detail)
+msgid "hub_contact_info_title"
+msgstr "Contact"
+
+#. Hub - Discover disabled
+msgid "hub_disabled_discover"
+msgstr "Activez l'annuaire public dans les Parametres pour decouvrir d'autres bibliotheques"
+
 #. Requests
 msgid "requests"
 msgstr "Demandes"
@@ -6829,6 +6885,12 @@ msgstr "Demandes"
 msgid "directory_empty"
 msgstr "Aucune bibliothèque à découvrir pour le moment."
 
+msgid "directory_search_hint"
+msgstr "Rechercher par nom..."
+
+msgid "directory_no_results"
+msgstr "Aucune bibliothèque trouvée"
+
 msgid "directory_following_empty"
 msgstr "Vous ne suivez encore aucune bibliothèque. Utilisez l'onglet Découvrir pour commencer."
 
@@ -6837,6 +6899,9 @@ msgstr "Aucune demande de suivi en attente."
 
 msgid "directory_books"
 msgstr "livres"
+
+msgid "directory_your_library"
+msgstr "Votre bibliothèque"
 
 msgid "directory_follow"
 msgstr "Suivre"
@@ -6974,7 +7039,7 @@ msgid "network_tab_my_network"
 msgstr "Mon réseau"
 
 msgid "network_tab_discover"
-msgstr "Découvrir"
+msgstr "Annuaire public"
 
 #. Filtres reseau
 msgid "network_filter_all"
@@ -7100,7 +7165,10 @@ msgid "peer_last_seen"
 msgstr "Dernière connexion"
 
 msgid "peer_has_relay"
-msgstr "Joignable via relais"
+msgstr "Joignable meme hors Wi-Fi local"
+
+msgid "peer_connection_info"
+msgstr "Connexion"
 
 msgid "peer_node_id"
 msgstr "Identifiant du noeud"
@@ -7147,6 +7215,9 @@ msgid "show_view_count_desc"
 msgstr "Afficher le compteur de vues sur votre profil"
 
 #. Profile view counter
+msgid "profile_view"
+msgstr "vue"
+
 msgid "profile_views"
 msgstr "vues"
 
@@ -7155,3 +7226,26 @@ msgstr "depuis les pairs"
 
 msgid "profile_views_followers"
 msgstr "depuis les abonnés"
+
+#. Peer connectivity status
+#. Profile follower count
+msgid "profile_follower"
+msgstr "abonné"
+
+msgid "profile_followers"
+msgstr "abonnés"
+
+msgid "peer_status_online"
+msgstr "En ligne"
+
+msgid "peer_status_unreachable"
+msgstr "Inactif"
+
+msgid "module_edition_browser"
+msgstr "Explorateur d'editions"
+
+msgid "module_edition_browser_desc"
+msgstr "Parcourir et choisir parmi plusieurs editions lors de l'ajout de livres"
+
+msgid "confirm"
+msgstr "Confirmer"

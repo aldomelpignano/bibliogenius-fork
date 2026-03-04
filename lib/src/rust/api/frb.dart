@@ -9,7 +9,7 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'frb.freezed.dart';
 
 // These functions are ignored because they are not marked as `pub`: `db`, `device_pairing_svc`, `device_sync_svc`, `entries_to_frb`, `hub_db`, `hub_directory_svc`, `install_panic_hook`, `load_google_books_api_key`, `runtime`, `track_to_frb`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Initialize the FFI backend with database at the given path
 /// Must be called before any other FFI functions
@@ -546,10 +546,12 @@ Future<List<FrbHubProfile>> hubDirectoryList({
   required PlatformInt64 limit,
   required PlatformInt64 offset,
   String? country,
+  String? search,
 }) => RustLib.instance.api.crateApiFrbHubDirectoryList(
   limit: limit,
   offset: offset,
   country: country,
+  search: search,
 );
 
 /// Gets a specific library profile from the hub directory.
@@ -571,12 +573,15 @@ Future<List<FrbHubFollow>> hubDirectoryPendingRequests() =>
     RustLib.instance.api.crateApiFrbHubDirectoryPendingRequests();
 
 /// Resolves a pending follow request. resolution: "approve" | "reject" | "block"
+/// When approving, encrypted_contact is an optional sealed blob of the owner's contact info.
 Future<FrbHubFollow> hubDirectoryResolveFollow({
   required PlatformInt64 followId,
   required String resolution,
+  String? encryptedContact,
 }) => RustLib.instance.api.crateApiFrbHubDirectoryResolveFollow(
   followId: followId,
   resolution: resolution,
+  encryptedContact: encryptedContact,
 );
 
 /// Lists libraries the local library is following (active follows).
@@ -590,6 +595,63 @@ Future<List<FrbHubFollow>> hubDirectoryListFollowers() =>
 /// Unfollows a library.
 Future<void> hubDirectoryUnfollow({required String nodeId}) =>
     RustLib.instance.api.crateApiFrbHubDirectoryUnfollow(nodeId: nodeId);
+
+/// Creates a hub-mediated borrow request for a book from a followed library.
+Future<FrbHubBorrowRequest> hubDirectoryCreateBorrowRequest({
+  required String lenderNodeId,
+  required String isbn,
+  required String bookTitle,
+}) => RustLib.instance.api.crateApiFrbHubDirectoryCreateBorrowRequest(
+  lenderNodeId: lenderNodeId,
+  isbn: isbn,
+  bookTitle: bookTitle,
+);
+
+/// Fetches incoming borrow requests (pending) for the local library as lender.
+Future<List<FrbHubBorrowRequest>> hubDirectoryIncomingBorrowRequests() =>
+    RustLib.instance.api.crateApiFrbHubDirectoryIncomingBorrowRequests();
+
+/// Fetches outgoing borrow requests sent by the local library as requester.
+Future<List<FrbHubBorrowRequest>> hubDirectoryOutgoingBorrowRequests() =>
+    RustLib.instance.api.crateApiFrbHubDirectoryOutgoingBorrowRequests();
+
+/// Resolves a borrow request. resolution: "accept" | "reject"
+Future<FrbHubBorrowRequest> hubDirectoryResolveBorrowRequest({
+  required PlatformInt64 requestId,
+  required String resolution,
+}) => RustLib.instance.api.crateApiFrbHubDirectoryResolveBorrowRequest(
+  requestId: requestId,
+  resolution: resolution,
+);
+
+/// Encrypts plaintext for a recipient identified by their X25519 public key (hex-encoded).
+/// Returns a base64-encoded sealed blob suitable for hub storage.
+Future<String> sealBlob({
+  required String recipientX25519Hex,
+  required String plaintext,
+}) => RustLib.instance.api.crateApiFrbSealBlob(
+  recipientX25519Hex: recipientX25519Hex,
+  plaintext: plaintext,
+);
+
+/// Decrypts a base64-encoded sealed blob using the local node identity's X25519 secret key.
+/// Returns the plaintext string.
+Future<String> openBlob({required String sealedBase64}) =>
+    RustLib.instance.api.crateApiFrbOpenBlob(sealedBase64: sealedBase64);
+
+/// Batch-updates encrypted contact blobs for all active followers.
+/// contacts: list of (follow_id, encrypted_contact_base64) pairs.
+Future<int> hubDirectorySyncContacts({
+  required Int64List followIds,
+  required List<String> encryptedContacts,
+}) => RustLib.instance.api.crateApiFrbHubDirectorySyncContacts(
+  followIds: followIds,
+  encryptedContacts: encryptedContacts,
+);
+
+/// Returns the local X25519 public key as hex string, or None if no identity exists.
+Future<String?> getLocalX25519PublicKey() =>
+    RustLib.instance.api.crateApiFrbGetLocalX25519PublicKey();
 
 /// Returns all collections with their book counts.
 Future<List<FrbCollection>> getAllCollections() =>
@@ -845,6 +907,7 @@ sealed class FrbDirectoryConfig with _$FrbDirectoryConfig {
     required bool isListed,
     required bool requiresApproval,
     required String acceptFrom,
+    required bool allowBorrowing,
   }) = _FrbDirectoryConfig;
 }
 
@@ -960,6 +1023,22 @@ class FrbGamificationStatus {
 }
 
 @freezed
+sealed class FrbHubBorrowRequest with _$FrbHubBorrowRequest {
+  const factory FrbHubBorrowRequest({
+    required PlatformInt64 id,
+    required String requesterNodeId,
+    required String lenderNodeId,
+    required String isbn,
+    required String bookTitle,
+    required String status,
+    required String createdAt,
+    String? resolvedAt,
+    String? requesterDisplayName,
+    String? lenderDisplayName,
+  }) = _FrbHubBorrowRequest;
+}
+
+@freezed
 sealed class FrbHubFollow with _$FrbHubFollow {
   const factory FrbHubFollow({
     required PlatformInt64 id,
@@ -969,6 +1048,8 @@ sealed class FrbHubFollow with _$FrbHubFollow {
     required String createdAt,
     String? resolvedAt,
     String? followerDisplayName,
+    String? encryptedContact,
+    String? followerX25519PublicKey,
   }) = _FrbHubFollow;
 }
 
@@ -981,7 +1062,10 @@ sealed class FrbHubProfile with _$FrbHubProfile {
     required int bookCount,
     String? locationCountry,
     required bool requiresApproval,
+    bool? allowBorrowing,
     String? lastSeenAt,
+    String? x25519PublicKey,
+    String? website,
   }) = _FrbHubProfile;
 }
 
@@ -1517,6 +1601,9 @@ sealed class FrbRegisterParams with _$FrbRegisterParams {
     required String acceptFrom,
     String? description,
     String? locationCountry,
+    required bool allowBorrowing,
+    String? x25519PublicKey,
+    String? website,
   }) = _FrbRegisterParams;
 }
 

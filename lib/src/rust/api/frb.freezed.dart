@@ -1406,7 +1406,7 @@ as String,
 /// @nodoc
 mixin _$FrbDirectoryConfig {
 
- String get nodeId; bool get isListed; bool get requiresApproval; String get acceptFrom;
+ String get nodeId; bool get isListed; bool get requiresApproval; String get acceptFrom; bool get allowBorrowing;
 /// Create a copy of FrbDirectoryConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1417,16 +1417,16 @@ $FrbDirectoryConfigCopyWith<FrbDirectoryConfig> get copyWith => _$FrbDirectoryCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbDirectoryConfig&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.isListed, isListed) || other.isListed == isListed)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.acceptFrom, acceptFrom) || other.acceptFrom == acceptFrom));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbDirectoryConfig&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.isListed, isListed) || other.isListed == isListed)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.acceptFrom, acceptFrom) || other.acceptFrom == acceptFrom)&&(identical(other.allowBorrowing, allowBorrowing) || other.allowBorrowing == allowBorrowing));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,nodeId,isListed,requiresApproval,acceptFrom);
+int get hashCode => Object.hash(runtimeType,nodeId,isListed,requiresApproval,acceptFrom,allowBorrowing);
 
 @override
 String toString() {
-  return 'FrbDirectoryConfig(nodeId: $nodeId, isListed: $isListed, requiresApproval: $requiresApproval, acceptFrom: $acceptFrom)';
+  return 'FrbDirectoryConfig(nodeId: $nodeId, isListed: $isListed, requiresApproval: $requiresApproval, acceptFrom: $acceptFrom, allowBorrowing: $allowBorrowing)';
 }
 
 
@@ -1437,7 +1437,7 @@ abstract mixin class $FrbDirectoryConfigCopyWith<$Res>  {
   factory $FrbDirectoryConfigCopyWith(FrbDirectoryConfig value, $Res Function(FrbDirectoryConfig) _then) = _$FrbDirectoryConfigCopyWithImpl;
 @useResult
 $Res call({
- String nodeId, bool isListed, bool requiresApproval, String acceptFrom
+ String nodeId, bool isListed, bool requiresApproval, String acceptFrom, bool allowBorrowing
 });
 
 
@@ -1454,13 +1454,14 @@ class _$FrbDirectoryConfigCopyWithImpl<$Res>
 
 /// Create a copy of FrbDirectoryConfig
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? nodeId = null,Object? isListed = null,Object? requiresApproval = null,Object? acceptFrom = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? nodeId = null,Object? isListed = null,Object? requiresApproval = null,Object? acceptFrom = null,Object? allowBorrowing = null,}) {
   return _then(_self.copyWith(
 nodeId: null == nodeId ? _self.nodeId : nodeId // ignore: cast_nullable_to_non_nullable
 as String,isListed: null == isListed ? _self.isListed : isListed // ignore: cast_nullable_to_non_nullable
 as bool,requiresApproval: null == requiresApproval ? _self.requiresApproval : requiresApproval // ignore: cast_nullable_to_non_nullable
 as bool,acceptFrom: null == acceptFrom ? _self.acceptFrom : acceptFrom // ignore: cast_nullable_to_non_nullable
-as String,
+as String,allowBorrowing: null == allowBorrowing ? _self.allowBorrowing : allowBorrowing // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -1542,10 +1543,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String nodeId,  bool isListed,  bool requiresApproval,  String acceptFrom)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String nodeId,  bool isListed,  bool requiresApproval,  String acceptFrom,  bool allowBorrowing)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FrbDirectoryConfig() when $default != null:
-return $default(_that.nodeId,_that.isListed,_that.requiresApproval,_that.acceptFrom);case _:
+return $default(_that.nodeId,_that.isListed,_that.requiresApproval,_that.acceptFrom,_that.allowBorrowing);case _:
   return orElse();
 
 }
@@ -1563,10 +1564,10 @@ return $default(_that.nodeId,_that.isListed,_that.requiresApproval,_that.acceptF
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String nodeId,  bool isListed,  bool requiresApproval,  String acceptFrom)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String nodeId,  bool isListed,  bool requiresApproval,  String acceptFrom,  bool allowBorrowing)  $default,) {final _that = this;
 switch (_that) {
 case _FrbDirectoryConfig():
-return $default(_that.nodeId,_that.isListed,_that.requiresApproval,_that.acceptFrom);}
+return $default(_that.nodeId,_that.isListed,_that.requiresApproval,_that.acceptFrom,_that.allowBorrowing);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1580,10 +1581,10 @@ return $default(_that.nodeId,_that.isListed,_that.requiresApproval,_that.acceptF
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String nodeId,  bool isListed,  bool requiresApproval,  String acceptFrom)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String nodeId,  bool isListed,  bool requiresApproval,  String acceptFrom,  bool allowBorrowing)?  $default,) {final _that = this;
 switch (_that) {
 case _FrbDirectoryConfig() when $default != null:
-return $default(_that.nodeId,_that.isListed,_that.requiresApproval,_that.acceptFrom);case _:
+return $default(_that.nodeId,_that.isListed,_that.requiresApproval,_that.acceptFrom,_that.allowBorrowing);case _:
   return null;
 
 }
@@ -1595,13 +1596,14 @@ return $default(_that.nodeId,_that.isListed,_that.requiresApproval,_that.acceptF
 
 
 class _FrbDirectoryConfig implements FrbDirectoryConfig {
-  const _FrbDirectoryConfig({required this.nodeId, required this.isListed, required this.requiresApproval, required this.acceptFrom});
+  const _FrbDirectoryConfig({required this.nodeId, required this.isListed, required this.requiresApproval, required this.acceptFrom, required this.allowBorrowing});
   
 
 @override final  String nodeId;
 @override final  bool isListed;
 @override final  bool requiresApproval;
 @override final  String acceptFrom;
+@override final  bool allowBorrowing;
 
 /// Create a copy of FrbDirectoryConfig
 /// with the given fields replaced by the non-null parameter values.
@@ -1613,16 +1615,16 @@ _$FrbDirectoryConfigCopyWith<_FrbDirectoryConfig> get copyWith => __$FrbDirector
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FrbDirectoryConfig&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.isListed, isListed) || other.isListed == isListed)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.acceptFrom, acceptFrom) || other.acceptFrom == acceptFrom));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FrbDirectoryConfig&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.isListed, isListed) || other.isListed == isListed)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.acceptFrom, acceptFrom) || other.acceptFrom == acceptFrom)&&(identical(other.allowBorrowing, allowBorrowing) || other.allowBorrowing == allowBorrowing));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,nodeId,isListed,requiresApproval,acceptFrom);
+int get hashCode => Object.hash(runtimeType,nodeId,isListed,requiresApproval,acceptFrom,allowBorrowing);
 
 @override
 String toString() {
-  return 'FrbDirectoryConfig(nodeId: $nodeId, isListed: $isListed, requiresApproval: $requiresApproval, acceptFrom: $acceptFrom)';
+  return 'FrbDirectoryConfig(nodeId: $nodeId, isListed: $isListed, requiresApproval: $requiresApproval, acceptFrom: $acceptFrom, allowBorrowing: $allowBorrowing)';
 }
 
 
@@ -1633,7 +1635,7 @@ abstract mixin class _$FrbDirectoryConfigCopyWith<$Res> implements $FrbDirectory
   factory _$FrbDirectoryConfigCopyWith(_FrbDirectoryConfig value, $Res Function(_FrbDirectoryConfig) _then) = __$FrbDirectoryConfigCopyWithImpl;
 @override @useResult
 $Res call({
- String nodeId, bool isListed, bool requiresApproval, String acceptFrom
+ String nodeId, bool isListed, bool requiresApproval, String acceptFrom, bool allowBorrowing
 });
 
 
@@ -1650,13 +1652,14 @@ class __$FrbDirectoryConfigCopyWithImpl<$Res>
 
 /// Create a copy of FrbDirectoryConfig
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? nodeId = null,Object? isListed = null,Object? requiresApproval = null,Object? acceptFrom = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? nodeId = null,Object? isListed = null,Object? requiresApproval = null,Object? acceptFrom = null,Object? allowBorrowing = null,}) {
   return _then(_FrbDirectoryConfig(
 nodeId: null == nodeId ? _self.nodeId : nodeId // ignore: cast_nullable_to_non_nullable
 as String,isListed: null == isListed ? _self.isListed : isListed // ignore: cast_nullable_to_non_nullable
 as bool,requiresApproval: null == requiresApproval ? _self.requiresApproval : requiresApproval // ignore: cast_nullable_to_non_nullable
 as bool,acceptFrom: null == acceptFrom ? _self.acceptFrom : acceptFrom // ignore: cast_nullable_to_non_nullable
-as String,
+as String,allowBorrowing: null == allowBorrowing ? _self.allowBorrowing : allowBorrowing // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -1942,9 +1945,287 @@ as String,
 }
 
 /// @nodoc
+mixin _$FrbHubBorrowRequest {
+
+ PlatformInt64 get id; String get requesterNodeId; String get lenderNodeId; String get isbn; String get bookTitle; String get status; String get createdAt; String? get resolvedAt; String? get requesterDisplayName; String? get lenderDisplayName;
+/// Create a copy of FrbHubBorrowRequest
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$FrbHubBorrowRequestCopyWith<FrbHubBorrowRequest> get copyWith => _$FrbHubBorrowRequestCopyWithImpl<FrbHubBorrowRequest>(this as FrbHubBorrowRequest, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbHubBorrowRequest&&(identical(other.id, id) || other.id == id)&&(identical(other.requesterNodeId, requesterNodeId) || other.requesterNodeId == requesterNodeId)&&(identical(other.lenderNodeId, lenderNodeId) || other.lenderNodeId == lenderNodeId)&&(identical(other.isbn, isbn) || other.isbn == isbn)&&(identical(other.bookTitle, bookTitle) || other.bookTitle == bookTitle)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.resolvedAt, resolvedAt) || other.resolvedAt == resolvedAt)&&(identical(other.requesterDisplayName, requesterDisplayName) || other.requesterDisplayName == requesterDisplayName)&&(identical(other.lenderDisplayName, lenderDisplayName) || other.lenderDisplayName == lenderDisplayName));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,id,requesterNodeId,lenderNodeId,isbn,bookTitle,status,createdAt,resolvedAt,requesterDisplayName,lenderDisplayName);
+
+@override
+String toString() {
+  return 'FrbHubBorrowRequest(id: $id, requesterNodeId: $requesterNodeId, lenderNodeId: $lenderNodeId, isbn: $isbn, bookTitle: $bookTitle, status: $status, createdAt: $createdAt, resolvedAt: $resolvedAt, requesterDisplayName: $requesterDisplayName, lenderDisplayName: $lenderDisplayName)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $FrbHubBorrowRequestCopyWith<$Res>  {
+  factory $FrbHubBorrowRequestCopyWith(FrbHubBorrowRequest value, $Res Function(FrbHubBorrowRequest) _then) = _$FrbHubBorrowRequestCopyWithImpl;
+@useResult
+$Res call({
+ PlatformInt64 id, String requesterNodeId, String lenderNodeId, String isbn, String bookTitle, String status, String createdAt, String? resolvedAt, String? requesterDisplayName, String? lenderDisplayName
+});
+
+
+
+
+}
+/// @nodoc
+class _$FrbHubBorrowRequestCopyWithImpl<$Res>
+    implements $FrbHubBorrowRequestCopyWith<$Res> {
+  _$FrbHubBorrowRequestCopyWithImpl(this._self, this._then);
+
+  final FrbHubBorrowRequest _self;
+  final $Res Function(FrbHubBorrowRequest) _then;
+
+/// Create a copy of FrbHubBorrowRequest
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? requesterNodeId = null,Object? lenderNodeId = null,Object? isbn = null,Object? bookTitle = null,Object? status = null,Object? createdAt = null,Object? resolvedAt = freezed,Object? requesterDisplayName = freezed,Object? lenderDisplayName = freezed,}) {
+  return _then(_self.copyWith(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as PlatformInt64,requesterNodeId: null == requesterNodeId ? _self.requesterNodeId : requesterNodeId // ignore: cast_nullable_to_non_nullable
+as String,lenderNodeId: null == lenderNodeId ? _self.lenderNodeId : lenderNodeId // ignore: cast_nullable_to_non_nullable
+as String,isbn: null == isbn ? _self.isbn : isbn // ignore: cast_nullable_to_non_nullable
+as String,bookTitle: null == bookTitle ? _self.bookTitle : bookTitle // ignore: cast_nullable_to_non_nullable
+as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as String,resolvedAt: freezed == resolvedAt ? _self.resolvedAt : resolvedAt // ignore: cast_nullable_to_non_nullable
+as String?,requesterDisplayName: freezed == requesterDisplayName ? _self.requesterDisplayName : requesterDisplayName // ignore: cast_nullable_to_non_nullable
+as String?,lenderDisplayName: freezed == lenderDisplayName ? _self.lenderDisplayName : lenderDisplayName // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [FrbHubBorrowRequest].
+extension FrbHubBorrowRequestPatterns on FrbHubBorrowRequest {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _FrbHubBorrowRequest value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _FrbHubBorrowRequest() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _FrbHubBorrowRequest value)  $default,){
+final _that = this;
+switch (_that) {
+case _FrbHubBorrowRequest():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _FrbHubBorrowRequest value)?  $default,){
+final _that = this;
+switch (_that) {
+case _FrbHubBorrowRequest() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PlatformInt64 id,  String requesterNodeId,  String lenderNodeId,  String isbn,  String bookTitle,  String status,  String createdAt,  String? resolvedAt,  String? requesterDisplayName,  String? lenderDisplayName)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _FrbHubBorrowRequest() when $default != null:
+return $default(_that.id,_that.requesterNodeId,_that.lenderNodeId,_that.isbn,_that.bookTitle,_that.status,_that.createdAt,_that.resolvedAt,_that.requesterDisplayName,_that.lenderDisplayName);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PlatformInt64 id,  String requesterNodeId,  String lenderNodeId,  String isbn,  String bookTitle,  String status,  String createdAt,  String? resolvedAt,  String? requesterDisplayName,  String? lenderDisplayName)  $default,) {final _that = this;
+switch (_that) {
+case _FrbHubBorrowRequest():
+return $default(_that.id,_that.requesterNodeId,_that.lenderNodeId,_that.isbn,_that.bookTitle,_that.status,_that.createdAt,_that.resolvedAt,_that.requesterDisplayName,_that.lenderDisplayName);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PlatformInt64 id,  String requesterNodeId,  String lenderNodeId,  String isbn,  String bookTitle,  String status,  String createdAt,  String? resolvedAt,  String? requesterDisplayName,  String? lenderDisplayName)?  $default,) {final _that = this;
+switch (_that) {
+case _FrbHubBorrowRequest() when $default != null:
+return $default(_that.id,_that.requesterNodeId,_that.lenderNodeId,_that.isbn,_that.bookTitle,_that.status,_that.createdAt,_that.resolvedAt,_that.requesterDisplayName,_that.lenderDisplayName);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _FrbHubBorrowRequest implements FrbHubBorrowRequest {
+  const _FrbHubBorrowRequest({required this.id, required this.requesterNodeId, required this.lenderNodeId, required this.isbn, required this.bookTitle, required this.status, required this.createdAt, this.resolvedAt, this.requesterDisplayName, this.lenderDisplayName});
+  
+
+@override final  PlatformInt64 id;
+@override final  String requesterNodeId;
+@override final  String lenderNodeId;
+@override final  String isbn;
+@override final  String bookTitle;
+@override final  String status;
+@override final  String createdAt;
+@override final  String? resolvedAt;
+@override final  String? requesterDisplayName;
+@override final  String? lenderDisplayName;
+
+/// Create a copy of FrbHubBorrowRequest
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$FrbHubBorrowRequestCopyWith<_FrbHubBorrowRequest> get copyWith => __$FrbHubBorrowRequestCopyWithImpl<_FrbHubBorrowRequest>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FrbHubBorrowRequest&&(identical(other.id, id) || other.id == id)&&(identical(other.requesterNodeId, requesterNodeId) || other.requesterNodeId == requesterNodeId)&&(identical(other.lenderNodeId, lenderNodeId) || other.lenderNodeId == lenderNodeId)&&(identical(other.isbn, isbn) || other.isbn == isbn)&&(identical(other.bookTitle, bookTitle) || other.bookTitle == bookTitle)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.resolvedAt, resolvedAt) || other.resolvedAt == resolvedAt)&&(identical(other.requesterDisplayName, requesterDisplayName) || other.requesterDisplayName == requesterDisplayName)&&(identical(other.lenderDisplayName, lenderDisplayName) || other.lenderDisplayName == lenderDisplayName));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,id,requesterNodeId,lenderNodeId,isbn,bookTitle,status,createdAt,resolvedAt,requesterDisplayName,lenderDisplayName);
+
+@override
+String toString() {
+  return 'FrbHubBorrowRequest(id: $id, requesterNodeId: $requesterNodeId, lenderNodeId: $lenderNodeId, isbn: $isbn, bookTitle: $bookTitle, status: $status, createdAt: $createdAt, resolvedAt: $resolvedAt, requesterDisplayName: $requesterDisplayName, lenderDisplayName: $lenderDisplayName)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$FrbHubBorrowRequestCopyWith<$Res> implements $FrbHubBorrowRequestCopyWith<$Res> {
+  factory _$FrbHubBorrowRequestCopyWith(_FrbHubBorrowRequest value, $Res Function(_FrbHubBorrowRequest) _then) = __$FrbHubBorrowRequestCopyWithImpl;
+@override @useResult
+$Res call({
+ PlatformInt64 id, String requesterNodeId, String lenderNodeId, String isbn, String bookTitle, String status, String createdAt, String? resolvedAt, String? requesterDisplayName, String? lenderDisplayName
+});
+
+
+
+
+}
+/// @nodoc
+class __$FrbHubBorrowRequestCopyWithImpl<$Res>
+    implements _$FrbHubBorrowRequestCopyWith<$Res> {
+  __$FrbHubBorrowRequestCopyWithImpl(this._self, this._then);
+
+  final _FrbHubBorrowRequest _self;
+  final $Res Function(_FrbHubBorrowRequest) _then;
+
+/// Create a copy of FrbHubBorrowRequest
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? requesterNodeId = null,Object? lenderNodeId = null,Object? isbn = null,Object? bookTitle = null,Object? status = null,Object? createdAt = null,Object? resolvedAt = freezed,Object? requesterDisplayName = freezed,Object? lenderDisplayName = freezed,}) {
+  return _then(_FrbHubBorrowRequest(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as PlatformInt64,requesterNodeId: null == requesterNodeId ? _self.requesterNodeId : requesterNodeId // ignore: cast_nullable_to_non_nullable
+as String,lenderNodeId: null == lenderNodeId ? _self.lenderNodeId : lenderNodeId // ignore: cast_nullable_to_non_nullable
+as String,isbn: null == isbn ? _self.isbn : isbn // ignore: cast_nullable_to_non_nullable
+as String,bookTitle: null == bookTitle ? _self.bookTitle : bookTitle // ignore: cast_nullable_to_non_nullable
+as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as String,resolvedAt: freezed == resolvedAt ? _self.resolvedAt : resolvedAt // ignore: cast_nullable_to_non_nullable
+as String?,requesterDisplayName: freezed == requesterDisplayName ? _self.requesterDisplayName : requesterDisplayName // ignore: cast_nullable_to_non_nullable
+as String?,lenderDisplayName: freezed == lenderDisplayName ? _self.lenderDisplayName : lenderDisplayName // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$FrbHubFollow {
 
- PlatformInt64 get id; String get followerNodeId; String get followedNodeId; String get status; String get createdAt; String? get resolvedAt; String? get followerDisplayName;
+ PlatformInt64 get id; String get followerNodeId; String get followedNodeId; String get status; String get createdAt; String? get resolvedAt; String? get followerDisplayName; String? get encryptedContact; String? get followerX25519PublicKey;
 /// Create a copy of FrbHubFollow
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1955,16 +2236,16 @@ $FrbHubFollowCopyWith<FrbHubFollow> get copyWith => _$FrbHubFollowCopyWithImpl<F
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbHubFollow&&(identical(other.id, id) || other.id == id)&&(identical(other.followerNodeId, followerNodeId) || other.followerNodeId == followerNodeId)&&(identical(other.followedNodeId, followedNodeId) || other.followedNodeId == followedNodeId)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.resolvedAt, resolvedAt) || other.resolvedAt == resolvedAt)&&(identical(other.followerDisplayName, followerDisplayName) || other.followerDisplayName == followerDisplayName));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbHubFollow&&(identical(other.id, id) || other.id == id)&&(identical(other.followerNodeId, followerNodeId) || other.followerNodeId == followerNodeId)&&(identical(other.followedNodeId, followedNodeId) || other.followedNodeId == followedNodeId)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.resolvedAt, resolvedAt) || other.resolvedAt == resolvedAt)&&(identical(other.followerDisplayName, followerDisplayName) || other.followerDisplayName == followerDisplayName)&&(identical(other.encryptedContact, encryptedContact) || other.encryptedContact == encryptedContact)&&(identical(other.followerX25519PublicKey, followerX25519PublicKey) || other.followerX25519PublicKey == followerX25519PublicKey));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,followerNodeId,followedNodeId,status,createdAt,resolvedAt,followerDisplayName);
+int get hashCode => Object.hash(runtimeType,id,followerNodeId,followedNodeId,status,createdAt,resolvedAt,followerDisplayName,encryptedContact,followerX25519PublicKey);
 
 @override
 String toString() {
-  return 'FrbHubFollow(id: $id, followerNodeId: $followerNodeId, followedNodeId: $followedNodeId, status: $status, createdAt: $createdAt, resolvedAt: $resolvedAt, followerDisplayName: $followerDisplayName)';
+  return 'FrbHubFollow(id: $id, followerNodeId: $followerNodeId, followedNodeId: $followedNodeId, status: $status, createdAt: $createdAt, resolvedAt: $resolvedAt, followerDisplayName: $followerDisplayName, encryptedContact: $encryptedContact, followerX25519PublicKey: $followerX25519PublicKey)';
 }
 
 
@@ -1975,7 +2256,7 @@ abstract mixin class $FrbHubFollowCopyWith<$Res>  {
   factory $FrbHubFollowCopyWith(FrbHubFollow value, $Res Function(FrbHubFollow) _then) = _$FrbHubFollowCopyWithImpl;
 @useResult
 $Res call({
- PlatformInt64 id, String followerNodeId, String followedNodeId, String status, String createdAt, String? resolvedAt, String? followerDisplayName
+ PlatformInt64 id, String followerNodeId, String followedNodeId, String status, String createdAt, String? resolvedAt, String? followerDisplayName, String? encryptedContact, String? followerX25519PublicKey
 });
 
 
@@ -1992,7 +2273,7 @@ class _$FrbHubFollowCopyWithImpl<$Res>
 
 /// Create a copy of FrbHubFollow
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? followerNodeId = null,Object? followedNodeId = null,Object? status = null,Object? createdAt = null,Object? resolvedAt = freezed,Object? followerDisplayName = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? followerNodeId = null,Object? followedNodeId = null,Object? status = null,Object? createdAt = null,Object? resolvedAt = freezed,Object? followerDisplayName = freezed,Object? encryptedContact = freezed,Object? followerX25519PublicKey = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as PlatformInt64,followerNodeId: null == followerNodeId ? _self.followerNodeId : followerNodeId // ignore: cast_nullable_to_non_nullable
@@ -2001,6 +2282,8 @@ as String,status: null == status ? _self.status : status // ignore: cast_nullabl
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as String,resolvedAt: freezed == resolvedAt ? _self.resolvedAt : resolvedAt // ignore: cast_nullable_to_non_nullable
 as String?,followerDisplayName: freezed == followerDisplayName ? _self.followerDisplayName : followerDisplayName // ignore: cast_nullable_to_non_nullable
+as String?,encryptedContact: freezed == encryptedContact ? _self.encryptedContact : encryptedContact // ignore: cast_nullable_to_non_nullable
+as String?,followerX25519PublicKey: freezed == followerX25519PublicKey ? _self.followerX25519PublicKey : followerX25519PublicKey // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -2083,10 +2366,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PlatformInt64 id,  String followerNodeId,  String followedNodeId,  String status,  String createdAt,  String? resolvedAt,  String? followerDisplayName)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PlatformInt64 id,  String followerNodeId,  String followedNodeId,  String status,  String createdAt,  String? resolvedAt,  String? followerDisplayName,  String? encryptedContact,  String? followerX25519PublicKey)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FrbHubFollow() when $default != null:
-return $default(_that.id,_that.followerNodeId,_that.followedNodeId,_that.status,_that.createdAt,_that.resolvedAt,_that.followerDisplayName);case _:
+return $default(_that.id,_that.followerNodeId,_that.followedNodeId,_that.status,_that.createdAt,_that.resolvedAt,_that.followerDisplayName,_that.encryptedContact,_that.followerX25519PublicKey);case _:
   return orElse();
 
 }
@@ -2104,10 +2387,10 @@ return $default(_that.id,_that.followerNodeId,_that.followedNodeId,_that.status,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PlatformInt64 id,  String followerNodeId,  String followedNodeId,  String status,  String createdAt,  String? resolvedAt,  String? followerDisplayName)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PlatformInt64 id,  String followerNodeId,  String followedNodeId,  String status,  String createdAt,  String? resolvedAt,  String? followerDisplayName,  String? encryptedContact,  String? followerX25519PublicKey)  $default,) {final _that = this;
 switch (_that) {
 case _FrbHubFollow():
-return $default(_that.id,_that.followerNodeId,_that.followedNodeId,_that.status,_that.createdAt,_that.resolvedAt,_that.followerDisplayName);}
+return $default(_that.id,_that.followerNodeId,_that.followedNodeId,_that.status,_that.createdAt,_that.resolvedAt,_that.followerDisplayName,_that.encryptedContact,_that.followerX25519PublicKey);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -2121,10 +2404,10 @@ return $default(_that.id,_that.followerNodeId,_that.followedNodeId,_that.status,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PlatformInt64 id,  String followerNodeId,  String followedNodeId,  String status,  String createdAt,  String? resolvedAt,  String? followerDisplayName)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PlatformInt64 id,  String followerNodeId,  String followedNodeId,  String status,  String createdAt,  String? resolvedAt,  String? followerDisplayName,  String? encryptedContact,  String? followerX25519PublicKey)?  $default,) {final _that = this;
 switch (_that) {
 case _FrbHubFollow() when $default != null:
-return $default(_that.id,_that.followerNodeId,_that.followedNodeId,_that.status,_that.createdAt,_that.resolvedAt,_that.followerDisplayName);case _:
+return $default(_that.id,_that.followerNodeId,_that.followedNodeId,_that.status,_that.createdAt,_that.resolvedAt,_that.followerDisplayName,_that.encryptedContact,_that.followerX25519PublicKey);case _:
   return null;
 
 }
@@ -2136,7 +2419,7 @@ return $default(_that.id,_that.followerNodeId,_that.followedNodeId,_that.status,
 
 
 class _FrbHubFollow implements FrbHubFollow {
-  const _FrbHubFollow({required this.id, required this.followerNodeId, required this.followedNodeId, required this.status, required this.createdAt, this.resolvedAt, this.followerDisplayName});
+  const _FrbHubFollow({required this.id, required this.followerNodeId, required this.followedNodeId, required this.status, required this.createdAt, this.resolvedAt, this.followerDisplayName, this.encryptedContact, this.followerX25519PublicKey});
   
 
 @override final  PlatformInt64 id;
@@ -2146,6 +2429,8 @@ class _FrbHubFollow implements FrbHubFollow {
 @override final  String createdAt;
 @override final  String? resolvedAt;
 @override final  String? followerDisplayName;
+@override final  String? encryptedContact;
+@override final  String? followerX25519PublicKey;
 
 /// Create a copy of FrbHubFollow
 /// with the given fields replaced by the non-null parameter values.
@@ -2157,16 +2442,16 @@ _$FrbHubFollowCopyWith<_FrbHubFollow> get copyWith => __$FrbHubFollowCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FrbHubFollow&&(identical(other.id, id) || other.id == id)&&(identical(other.followerNodeId, followerNodeId) || other.followerNodeId == followerNodeId)&&(identical(other.followedNodeId, followedNodeId) || other.followedNodeId == followedNodeId)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.resolvedAt, resolvedAt) || other.resolvedAt == resolvedAt)&&(identical(other.followerDisplayName, followerDisplayName) || other.followerDisplayName == followerDisplayName));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FrbHubFollow&&(identical(other.id, id) || other.id == id)&&(identical(other.followerNodeId, followerNodeId) || other.followerNodeId == followerNodeId)&&(identical(other.followedNodeId, followedNodeId) || other.followedNodeId == followedNodeId)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.resolvedAt, resolvedAt) || other.resolvedAt == resolvedAt)&&(identical(other.followerDisplayName, followerDisplayName) || other.followerDisplayName == followerDisplayName)&&(identical(other.encryptedContact, encryptedContact) || other.encryptedContact == encryptedContact)&&(identical(other.followerX25519PublicKey, followerX25519PublicKey) || other.followerX25519PublicKey == followerX25519PublicKey));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,followerNodeId,followedNodeId,status,createdAt,resolvedAt,followerDisplayName);
+int get hashCode => Object.hash(runtimeType,id,followerNodeId,followedNodeId,status,createdAt,resolvedAt,followerDisplayName,encryptedContact,followerX25519PublicKey);
 
 @override
 String toString() {
-  return 'FrbHubFollow(id: $id, followerNodeId: $followerNodeId, followedNodeId: $followedNodeId, status: $status, createdAt: $createdAt, resolvedAt: $resolvedAt, followerDisplayName: $followerDisplayName)';
+  return 'FrbHubFollow(id: $id, followerNodeId: $followerNodeId, followedNodeId: $followedNodeId, status: $status, createdAt: $createdAt, resolvedAt: $resolvedAt, followerDisplayName: $followerDisplayName, encryptedContact: $encryptedContact, followerX25519PublicKey: $followerX25519PublicKey)';
 }
 
 
@@ -2177,7 +2462,7 @@ abstract mixin class _$FrbHubFollowCopyWith<$Res> implements $FrbHubFollowCopyWi
   factory _$FrbHubFollowCopyWith(_FrbHubFollow value, $Res Function(_FrbHubFollow) _then) = __$FrbHubFollowCopyWithImpl;
 @override @useResult
 $Res call({
- PlatformInt64 id, String followerNodeId, String followedNodeId, String status, String createdAt, String? resolvedAt, String? followerDisplayName
+ PlatformInt64 id, String followerNodeId, String followedNodeId, String status, String createdAt, String? resolvedAt, String? followerDisplayName, String? encryptedContact, String? followerX25519PublicKey
 });
 
 
@@ -2194,7 +2479,7 @@ class __$FrbHubFollowCopyWithImpl<$Res>
 
 /// Create a copy of FrbHubFollow
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? followerNodeId = null,Object? followedNodeId = null,Object? status = null,Object? createdAt = null,Object? resolvedAt = freezed,Object? followerDisplayName = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? followerNodeId = null,Object? followedNodeId = null,Object? status = null,Object? createdAt = null,Object? resolvedAt = freezed,Object? followerDisplayName = freezed,Object? encryptedContact = freezed,Object? followerX25519PublicKey = freezed,}) {
   return _then(_FrbHubFollow(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as PlatformInt64,followerNodeId: null == followerNodeId ? _self.followerNodeId : followerNodeId // ignore: cast_nullable_to_non_nullable
@@ -2203,6 +2488,8 @@ as String,status: null == status ? _self.status : status // ignore: cast_nullabl
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as String,resolvedAt: freezed == resolvedAt ? _self.resolvedAt : resolvedAt // ignore: cast_nullable_to_non_nullable
 as String?,followerDisplayName: freezed == followerDisplayName ? _self.followerDisplayName : followerDisplayName // ignore: cast_nullable_to_non_nullable
+as String?,encryptedContact: freezed == encryptedContact ? _self.encryptedContact : encryptedContact // ignore: cast_nullable_to_non_nullable
+as String?,followerX25519PublicKey: freezed == followerX25519PublicKey ? _self.followerX25519PublicKey : followerX25519PublicKey // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -2213,7 +2500,7 @@ as String?,
 /// @nodoc
 mixin _$FrbHubProfile {
 
- String get nodeId; String get displayName; String? get description; int get bookCount; String? get locationCountry; bool get requiresApproval; String? get lastSeenAt;
+ String get nodeId; String get displayName; String? get description; int get bookCount; String? get locationCountry; bool get requiresApproval; bool? get allowBorrowing; String? get lastSeenAt; String? get x25519PublicKey; String? get website;
 /// Create a copy of FrbHubProfile
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2224,16 +2511,16 @@ $FrbHubProfileCopyWith<FrbHubProfile> get copyWith => _$FrbHubProfileCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbHubProfile&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.description, description) || other.description == description)&&(identical(other.bookCount, bookCount) || other.bookCount == bookCount)&&(identical(other.locationCountry, locationCountry) || other.locationCountry == locationCountry)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbHubProfile&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.description, description) || other.description == description)&&(identical(other.bookCount, bookCount) || other.bookCount == bookCount)&&(identical(other.locationCountry, locationCountry) || other.locationCountry == locationCountry)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.allowBorrowing, allowBorrowing) || other.allowBorrowing == allowBorrowing)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt)&&(identical(other.x25519PublicKey, x25519PublicKey) || other.x25519PublicKey == x25519PublicKey)&&(identical(other.website, website) || other.website == website));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,nodeId,displayName,description,bookCount,locationCountry,requiresApproval,lastSeenAt);
+int get hashCode => Object.hash(runtimeType,nodeId,displayName,description,bookCount,locationCountry,requiresApproval,allowBorrowing,lastSeenAt,x25519PublicKey,website);
 
 @override
 String toString() {
-  return 'FrbHubProfile(nodeId: $nodeId, displayName: $displayName, description: $description, bookCount: $bookCount, locationCountry: $locationCountry, requiresApproval: $requiresApproval, lastSeenAt: $lastSeenAt)';
+  return 'FrbHubProfile(nodeId: $nodeId, displayName: $displayName, description: $description, bookCount: $bookCount, locationCountry: $locationCountry, requiresApproval: $requiresApproval, allowBorrowing: $allowBorrowing, lastSeenAt: $lastSeenAt, x25519PublicKey: $x25519PublicKey, website: $website)';
 }
 
 
@@ -2244,7 +2531,7 @@ abstract mixin class $FrbHubProfileCopyWith<$Res>  {
   factory $FrbHubProfileCopyWith(FrbHubProfile value, $Res Function(FrbHubProfile) _then) = _$FrbHubProfileCopyWithImpl;
 @useResult
 $Res call({
- String nodeId, String displayName, String? description, int bookCount, String? locationCountry, bool requiresApproval, String? lastSeenAt
+ String nodeId, String displayName, String? description, int bookCount, String? locationCountry, bool requiresApproval, bool? allowBorrowing, String? lastSeenAt, String? x25519PublicKey, String? website
 });
 
 
@@ -2261,7 +2548,7 @@ class _$FrbHubProfileCopyWithImpl<$Res>
 
 /// Create a copy of FrbHubProfile
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? nodeId = null,Object? displayName = null,Object? description = freezed,Object? bookCount = null,Object? locationCountry = freezed,Object? requiresApproval = null,Object? lastSeenAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? nodeId = null,Object? displayName = null,Object? description = freezed,Object? bookCount = null,Object? locationCountry = freezed,Object? requiresApproval = null,Object? allowBorrowing = freezed,Object? lastSeenAt = freezed,Object? x25519PublicKey = freezed,Object? website = freezed,}) {
   return _then(_self.copyWith(
 nodeId: null == nodeId ? _self.nodeId : nodeId // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
@@ -2269,7 +2556,10 @@ as String,description: freezed == description ? _self.description : description 
 as String?,bookCount: null == bookCount ? _self.bookCount : bookCount // ignore: cast_nullable_to_non_nullable
 as int,locationCountry: freezed == locationCountry ? _self.locationCountry : locationCountry // ignore: cast_nullable_to_non_nullable
 as String?,requiresApproval: null == requiresApproval ? _self.requiresApproval : requiresApproval // ignore: cast_nullable_to_non_nullable
-as bool,lastSeenAt: freezed == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
+as bool,allowBorrowing: freezed == allowBorrowing ? _self.allowBorrowing : allowBorrowing // ignore: cast_nullable_to_non_nullable
+as bool?,lastSeenAt: freezed == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
+as String?,x25519PublicKey: freezed == x25519PublicKey ? _self.x25519PublicKey : x25519PublicKey // ignore: cast_nullable_to_non_nullable
+as String?,website: freezed == website ? _self.website : website // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -2352,10 +2642,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String nodeId,  String displayName,  String? description,  int bookCount,  String? locationCountry,  bool requiresApproval,  String? lastSeenAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String nodeId,  String displayName,  String? description,  int bookCount,  String? locationCountry,  bool requiresApproval,  bool? allowBorrowing,  String? lastSeenAt,  String? x25519PublicKey,  String? website)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FrbHubProfile() when $default != null:
-return $default(_that.nodeId,_that.displayName,_that.description,_that.bookCount,_that.locationCountry,_that.requiresApproval,_that.lastSeenAt);case _:
+return $default(_that.nodeId,_that.displayName,_that.description,_that.bookCount,_that.locationCountry,_that.requiresApproval,_that.allowBorrowing,_that.lastSeenAt,_that.x25519PublicKey,_that.website);case _:
   return orElse();
 
 }
@@ -2373,10 +2663,10 @@ return $default(_that.nodeId,_that.displayName,_that.description,_that.bookCount
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String nodeId,  String displayName,  String? description,  int bookCount,  String? locationCountry,  bool requiresApproval,  String? lastSeenAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String nodeId,  String displayName,  String? description,  int bookCount,  String? locationCountry,  bool requiresApproval,  bool? allowBorrowing,  String? lastSeenAt,  String? x25519PublicKey,  String? website)  $default,) {final _that = this;
 switch (_that) {
 case _FrbHubProfile():
-return $default(_that.nodeId,_that.displayName,_that.description,_that.bookCount,_that.locationCountry,_that.requiresApproval,_that.lastSeenAt);}
+return $default(_that.nodeId,_that.displayName,_that.description,_that.bookCount,_that.locationCountry,_that.requiresApproval,_that.allowBorrowing,_that.lastSeenAt,_that.x25519PublicKey,_that.website);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -2390,10 +2680,10 @@ return $default(_that.nodeId,_that.displayName,_that.description,_that.bookCount
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String nodeId,  String displayName,  String? description,  int bookCount,  String? locationCountry,  bool requiresApproval,  String? lastSeenAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String nodeId,  String displayName,  String? description,  int bookCount,  String? locationCountry,  bool requiresApproval,  bool? allowBorrowing,  String? lastSeenAt,  String? x25519PublicKey,  String? website)?  $default,) {final _that = this;
 switch (_that) {
 case _FrbHubProfile() when $default != null:
-return $default(_that.nodeId,_that.displayName,_that.description,_that.bookCount,_that.locationCountry,_that.requiresApproval,_that.lastSeenAt);case _:
+return $default(_that.nodeId,_that.displayName,_that.description,_that.bookCount,_that.locationCountry,_that.requiresApproval,_that.allowBorrowing,_that.lastSeenAt,_that.x25519PublicKey,_that.website);case _:
   return null;
 
 }
@@ -2405,7 +2695,7 @@ return $default(_that.nodeId,_that.displayName,_that.description,_that.bookCount
 
 
 class _FrbHubProfile implements FrbHubProfile {
-  const _FrbHubProfile({required this.nodeId, required this.displayName, this.description, required this.bookCount, this.locationCountry, required this.requiresApproval, this.lastSeenAt});
+  const _FrbHubProfile({required this.nodeId, required this.displayName, this.description, required this.bookCount, this.locationCountry, required this.requiresApproval, this.allowBorrowing, this.lastSeenAt, this.x25519PublicKey, this.website});
   
 
 @override final  String nodeId;
@@ -2414,7 +2704,10 @@ class _FrbHubProfile implements FrbHubProfile {
 @override final  int bookCount;
 @override final  String? locationCountry;
 @override final  bool requiresApproval;
+@override final  bool? allowBorrowing;
 @override final  String? lastSeenAt;
+@override final  String? x25519PublicKey;
+@override final  String? website;
 
 /// Create a copy of FrbHubProfile
 /// with the given fields replaced by the non-null parameter values.
@@ -2426,16 +2719,16 @@ _$FrbHubProfileCopyWith<_FrbHubProfile> get copyWith => __$FrbHubProfileCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FrbHubProfile&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.description, description) || other.description == description)&&(identical(other.bookCount, bookCount) || other.bookCount == bookCount)&&(identical(other.locationCountry, locationCountry) || other.locationCountry == locationCountry)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FrbHubProfile&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.description, description) || other.description == description)&&(identical(other.bookCount, bookCount) || other.bookCount == bookCount)&&(identical(other.locationCountry, locationCountry) || other.locationCountry == locationCountry)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.allowBorrowing, allowBorrowing) || other.allowBorrowing == allowBorrowing)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt)&&(identical(other.x25519PublicKey, x25519PublicKey) || other.x25519PublicKey == x25519PublicKey)&&(identical(other.website, website) || other.website == website));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,nodeId,displayName,description,bookCount,locationCountry,requiresApproval,lastSeenAt);
+int get hashCode => Object.hash(runtimeType,nodeId,displayName,description,bookCount,locationCountry,requiresApproval,allowBorrowing,lastSeenAt,x25519PublicKey,website);
 
 @override
 String toString() {
-  return 'FrbHubProfile(nodeId: $nodeId, displayName: $displayName, description: $description, bookCount: $bookCount, locationCountry: $locationCountry, requiresApproval: $requiresApproval, lastSeenAt: $lastSeenAt)';
+  return 'FrbHubProfile(nodeId: $nodeId, displayName: $displayName, description: $description, bookCount: $bookCount, locationCountry: $locationCountry, requiresApproval: $requiresApproval, allowBorrowing: $allowBorrowing, lastSeenAt: $lastSeenAt, x25519PublicKey: $x25519PublicKey, website: $website)';
 }
 
 
@@ -2446,7 +2739,7 @@ abstract mixin class _$FrbHubProfileCopyWith<$Res> implements $FrbHubProfileCopy
   factory _$FrbHubProfileCopyWith(_FrbHubProfile value, $Res Function(_FrbHubProfile) _then) = __$FrbHubProfileCopyWithImpl;
 @override @useResult
 $Res call({
- String nodeId, String displayName, String? description, int bookCount, String? locationCountry, bool requiresApproval, String? lastSeenAt
+ String nodeId, String displayName, String? description, int bookCount, String? locationCountry, bool requiresApproval, bool? allowBorrowing, String? lastSeenAt, String? x25519PublicKey, String? website
 });
 
 
@@ -2463,7 +2756,7 @@ class __$FrbHubProfileCopyWithImpl<$Res>
 
 /// Create a copy of FrbHubProfile
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? nodeId = null,Object? displayName = null,Object? description = freezed,Object? bookCount = null,Object? locationCountry = freezed,Object? requiresApproval = null,Object? lastSeenAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? nodeId = null,Object? displayName = null,Object? description = freezed,Object? bookCount = null,Object? locationCountry = freezed,Object? requiresApproval = null,Object? allowBorrowing = freezed,Object? lastSeenAt = freezed,Object? x25519PublicKey = freezed,Object? website = freezed,}) {
   return _then(_FrbHubProfile(
 nodeId: null == nodeId ? _self.nodeId : nodeId // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
@@ -2471,7 +2764,10 @@ as String,description: freezed == description ? _self.description : description 
 as String?,bookCount: null == bookCount ? _self.bookCount : bookCount // ignore: cast_nullable_to_non_nullable
 as int,locationCountry: freezed == locationCountry ? _self.locationCountry : locationCountry // ignore: cast_nullable_to_non_nullable
 as String?,requiresApproval: null == requiresApproval ? _self.requiresApproval : requiresApproval // ignore: cast_nullable_to_non_nullable
-as bool,lastSeenAt: freezed == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
+as bool,allowBorrowing: freezed == allowBorrowing ? _self.allowBorrowing : allowBorrowing // ignore: cast_nullable_to_non_nullable
+as bool?,lastSeenAt: freezed == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
+as String?,x25519PublicKey: freezed == x25519PublicKey ? _self.x25519PublicKey : x25519PublicKey // ignore: cast_nullable_to_non_nullable
+as String?,website: freezed == website ? _self.website : website // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -3298,7 +3594,7 @@ as BigInt,
 /// @nodoc
 mixin _$FrbRegisterParams {
 
- String get nodeId; String get displayName; int get bookCount; bool get isListed; bool get requiresApproval; String get acceptFrom; String? get description; String? get locationCountry;
+ String get nodeId; String get displayName; int get bookCount; bool get isListed; bool get requiresApproval; String get acceptFrom; String? get description; String? get locationCountry; bool get allowBorrowing; String? get x25519PublicKey; String? get website;
 /// Create a copy of FrbRegisterParams
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3309,16 +3605,16 @@ $FrbRegisterParamsCopyWith<FrbRegisterParams> get copyWith => _$FrbRegisterParam
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbRegisterParams&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.bookCount, bookCount) || other.bookCount == bookCount)&&(identical(other.isListed, isListed) || other.isListed == isListed)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.acceptFrom, acceptFrom) || other.acceptFrom == acceptFrom)&&(identical(other.description, description) || other.description == description)&&(identical(other.locationCountry, locationCountry) || other.locationCountry == locationCountry));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FrbRegisterParams&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.bookCount, bookCount) || other.bookCount == bookCount)&&(identical(other.isListed, isListed) || other.isListed == isListed)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.acceptFrom, acceptFrom) || other.acceptFrom == acceptFrom)&&(identical(other.description, description) || other.description == description)&&(identical(other.locationCountry, locationCountry) || other.locationCountry == locationCountry)&&(identical(other.allowBorrowing, allowBorrowing) || other.allowBorrowing == allowBorrowing)&&(identical(other.x25519PublicKey, x25519PublicKey) || other.x25519PublicKey == x25519PublicKey)&&(identical(other.website, website) || other.website == website));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,nodeId,displayName,bookCount,isListed,requiresApproval,acceptFrom,description,locationCountry);
+int get hashCode => Object.hash(runtimeType,nodeId,displayName,bookCount,isListed,requiresApproval,acceptFrom,description,locationCountry,allowBorrowing,x25519PublicKey,website);
 
 @override
 String toString() {
-  return 'FrbRegisterParams(nodeId: $nodeId, displayName: $displayName, bookCount: $bookCount, isListed: $isListed, requiresApproval: $requiresApproval, acceptFrom: $acceptFrom, description: $description, locationCountry: $locationCountry)';
+  return 'FrbRegisterParams(nodeId: $nodeId, displayName: $displayName, bookCount: $bookCount, isListed: $isListed, requiresApproval: $requiresApproval, acceptFrom: $acceptFrom, description: $description, locationCountry: $locationCountry, allowBorrowing: $allowBorrowing, x25519PublicKey: $x25519PublicKey, website: $website)';
 }
 
 
@@ -3329,7 +3625,7 @@ abstract mixin class $FrbRegisterParamsCopyWith<$Res>  {
   factory $FrbRegisterParamsCopyWith(FrbRegisterParams value, $Res Function(FrbRegisterParams) _then) = _$FrbRegisterParamsCopyWithImpl;
 @useResult
 $Res call({
- String nodeId, String displayName, int bookCount, bool isListed, bool requiresApproval, String acceptFrom, String? description, String? locationCountry
+ String nodeId, String displayName, int bookCount, bool isListed, bool requiresApproval, String acceptFrom, String? description, String? locationCountry, bool allowBorrowing, String? x25519PublicKey, String? website
 });
 
 
@@ -3346,7 +3642,7 @@ class _$FrbRegisterParamsCopyWithImpl<$Res>
 
 /// Create a copy of FrbRegisterParams
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? nodeId = null,Object? displayName = null,Object? bookCount = null,Object? isListed = null,Object? requiresApproval = null,Object? acceptFrom = null,Object? description = freezed,Object? locationCountry = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? nodeId = null,Object? displayName = null,Object? bookCount = null,Object? isListed = null,Object? requiresApproval = null,Object? acceptFrom = null,Object? description = freezed,Object? locationCountry = freezed,Object? allowBorrowing = null,Object? x25519PublicKey = freezed,Object? website = freezed,}) {
   return _then(_self.copyWith(
 nodeId: null == nodeId ? _self.nodeId : nodeId // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
@@ -3356,6 +3652,9 @@ as bool,requiresApproval: null == requiresApproval ? _self.requiresApproval : re
 as bool,acceptFrom: null == acceptFrom ? _self.acceptFrom : acceptFrom // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,locationCountry: freezed == locationCountry ? _self.locationCountry : locationCountry // ignore: cast_nullable_to_non_nullable
+as String?,allowBorrowing: null == allowBorrowing ? _self.allowBorrowing : allowBorrowing // ignore: cast_nullable_to_non_nullable
+as bool,x25519PublicKey: freezed == x25519PublicKey ? _self.x25519PublicKey : x25519PublicKey // ignore: cast_nullable_to_non_nullable
+as String?,website: freezed == website ? _self.website : website // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -3438,10 +3737,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String nodeId,  String displayName,  int bookCount,  bool isListed,  bool requiresApproval,  String acceptFrom,  String? description,  String? locationCountry)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String nodeId,  String displayName,  int bookCount,  bool isListed,  bool requiresApproval,  String acceptFrom,  String? description,  String? locationCountry,  bool allowBorrowing,  String? x25519PublicKey,  String? website)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FrbRegisterParams() when $default != null:
-return $default(_that.nodeId,_that.displayName,_that.bookCount,_that.isListed,_that.requiresApproval,_that.acceptFrom,_that.description,_that.locationCountry);case _:
+return $default(_that.nodeId,_that.displayName,_that.bookCount,_that.isListed,_that.requiresApproval,_that.acceptFrom,_that.description,_that.locationCountry,_that.allowBorrowing,_that.x25519PublicKey,_that.website);case _:
   return orElse();
 
 }
@@ -3459,10 +3758,10 @@ return $default(_that.nodeId,_that.displayName,_that.bookCount,_that.isListed,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String nodeId,  String displayName,  int bookCount,  bool isListed,  bool requiresApproval,  String acceptFrom,  String? description,  String? locationCountry)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String nodeId,  String displayName,  int bookCount,  bool isListed,  bool requiresApproval,  String acceptFrom,  String? description,  String? locationCountry,  bool allowBorrowing,  String? x25519PublicKey,  String? website)  $default,) {final _that = this;
 switch (_that) {
 case _FrbRegisterParams():
-return $default(_that.nodeId,_that.displayName,_that.bookCount,_that.isListed,_that.requiresApproval,_that.acceptFrom,_that.description,_that.locationCountry);}
+return $default(_that.nodeId,_that.displayName,_that.bookCount,_that.isListed,_that.requiresApproval,_that.acceptFrom,_that.description,_that.locationCountry,_that.allowBorrowing,_that.x25519PublicKey,_that.website);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -3476,10 +3775,10 @@ return $default(_that.nodeId,_that.displayName,_that.bookCount,_that.isListed,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String nodeId,  String displayName,  int bookCount,  bool isListed,  bool requiresApproval,  String acceptFrom,  String? description,  String? locationCountry)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String nodeId,  String displayName,  int bookCount,  bool isListed,  bool requiresApproval,  String acceptFrom,  String? description,  String? locationCountry,  bool allowBorrowing,  String? x25519PublicKey,  String? website)?  $default,) {final _that = this;
 switch (_that) {
 case _FrbRegisterParams() when $default != null:
-return $default(_that.nodeId,_that.displayName,_that.bookCount,_that.isListed,_that.requiresApproval,_that.acceptFrom,_that.description,_that.locationCountry);case _:
+return $default(_that.nodeId,_that.displayName,_that.bookCount,_that.isListed,_that.requiresApproval,_that.acceptFrom,_that.description,_that.locationCountry,_that.allowBorrowing,_that.x25519PublicKey,_that.website);case _:
   return null;
 
 }
@@ -3491,7 +3790,7 @@ return $default(_that.nodeId,_that.displayName,_that.bookCount,_that.isListed,_t
 
 
 class _FrbRegisterParams implements FrbRegisterParams {
-  const _FrbRegisterParams({required this.nodeId, required this.displayName, required this.bookCount, required this.isListed, required this.requiresApproval, required this.acceptFrom, this.description, this.locationCountry});
+  const _FrbRegisterParams({required this.nodeId, required this.displayName, required this.bookCount, required this.isListed, required this.requiresApproval, required this.acceptFrom, this.description, this.locationCountry, required this.allowBorrowing, this.x25519PublicKey, this.website});
   
 
 @override final  String nodeId;
@@ -3502,6 +3801,9 @@ class _FrbRegisterParams implements FrbRegisterParams {
 @override final  String acceptFrom;
 @override final  String? description;
 @override final  String? locationCountry;
+@override final  bool allowBorrowing;
+@override final  String? x25519PublicKey;
+@override final  String? website;
 
 /// Create a copy of FrbRegisterParams
 /// with the given fields replaced by the non-null parameter values.
@@ -3513,16 +3815,16 @@ _$FrbRegisterParamsCopyWith<_FrbRegisterParams> get copyWith => __$FrbRegisterPa
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FrbRegisterParams&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.bookCount, bookCount) || other.bookCount == bookCount)&&(identical(other.isListed, isListed) || other.isListed == isListed)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.acceptFrom, acceptFrom) || other.acceptFrom == acceptFrom)&&(identical(other.description, description) || other.description == description)&&(identical(other.locationCountry, locationCountry) || other.locationCountry == locationCountry));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FrbRegisterParams&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.bookCount, bookCount) || other.bookCount == bookCount)&&(identical(other.isListed, isListed) || other.isListed == isListed)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.acceptFrom, acceptFrom) || other.acceptFrom == acceptFrom)&&(identical(other.description, description) || other.description == description)&&(identical(other.locationCountry, locationCountry) || other.locationCountry == locationCountry)&&(identical(other.allowBorrowing, allowBorrowing) || other.allowBorrowing == allowBorrowing)&&(identical(other.x25519PublicKey, x25519PublicKey) || other.x25519PublicKey == x25519PublicKey)&&(identical(other.website, website) || other.website == website));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,nodeId,displayName,bookCount,isListed,requiresApproval,acceptFrom,description,locationCountry);
+int get hashCode => Object.hash(runtimeType,nodeId,displayName,bookCount,isListed,requiresApproval,acceptFrom,description,locationCountry,allowBorrowing,x25519PublicKey,website);
 
 @override
 String toString() {
-  return 'FrbRegisterParams(nodeId: $nodeId, displayName: $displayName, bookCount: $bookCount, isListed: $isListed, requiresApproval: $requiresApproval, acceptFrom: $acceptFrom, description: $description, locationCountry: $locationCountry)';
+  return 'FrbRegisterParams(nodeId: $nodeId, displayName: $displayName, bookCount: $bookCount, isListed: $isListed, requiresApproval: $requiresApproval, acceptFrom: $acceptFrom, description: $description, locationCountry: $locationCountry, allowBorrowing: $allowBorrowing, x25519PublicKey: $x25519PublicKey, website: $website)';
 }
 
 
@@ -3533,7 +3835,7 @@ abstract mixin class _$FrbRegisterParamsCopyWith<$Res> implements $FrbRegisterPa
   factory _$FrbRegisterParamsCopyWith(_FrbRegisterParams value, $Res Function(_FrbRegisterParams) _then) = __$FrbRegisterParamsCopyWithImpl;
 @override @useResult
 $Res call({
- String nodeId, String displayName, int bookCount, bool isListed, bool requiresApproval, String acceptFrom, String? description, String? locationCountry
+ String nodeId, String displayName, int bookCount, bool isListed, bool requiresApproval, String acceptFrom, String? description, String? locationCountry, bool allowBorrowing, String? x25519PublicKey, String? website
 });
 
 
@@ -3550,7 +3852,7 @@ class __$FrbRegisterParamsCopyWithImpl<$Res>
 
 /// Create a copy of FrbRegisterParams
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? nodeId = null,Object? displayName = null,Object? bookCount = null,Object? isListed = null,Object? requiresApproval = null,Object? acceptFrom = null,Object? description = freezed,Object? locationCountry = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? nodeId = null,Object? displayName = null,Object? bookCount = null,Object? isListed = null,Object? requiresApproval = null,Object? acceptFrom = null,Object? description = freezed,Object? locationCountry = freezed,Object? allowBorrowing = null,Object? x25519PublicKey = freezed,Object? website = freezed,}) {
   return _then(_FrbRegisterParams(
 nodeId: null == nodeId ? _self.nodeId : nodeId // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
@@ -3560,6 +3862,9 @@ as bool,requiresApproval: null == requiresApproval ? _self.requiresApproval : re
 as bool,acceptFrom: null == acceptFrom ? _self.acceptFrom : acceptFrom // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,locationCountry: freezed == locationCountry ? _self.locationCountry : locationCountry // ignore: cast_nullable_to_non_nullable
+as String?,allowBorrowing: null == allowBorrowing ? _self.allowBorrowing : allowBorrowing // ignore: cast_nullable_to_non_nullable
+as bool,x25519PublicKey: freezed == x25519PublicKey ? _self.x25519PublicKey : x25519PublicKey // ignore: cast_nullable_to_non_nullable
+as String?,website: freezed == website ? _self.website : website // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

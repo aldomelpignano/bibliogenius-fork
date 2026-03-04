@@ -4605,6 +4605,62 @@ msgstr "To"
 msgid "request_to_borrow"
 msgstr "Borrow"
 
+#. Hub Borrow - Via Hub badge
+msgid "hub_borrow_via_hub"
+msgstr "Via Hub"
+
+#. Hub Borrow - Follow required
+msgid "hub_borrow_no_follow"
+msgstr "Follow this library first to request a loan"
+
+#. Hub Borrow - Duplicate pending request
+msgid "hub_borrow_duplicate"
+msgstr "You already have a pending request for this book"
+
+#. Hub - Allow borrowing toggle
+msgid "hub_allow_borrowing"
+msgstr "Allow borrowing requests"
+
+#. Hub - Allow borrowing description
+msgid "hub_allow_borrowing_desc"
+msgstr "Let your followers request to borrow your books via the hub"
+
+#. Hub - Borrowing disabled message
+msgid "hub_borrowing_disabled"
+msgstr "This library does not accept borrow requests"
+
+#. Hub - Experimental toggle
+msgid "hub_experimental_toggle"
+msgstr "Public directory (Experimental)"
+
+msgid "hub_experimental_desc"
+msgstr "Register your library in the public directory and discover other readers nearby"
+
+msgid "hub_experimental_chip"
+msgstr "Experimental"
+
+#. Hub - Contact info
+msgid "hub_contact_label"
+msgstr "Contact info (visible to approved followers)"
+
+msgid "hub_contact_hint"
+msgstr "Email, phone, address..."
+
+msgid "hub_contact_encrypted_notice"
+msgstr "Encrypted - only visible to your approved followers"
+
+#. Hub - Website
+msgid "hub_website_label"
+msgstr "Website (optional)"
+
+#. Hub - Contact info title (peer detail)
+msgid "hub_contact_info_title"
+msgstr "Contact"
+
+#. Hub - Discover disabled
+msgid "hub_disabled_discover"
+msgstr "Enable the public directory in Settings to discover other libraries"
+
 #. Requests
 msgid "requests"
 msgstr "Requests"
@@ -6829,6 +6885,12 @@ msgstr "Requests"
 msgid "directory_empty"
 msgstr "No libraries to discover yet."
 
+msgid "directory_search_hint"
+msgstr "Search by name..."
+
+msgid "directory_no_results"
+msgstr "No libraries found"
+
 msgid "directory_following_empty"
 msgstr "You are not following any libraries yet. Use the Discover tab to get started."
 
@@ -6837,6 +6899,9 @@ msgstr "No incoming follow requests."
 
 msgid "directory_books"
 msgstr "books"
+
+msgid "directory_your_library"
+msgstr "Your library"
 
 msgid "directory_follow"
 msgstr "Follow"
@@ -6974,7 +7039,7 @@ msgid "network_tab_my_network"
 msgstr "My network"
 
 msgid "network_tab_discover"
-msgstr "Discover"
+msgstr "Public directory"
 
 #. Network filters
 msgid "network_filter_all"
@@ -7100,7 +7165,10 @@ msgid "peer_last_seen"
 msgstr "Last seen"
 
 msgid "peer_has_relay"
-msgstr "Reachable via relay"
+msgstr "Reachable even outside local Wi-Fi"
+
+msgid "peer_connection_info"
+msgstr "Connection"
 
 msgid "peer_node_id"
 msgstr "Node ID"
@@ -7147,6 +7215,9 @@ msgid "show_view_count_desc"
 msgstr "Display view count on your profile"
 
 #. Profile view counter
+msgid "profile_view"
+msgstr "view"
+
 msgid "profile_views"
 msgstr "views"
 
@@ -7155,3 +7226,26 @@ msgstr "from peers"
 
 msgid "profile_views_followers"
 msgstr "from followers"
+
+#. Peer connectivity status
+#. Profile follower count
+msgid "profile_follower"
+msgstr "follower"
+
+msgid "profile_followers"
+msgstr "followers"
+
+msgid "peer_status_online"
+msgstr "Online"
+
+msgid "peer_status_unreachable"
+msgstr "Unreachable"
+
+msgid "module_edition_browser"
+msgstr "Edition Browser"
+
+msgid "module_edition_browser_desc"
+msgstr "Browse and select from multiple editions when adding books"
+
+msgid "confirm"
+msgstr "Confirm"

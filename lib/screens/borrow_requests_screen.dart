@@ -11,7 +11,9 @@ import '../models/loan.dart';
 import '../services/api_service.dart';
 import '../services/ffi_service.dart';
 import '../services/translation_service.dart';
+import '../providers/hub_directory_provider.dart';
 import '../providers/theme_provider.dart';
+import '../src/rust/api/frb.dart' show FrbHubBorrowRequest;
 import '../widgets/premium_empty_state.dart';
 
 /// Screen for managing loans, borrows, and P2P requests
@@ -55,10 +57,10 @@ class _LoansScreenState extends State<LoansScreen>
   void initState() {
     super.initState();
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    // Show "Demandes" tab if LAN discovery OR relay sharing is enabled
-    // (relay peers can also send/receive loan requests)
+    final hubProvider = Provider.of<HubDirectoryProvider>(context, listen: false);
+    // Show "Demandes" tab if LAN discovery, relay sharing, or hub is active
     final hasPeerNetwork =
-        themeProvider.networkEnabled || themeProvider.remoteReachableEnabled;
+        themeProvider.networkEnabled || themeProvider.remoteReachableEnabled || hubProvider.isRegistered;
     // Tab count depends on:
     // - hasPeerNetwork: show "Demandes" tab if any peer connectivity is active
     // - canBorrowBooks: show "Empruntés" tab only if borrowing is enabled
@@ -122,6 +124,15 @@ class _LoansScreenState extends State<LoansScreen>
           _outgoingRequests = outRes.data;
           _connectionRequests = connRes.data['requests'] ?? [];
         }
+      }
+
+      // Fetch hub borrow requests (independent from P2P network)
+      final hubProvider = Provider.of<HubDirectoryProvider>(context, listen: false);
+      if (hubProvider.isRegistered) {
+        await Future.wait([
+          hubProvider.loadIncomingHubRequests(),
+          hubProvider.loadOutgoingHubRequests(),
+        ]);
       }
 
       // Fetch active loans (books I lent)
@@ -795,34 +806,44 @@ class _LoansScreenState extends State<LoansScreen>
   // === Request list builders (from original) ===
 
   Widget _buildIncomingList() {
-    if (_incomingRequests.isEmpty) {
+    final hubProvider = Provider.of<HubDirectoryProvider>(context, listen: false);
+    final hubIncoming = hubProvider.incomingHubRequests;
+    final hasP2p = _incomingRequests.isNotEmpty;
+    final hasHub = hubIncoming.isNotEmpty;
+
+    if (!hasP2p && !hasHub) {
       return _buildEmptyState(
         TranslationService.translate(context, 'empty_no_incoming'),
       );
     }
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton.icon(
-                onPressed: () => _cleanClosedRequests(isIncoming: true),
-                icon: const Icon(Icons.cleaning_services, size: 18),
-                label: Text(
-                  TranslationService.translate(context, 'clean_closed_requests'),
+        if (hasP2p)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _cleanClosedRequests(isIncoming: true),
+                  icon: const Icon(Icons.cleaning_services, size: 18),
+                  label: Text(
+                    TranslationService.translate(context, 'clean_closed_requests'),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
         Expanded(
-          child: ListView.builder(
-            itemCount: _incomingRequests.length,
-            itemBuilder: (context, index) {
-              return _buildRequestTile(_incomingRequests[index], isIncoming: true);
-            },
+          child: ListView(
+            children: [
+              // P2P requests
+              for (final req in _incomingRequests)
+                _buildRequestTile(req, isIncoming: true),
+              // Hub borrow requests (ADR-018)
+              for (final req in hubIncoming)
+                _buildHubRequestTile(req, isIncoming: true),
+            ],
           ),
         ),
       ],
@@ -830,34 +851,44 @@ class _LoansScreenState extends State<LoansScreen>
   }
 
   Widget _buildOutgoingList() {
-    if (_outgoingRequests.isEmpty) {
+    final hubProvider = Provider.of<HubDirectoryProvider>(context, listen: false);
+    final hubOutgoing = hubProvider.outgoingHubRequests;
+    final hasP2p = _outgoingRequests.isNotEmpty;
+    final hasHub = hubOutgoing.isNotEmpty;
+
+    if (!hasP2p && !hasHub) {
       return _buildEmptyState(
         TranslationService.translate(context, 'empty_no_outgoing'),
       );
     }
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton.icon(
-                onPressed: () => _cleanClosedRequests(isIncoming: false),
-                icon: const Icon(Icons.cleaning_services, size: 18),
-                label: Text(
-                  TranslationService.translate(context, 'clean_closed_requests'),
+        if (hasP2p)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _cleanClosedRequests(isIncoming: false),
+                  icon: const Icon(Icons.cleaning_services, size: 18),
+                  label: Text(
+                    TranslationService.translate(context, 'clean_closed_requests'),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
         Expanded(
-          child: ListView.builder(
-            itemCount: _outgoingRequests.length,
-            itemBuilder: (context, index) {
-              return _buildRequestTile(_outgoingRequests[index], isIncoming: false);
-            },
+          child: ListView(
+            children: [
+              // P2P requests
+              for (final req in _outgoingRequests)
+                _buildRequestTile(req, isIncoming: false),
+              // Hub borrow requests (ADR-018)
+              for (final req in hubOutgoing)
+                _buildHubRequestTile(req, isIncoming: false),
+            ],
           ),
         ),
       ],
@@ -930,6 +961,93 @@ class _LoansScreenState extends State<LoansScreen>
         );
       }
     }
+  }
+
+  // === Hub borrow request tiles (ADR-018) ===
+
+  Widget _buildHubRequestTile(FrbHubBorrowRequest req, {required bool isIncoming}) {
+    final title = req.bookTitle.isNotEmpty ? req.bookTitle : req.isbn;
+    final peerName = isIncoming
+        ? (req.requesterDisplayName ?? req.requesterNodeId)
+        : (req.lenderDisplayName ?? req.lenderNodeId);
+    final status = req.status;
+    final busyKey = 'hub_borrow_${req.id}';
+    final hubProvider = Provider.of<HubDirectoryProvider>(context, listen: false);
+    final isPending = hubProvider.isBusy(busyKey);
+
+    return Card(
+      surfaceTintColor: Colors.transparent,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: _getStatusColor(status),
+          child: const Icon(Icons.book, color: Colors.white),
+        ),
+        title: Row(
+          children: [
+            Expanded(child: Text(title)),
+            Tooltip(
+              message: TranslationService.translate(context, 'hub_borrow_via_hub'),
+              child: const Icon(Icons.cloud_outlined, size: 18, color: Colors.blueGrey),
+            ),
+          ],
+        ),
+        subtitle: Text(
+          isIncoming
+              ? '${TranslationService.translate(context, 'request_from')}: $peerName'
+              : '${TranslationService.translate(context, 'request_to')}: $peerName',
+        ),
+        trailing: isPending
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : _buildStatusChip(status),
+        onTap: (status != 'pending' || isPending || !isIncoming)
+            ? null
+            : () => _showHubRequestActions(req),
+      ),
+    );
+  }
+
+  void _showHubRequestActions(FrbHubBorrowRequest req) {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.check, color: Colors.green),
+              title: Text(
+                TranslationService.translate(context, 'action_approve'),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                final hubProvider = Provider.of<HubDirectoryProvider>(context, listen: false);
+                hubProvider.resolveHubBorrowRequest(req.id.toInt(), 'accept').then((_) {
+                  if (mounted) setState(() {});
+                });
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.close, color: Colors.red),
+              title: Text(
+                TranslationService.translate(context, 'action_reject'),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                final hubProvider = Provider.of<HubDirectoryProvider>(context, listen: false);
+                hubProvider.resolveHubBorrowRequest(req.id.toInt(), 'reject').then((_) {
+                  if (mounted) setState(() {});
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildConnectionList() {

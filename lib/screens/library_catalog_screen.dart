@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/hub_directory.dart';
 import '../providers/hub_directory_provider.dart';
@@ -35,6 +36,7 @@ class _LibraryCatalogScreenState extends State<LibraryCatalogScreen> {
   String? _error;
   final Map<String, Map<String, String?>?> _lookupCache = {};
   Set<String> _localIsbns = {};
+  String? _decryptedContact;
 
   @override
   void initState() {
@@ -63,11 +65,34 @@ class _LibraryCatalogScreenState extends State<LibraryCatalogScreen> {
             .map((b) => b.isbn!)
             .toSet();
       });
+      // Decrypt contact info if available on the follow relationship
+      _decryptContact();
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = e.toString());
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _decryptContact() async {
+    final provider = context.read<HubDirectoryProvider>();
+    final follow = provider.followFor(widget.nodeId);
+    debugPrint('[CONTACT-READ] followFor(${widget.nodeId.substring(0, 8)}...): '
+        '${follow != null ? "found id=${follow.id} status=${follow.status}" : "NOT FOUND"}');
+    if (follow != null) {
+      debugPrint('[CONTACT-READ] encryptedContact: ${follow.encryptedContact != null ? "${follow.encryptedContact!.length} chars" : "null"}');
+    }
+    final blob = follow?.encryptedContact;
+    if (blob == null || blob.isEmpty) {
+      debugPrint('[CONTACT-READ] no encrypted contact blob, returning');
+      return;
+    }
+
+    final plaintext = await provider.openContact(blob);
+    debugPrint('[CONTACT-READ] decrypted: ${plaintext != null ? "OK (${plaintext.length} chars)" : "FAILED"}');
+    if (mounted && plaintext != null) {
+      setState(() => _decryptedContact = plaintext);
     }
   }
 
@@ -168,7 +193,11 @@ class _LibraryCatalogScreenState extends State<LibraryCatalogScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_profile != null) _ProfileHeader(profile: _profile!),
+        if (_profile != null)
+          _ProfileHeader(
+            profile: _profile!,
+            decryptedContact: _decryptedContact,
+          ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
           child: Semantics(
@@ -232,6 +261,8 @@ class _LibraryCatalogScreenState extends State<LibraryCatalogScreen> {
         ffi: _ffi,
         lang: lang,
         onAdded: (isbn) => setState(() => _localIsbns.add(isbn)),
+        lenderNodeId: widget.nodeId,
+        allowBorrowing: false, // Hub borrowing disabled (coming soon)
       ),
     );
   }
@@ -248,6 +279,8 @@ class _BookDetailSheet extends StatefulWidget {
   final FfiService ffi;
   final String lang;
   final ValueChanged<String> onAdded;
+  final String lenderNodeId;
+  final bool allowBorrowing;
 
   const _BookDetailSheet({
     required this.entry,
@@ -256,6 +289,8 @@ class _BookDetailSheet extends StatefulWidget {
     required this.ffi,
     required this.lang,
     required this.onAdded,
+    required this.lenderNodeId,
+    required this.allowBorrowing,
   });
 
   @override
@@ -266,6 +301,7 @@ class _BookDetailSheetState extends State<_BookDetailSheet> {
   Map<String, String?>? _meta;
   bool _loading = true;
   bool _adding = false;
+  bool _borrowing = false;
 
   @override
   void initState() {
@@ -337,6 +373,41 @@ class _BookDetailSheetState extends State<_BookDetailSheet> {
           ),
         );
         setState(() => _adding = false);
+      }
+    }
+  }
+
+  Future<void> _requestBorrow() async {
+    setState(() => _borrowing = true);
+    try {
+      final provider = context.read<HubDirectoryProvider>();
+      await provider.createBorrowRequest(
+        widget.lenderNodeId,
+        widget.entry.isbn,
+        _meta?['title'] ?? widget.entry.title,
+      );
+      if (mounted) {
+        final messenger = ScaffoldMessenger.of(context);
+        Navigator.of(context).pop();
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              TranslationService.translate(context, 'borrow_request_sent'),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${TranslationService.translate(context, 'error_sending_request')}: $e',
+            ),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+        setState(() => _borrowing = false);
       }
     }
   }
@@ -537,6 +608,30 @@ class _BookDetailSheetState extends State<_BookDetailSheet> {
                         ),
                       ),
               ),
+              // Borrow button (hub-mediated, ADR-018)
+              if (!isLocal && widget.allowBorrowing)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _borrowing ? null : _requestBorrow,
+                      icon: _borrowing
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.swap_horiz),
+                      label: Text(
+                        TranslationService.translate(
+                          context,
+                          'request_to_borrow',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -563,86 +658,213 @@ class _BookDetailSheetState extends State<_BookDetailSheet> {
 
 class _ProfileHeader extends StatelessWidget {
   final HubProfile profile;
+  final String? decryptedContact;
 
-  const _ProfileHeader({required this.profile});
+  const _ProfileHeader({
+    required this.profile,
+    this.decryptedContact,
+  });
+
+  bool get _hasContactSection =>
+      (profile.website != null && profile.website!.isNotEmpty) ||
+      (decryptedContact != null && decryptedContact!.isNotEmpty);
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final onContainer = cs.onPrimaryContainer;
+    final onContainerMuted = onContainer.withValues(alpha: 0.7);
+
     return Container(
       margin: const EdgeInsets.all(12),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(12),
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            child: Text(
-              profile.displayName.isNotEmpty
-                  ? profile.displayName[0].toUpperCase()
-                  : '?',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  profile.displayName,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onPrimaryContainer,
-                      ),
-                ),
-                if (profile.locationCountry != null)
-                  Text(
-                    profile.locationCountry!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onPrimaryContainer
-                          .withValues(alpha: 0.8),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          // -- Identity row --
+          Row(
             children: [
-              Text(
-                '${profile.bookCount}',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color:
-                          Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: cs.primary,
+                child: Text(
+                  profile.displayName.isNotEmpty
+                      ? profile.displayName[0].toUpperCase()
+                      : '?',
+                  style: TextStyle(
+                    color: cs.onPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
               ),
-              Text(
-                TranslationService.translate(context, 'directory_books'),
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onPrimaryContainer
-                      .withValues(alpha: 0.8),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      profile.displayName,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: onContainer,
+                          ),
+                    ),
+                    if (profile.locationCountry != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          profile.locationCountry!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: onContainerMuted,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: cs.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      '${profile.bookCount}',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: onContainer,
+                          ),
+                    ),
+                    Text(
+                      TranslationService.translate(
+                          context, 'directory_books'),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: onContainerMuted,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
+          // -- Contact section --
+          if (_hasContactSection) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Divider(
+                height: 1,
+                color: onContainer.withValues(alpha: 0.15),
+              ),
+            ),
+            if (profile.website != null &&
+                profile.website!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: _WebsiteLink(
+                  url: profile.website!,
+                  color: onContainerMuted,
+                ),
+              ),
+            if (decryptedContact != null &&
+                decryptedContact!.isNotEmpty)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 1),
+                    child: Icon(Icons.lock_outlined,
+                        size: 14, color: onContainerMuted),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      decryptedContact!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: onContainer,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+          ],
         ],
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Website link (validated, clickable)
+// ---------------------------------------------------------------------------
+
+class _WebsiteLink extends StatelessWidget {
+  final String url;
+  final Color color;
+
+  const _WebsiteLink({required this.url, required this.color});
+
+  /// Normalizes and validates the URL. Returns a safe https/http URI or null.
+  static Uri? _safeUri(String raw) {
+    var s = raw.trim();
+    if (s.isEmpty) return null;
+    // Auto-prepend https if missing scheme
+    if (!s.startsWith('http://') && !s.startsWith('https://')) {
+      s = 'https://$s';
+    }
+    final uri = Uri.tryParse(s);
+    if (uri == null) return null;
+    // Only allow http/https schemes
+    if (uri.scheme != 'http' && uri.scheme != 'https') return null;
+    // Must have a host with a dot (basic domain validation)
+    if (!uri.host.contains('.')) return null;
+    return uri;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final uri = _safeUri(url);
+    if (uri == null) return const SizedBox.shrink();
+
+    final display = uri.toString();
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+      onTap: () => launchUrl(uri, mode: LaunchMode.externalApplication),
+      child: Row(
+        children: [
+          Icon(Icons.language, size: 14, color: color),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              display,
+              style: TextStyle(
+                fontSize: 12,
+                color: color,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    ),
     );
   }
 }

@@ -42,15 +42,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _relayConnected = false;
   bool _relayLoading = false;
   final _relayUrlController = TextEditingController();
+  // Hub directory contact + website controllers
+  final _hubContactController = TextEditingController();
+  final _hubWebsiteController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _fetchSettings();
     _initPackageInfo();
-    // Load hub directory config (non-blocking)
+    // Load hub directory config + preferences (non-blocking)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<HubDirectoryProvider>().loadConfig();
+      final hubProvider = context.read<HubDirectoryProvider>();
+      final themeProvider = context.read<ThemeProvider>();
+      hubProvider.loadConfig().then((_) {
+        // Ensure X25519 key is published on hub for E2EE contact sharing
+        if (hubProvider.isRegistered) {
+          final name = themeProvider.libraryName.isNotEmpty
+              ? themeProvider.libraryName
+              : 'My Library';
+          hubProvider.ensureKeysPublished(name);
+        }
+      });
+      hubProvider.loadHubEnabled();
+      hubProvider.loadContactInfo().then((_) {
+        if (mounted && _hubContactController.text.isEmpty) {
+          _hubContactController.text = hubProvider.contactInfo;
+        }
+      });
+      hubProvider.loadWebsite().then((_) {
+        if (mounted && _hubWebsiteController.text.isEmpty) {
+          _hubWebsiteController.text = hubProvider.websiteUrl;
+        }
+      });
     });
   }
 
@@ -71,6 +95,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void dispose() {
     _apiKeyController.dispose();
     _relayUrlController.dispose();
+    _hubContactController.dispose();
+    _hubWebsiteController.dispose();
     super.dispose();
   }
 
@@ -774,26 +800,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 24),
 
-            // Session / Logout
-            OutlinedButton.icon(
-              onPressed: () async {
-                final authService = Provider.of<AuthService>(
-                  context,
-                  listen: false,
-                );
-                await Future.delayed(const Duration(milliseconds: 200));
-                await authService.logout();
-                if (mounted) {
-                  context.go('/login');
-                }
-              },
-              icon: const Icon(Icons.logout),
-              label: Text(TranslationService.translate(context, 'logout')),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                foregroundColor: Colors.red,
+            // Session / Logout (only shown for authenticated users)
+            if (hasPassword)
+              OutlinedButton.icon(
+                onPressed: () async {
+                  final authService = Provider.of<AuthService>(
+                    context,
+                    listen: false,
+                  );
+                  await Future.delayed(const Duration(milliseconds: 200));
+                  await authService.logout();
+                  if (mounted) {
+                    context.go('/login');
+                  }
+                },
+                icon: const Icon(Icons.logout),
+                label: Text(TranslationService.translate(context, 'logout')),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  foregroundColor: Colors.red,
+                ),
               ),
-            ),
             if (_appVersion.isNotEmpty) ...[
               const SizedBox(height: 32),
               Center(
@@ -919,7 +946,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        _buildDirectorySection(context),
+        Consumer<HubDirectoryProvider>(
+          builder: (context, hubProvider, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: SwitchListTile(
+                  secondary: const Icon(Icons.public),
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          TranslationService.translate(
+                                context, 'hub_experimental_toggle') ??
+                              'Public directory (Experimental)',
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          TranslationService.translate(
+                                context, 'hub_experimental_chip') ??
+                              'Experimental',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.orange,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  subtitle: Text(
+                    TranslationService.translate(
+                          context, 'hub_experimental_desc') ??
+                        'Register your library in the public directory and discover other readers nearby',
+                  ),
+                  value: hubProvider.isHubEnabled,
+                  onChanged: (value) => hubProvider.setHubEnabled(value),
+                ),
+              ),
+              if (hubProvider.isHubEnabled) _buildDirectorySection(context),
+            ],
+          ),
+        ),
 
         // --- Privacy & cache sub-group ---
         const SizedBox(height: 12),
@@ -1311,15 +1387,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             'Advanced settings',
                       ),
                       children: [
-                        // Requires approval toggle
+                        // Requires approval toggle (disabled - coming soon)
                         SwitchListTile(
                           secondary: const Icon(Icons.how_to_reg),
-                          title: Text(
-                            TranslationService.translate(
-                                  context,
-                                  'directory_requires_approval_title',
-                                ) ??
-                                'Require approval for followers',
+                          title: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  TranslationService.translate(
+                                        context,
+                                        'directory_requires_approval_title',
+                                      ) ??
+                                      'Require approval for followers',
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color:
+                                      Colors.orange.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  TranslationService.translate(
+                                          context, 'coming_soon') ??
+                                      'Coming soon',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           subtitle: Text(
                             TranslationService.translate(
@@ -1329,16 +1431,97 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 'New followers need your approval before accessing your catalog',
                           ),
                           value: config?.requiresApproval ?? false,
-                          onChanged: dirProvider.configLoading
-                              ? null
-                              : (value) => _updateDirectoryConfig(
-                                    context,
-                                    dirProvider,
-                                    requiresApproval: value,
+                          onChanged: null,
+                        ),
+                        // Allow borrowing toggle (disabled - coming soon)
+                        SwitchListTile(
+                          secondary: const Icon(Icons.menu_book_outlined),
+                          title: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  TranslationService.translate(
+                                        context,
+                                        'hub_allow_borrowing',
+                                      ) ??
+                                      'Allow borrowing requests',
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color:
+                                      Colors.orange.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  TranslationService.translate(
+                                          context, 'coming_soon') ??
+                                      'Coming soon',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange,
                                   ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          subtitle: Text(
+                            TranslationService.translate(
+                                  context,
+                                  'hub_allow_borrowing_desc',
+                                ) ??
+                                'Let your followers request to borrow your books via the hub',
+                          ),
+                          value: false,
+                          onChanged: null,
                         ),
                         // accept_from selector removed (non-functional)
                       ],
+                    ),
+                    // Contact info (mandatory for listed libraries)
+                    const Divider(height: 1),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      child: TextField(
+                        controller: _hubContactController,
+                        decoration: InputDecoration(
+                          labelText: TranslationService.translate(
+                                context, 'hub_contact_label') ??
+                              'Contact info (visible to approved followers)',
+                          hintText: TranslationService.translate(
+                                context, 'hub_contact_hint') ??
+                              'Email, phone, address...',
+                          prefixIcon: const Icon(Icons.contact_mail),
+                          border: const OutlineInputBorder(),
+                          helperText: TranslationService.translate(
+                                context, 'hub_contact_encrypted_notice') ??
+                              'Encrypted - only visible to your approved followers',
+                          helperMaxLines: 2,
+                        ),
+                        maxLines: 2,
+                        onChanged: (value) => dirProvider.setContactInfo(value),
+                      ),
+                    ),
+                    // Website (optional, public)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                      child: TextField(
+                        controller: _hubWebsiteController,
+                        decoration: InputDecoration(
+                          labelText: TranslationService.translate(
+                                context, 'hub_website_label') ??
+                              'Website (optional)',
+                          hintText: 'https://...',
+                          prefixIcon: const Icon(Icons.language),
+                          border: const OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.url,
+                        onChanged: (value) => dirProvider.setWebsite(value),
+                      ),
                     ),
                   ],
 
@@ -1367,7 +1550,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // Use existing node_id, or fall back to the stable library UUID (first registration).
     final nodeId = config?.nodeId ?? await authService.getOrCreateLibraryUuid();
 
-    final bookCount = await FfiService().countBooks();
+    final ffi = FfiService();
+    final bookCount = await ffi.countBooks();
+
+    // Fetch local x25519 public key for E2EE contact sharing
+    String? x25519PublicKey;
+    try {
+      x25519PublicKey = await ffi.getLocalX25519PublicKey();
+    } catch (_) {}
+
+    final website = dirProvider.websiteUrl.isNotEmpty
+        ? dirProvider.websiteUrl
+        : null;
 
     final ok = await dirProvider.register(
       nodeId: nodeId,
@@ -1376,6 +1570,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       isListed: newValue,
       requiresApproval: config?.requiresApproval ?? false,
       acceptFrom: config?.acceptFrom ?? 'everyone',
+      allowBorrowing: config?.allowBorrowing ?? true,
+      x25519PublicKey: x25519PublicKey,
+      website: website,
     );
 
     if (ok && newValue) {
@@ -1409,6 +1606,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     HubDirectoryProvider dirProvider, {
     bool? requiresApproval,
     String? acceptFrom,
+    bool? allowBorrowing,
   }) async {
     final config = dirProvider.config;
     if (config == null) return;
@@ -1417,7 +1615,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final libraryName =
         themeProvider.libraryName.isNotEmpty ? themeProvider.libraryName : 'My Library';
 
-    final bookCount = await FfiService().countBooks();
+    final ffi = FfiService();
+    final bookCount = await ffi.countBooks();
+
+    String? x25519PublicKey;
+    try {
+      x25519PublicKey = await ffi.getLocalX25519PublicKey();
+    } catch (_) {}
+
+    final website = dirProvider.websiteUrl.isNotEmpty
+        ? dirProvider.websiteUrl
+        : null;
 
     final ok = await dirProvider.register(
       nodeId: config.nodeId,
@@ -1426,6 +1634,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       isListed: config.isListed,
       requiresApproval: requiresApproval ?? config.requiresApproval,
       acceptFrom: acceptFrom ?? config.acceptFrom,
+      allowBorrowing: allowBorrowing ?? config.allowBorrowing,
+      x25519PublicKey: x25519PublicKey,
+      website: website,
     );
 
     if (!ok && mounted) {

@@ -399,7 +399,10 @@ class MyApp extends StatelessWidget {
           create: (_) => DeviceSyncProvider(),
         ),
         ChangeNotifierProvider<HubDirectoryProvider>(
-          create: (_) => HubDirectoryProvider(),
+          create: (_) => HubDirectoryProvider()
+            ..loadHubEnabled()
+            ..loadContactInfo()
+            ..loadCustomFollowNames(),
         ),
         ChangeNotifierProvider<FlashMessageProvider>(
           create: (_) => FlashMessageProvider(),
@@ -1224,6 +1227,7 @@ class _FlashLibraryNameEditorState extends State<_FlashLibraryNameEditor> {
             isListed: hubConfig.isListed,
             requiresApproval: hubConfig.requiresApproval,
             acceptFrom: hubConfig.acceptFrom,
+            allowBorrowing: hubConfig.allowBorrowing,
           );
         }
       } catch (e) {

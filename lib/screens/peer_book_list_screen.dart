@@ -1,14 +1,19 @@
 import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../services/ffi_service.dart';
 import '../models/book.dart';
+import '../models/hub_directory.dart';
 import '../src/rust/api/frb.dart' show FrbCatalogEntry;
 import '../widgets/bookshelf_view.dart';
 import '../widgets/book_spine.dart';
 import '../widgets/shimmer_loading.dart';
 import '../services/translation_service.dart';
+import '../providers/hub_directory_provider.dart';
 import '../providers/theme_provider.dart';
 
 class PeerBookListScreen extends StatefulWidget {
@@ -60,10 +65,40 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
   bool _isHubOnly = false;
   List<FrbCatalogEntry> _hubEntries = [];
 
+  /// Hub contact info (decrypted)
+  String? _decryptedContact;
+  HubProfile? _hubProfile;
+
   @override
   void initState() {
     super.initState();
     _loadCachedBooksFirst();
+    _loadHubContactInfo();
+  }
+
+  Future<void> _loadHubContactInfo() async {
+    final nodeId = widget.nodeId;
+    if (nodeId == null) return;
+    final provider = context.read<HubDirectoryProvider>();
+    if (!provider.isHubEnabled) return;
+
+    // Decrypt contact blob from follow
+    final follow = provider.followFor(nodeId);
+    final blob = follow?.encryptedContact;
+    if (blob != null && blob.isNotEmpty) {
+      final plaintext = await provider.openContact(blob);
+      if (mounted && plaintext != null) {
+        setState(() => _decryptedContact = plaintext);
+      }
+    }
+
+    // Fetch hub profile for website
+    try {
+      final frbProfile = await FfiService().hubDirectoryGetProfile(nodeId);
+      if (mounted && frbProfile != null) {
+        setState(() => _hubProfile = HubProfile.fromFrb(frbProfile));
+      }
+    } catch (_) {}
   }
 
   @override
@@ -118,12 +153,25 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
         }
       }
 
-      // 2. Check connectivity (3s timeout) - runs after cache display
+      // 2. Check connectivity - skip LAN attempt if not on WiFi (avoids 3s timeout)
       debugPrint('Checking connectivity for ${widget.peerUrl}');
-      final isOnline = await api.checkPeerConnectivity(
-        widget.peerUrl,
-        timeoutMs: 3000,
-      );
+      bool isOnline = false;
+      if (widget.peerUrl.startsWith('relay://')) {
+        isOnline = false;
+      } else {
+        final connectivity = await Connectivity().checkConnectivity();
+        final hasWifi = connectivity.contains(ConnectivityResult.wifi) ||
+            connectivity.contains(ConnectivityResult.ethernet);
+        if (!hasWifi) {
+          debugPrint('Not on WiFi/ethernet - skipping LAN connectivity check');
+          isOnline = false;
+        } else {
+          isOnline = await api.checkPeerConnectivity(
+            widget.peerUrl,
+            timeoutMs: 2000,
+          );
+        }
+      }
 
       if (!mounted) return;
       setState(() => _isPeerOnline = isOnline);
@@ -178,6 +226,7 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
         // Peer has no relay - try hub catalog fallback if nodeId is available
         if (widget.nodeId != null && _books.isEmpty) {
           await _loadHubCatalog();
+        } else {
         }
         if (mounted) setState(() { _isLoading = false; _isRefreshing = false; });
         return;
@@ -235,10 +284,24 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
       // Diagnostic: check local relay status before requesting
       await api.logRelayStatus();
 
-      // 1. Request manifest to get total book count
+      // 1. Request manifest to get total book count + catalog hash
       final manifest = await api.requestPeerManifest(widget.peerId);
 
       if (manifest != null && mounted) {
+        // Skip re-fetch if catalog is unchanged (hash match)
+        final newHash = manifest['catalog_hash'] as String?;
+        if (newHash != null && _books.isNotEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          final cachedHash =
+              prefs.getString('peer_catalog_hash_${widget.peerId}');
+          if (newHash == cachedHash) {
+            debugPrint(
+              'Relay: catalog unchanged (hash match), skipping re-fetch',
+            );
+            if (mounted) setState(() => _isRelayLoading = false);
+            return;
+          }
+        }
         await _fetchRelayPages(api, manifest);
       } else {
         // manifest returned null (202 relay_pending) - start polling
@@ -351,6 +414,16 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
       }).catchError((e) {
         debugPrint('Failed to cache relay books: $e');
       });
+    }
+
+    // Save catalog hash for diff check on next visit
+    final catalogHash = manifest['catalog_hash'] as String?;
+    if (catalogHash != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'peer_catalog_hash_${widget.peerId}',
+        catalogHash,
+      );
     }
 
     if (mounted) {
@@ -699,6 +772,87 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
     );
   }
 
+  Widget _buildHubContactBar() {
+    final hasWebsite =
+        _hubProfile?.website != null && _hubProfile!.website!.isNotEmpty;
+    final hasContact =
+        _decryptedContact != null && _decryptedContact!.isNotEmpty;
+    if (!hasWebsite && !hasContact) return const SizedBox.shrink();
+
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (hasWebsite)
+            _buildWebsiteRow(_hubProfile!.website!, cs),
+          if (hasWebsite && hasContact)
+            const SizedBox(height: 6),
+          if (hasContact)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Icon(Icons.lock_outlined,
+                      size: 15, color: cs.onPrimaryContainer.withValues(alpha: 0.7)),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _decryptedContact!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: cs.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWebsiteRow(String url, ColorScheme cs) {
+    var s = url.trim();
+    if (!s.startsWith('http://') && !s.startsWith('https://')) {
+      s = 'https://$s';
+    }
+    final uri = Uri.tryParse(s);
+    if (uri == null || !uri.host.contains('.')) return const SizedBox.shrink();
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () => launchUrl(uri, mode: LaunchMode.externalApplication),
+        child: Row(
+          children: [
+            Icon(Icons.language, size: 15,
+                color: cs.onPrimaryContainer.withValues(alpha: 0.7)),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                uri.toString(),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: cs.primary,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildStalenessBar() {
     final isRelay = !_isPeerOnline && _books.isNotEmpty;
     return Container(
@@ -841,6 +995,8 @@ class _PeerBookListScreenState extends State<PeerBookListScreen> {
                   ? _buildOfflineNotAvailableView()
               : Column(
                   children: [
+                    // Hub contact info bar
+                    _buildHubContactBar(),
                     // Staleness indicator bar
                     _buildStalenessBar(),
                     // Relay loading progress bar

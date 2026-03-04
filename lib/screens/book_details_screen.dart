@@ -312,6 +312,8 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
 
       if (!mounted) return;
 
+      final isbnResultCount = candidates.length;
+
       // Step 2: If ISBN gave < 2 results, also try title search
       if (candidates.length < 2) {
         messenger.hideCurrentSnackBar();
@@ -372,9 +374,9 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
       }
 
       // Single result from ISBN search: auto-apply (high confidence)
-      if (candidates.length == 1 &&
-          book.isbn != null &&
-          book.isbn!.isNotEmpty) {
+      // Only auto-apply if the result came from the ISBN search itself,
+      // not from the title fallback (lower confidence).
+      if (candidates.length == 1 && isbnResultCount == 1) {
         await bookRepo.updateBook(
             book.id!, {'cover_url': candidates.first.url});
         await _fetchBookDetails(forceRefresh: true);

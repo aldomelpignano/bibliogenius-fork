@@ -2220,41 +2220,17 @@ class ApiService {
             // relay credentials before deleting: a peer reachable via relay
             // should NOT be removed just because LAN sync fails (different
             // WiFi, cellular, peer reset but relay still valid, etc.).
-            debugPrint('P2P Sync: Remote returned 404 for $normalizedUrl');
-            try {
-              final peersRes = await getPeers();
-              if (peersRes.statusCode == 200 && peersRes.data is Map) {
-                final peers = (peersRes.data['data'] as List?) ?? [];
-                for (final p in peers) {
-                  if (p is Map && p['url'] == normalizedUrl) {
-                    final hasRelay = p['relay_url'] != null &&
-                        (p['relay_url'] as String).isNotEmpty &&
-                        p['mailbox_id'] != null &&
-                        (p['mailbox_id'] as String).isNotEmpty;
-                    final peerId = p['id'] as int?;
-                    if (hasRelay) {
-                      debugPrint(
-                        'P2P Sync: Peer $peerId has relay credentials, '
-                        'keeping peer (LAN-only 404 ignored)',
-                      );
-                    } else if (peerId != null) {
-                      await deletePeer(peerId);
-                      debugPrint(
-                        'P2P Sync: Removed disconnected peer $peerId '
-                        '($normalizedUrl) - no relay fallback',
-                      );
-                    }
-                    break;
-                  }
-                }
-              }
-            } catch (deleteErr) {
-              debugPrint('P2P Sync: Failed to check/remove peer: $deleteErr');
-            }
+            // 404 means the remote doesn't recognize our URL (peer reset,
+            // different WiFi, URL mismatch). This is NOT a disconnect signal.
+            // Never auto-delete peers - disconnection must be explicit.
+            debugPrint(
+              'P2P Sync: Remote returned 404 for $normalizedUrl '
+              '(keeping peer, LAN URL mismatch is not a disconnect)',
+            );
             return Response(
               requestOptions: RequestOptions(path: '/api/peers/sync_by_url'),
-              statusCode: 410,
-              data: {'message': 'Peer disconnected'},
+              statusCode: 200,
+              data: {'message': 'LAN sync skipped (404), peer kept'},
             );
           }
           debugPrint('P2P remote sync error (non-fatal): $e');

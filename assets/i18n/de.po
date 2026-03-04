@@ -5914,3 +5914,1121 @@ msgstr "Tritt {name} auf BiblioGenius bei, um Bücher zu teilen: {link}"
 msgid "profile_share_invite"
 msgstr "Meine Bibliothek teilen"
 
+msgid "module_edition_browser"
+msgstr "Ausgaben-Browser"
+
+msgid "module_edition_browser_desc"
+msgstr "Beim Hinzufügen von Büchern zwischen verschiedenen Ausgaben wählen"
+
+msgid "accept_connection"
+msgstr "Annehmen"
+
+msgid "account"
+msgstr "Konto"
+
+msgid "achievement_puzzle_first_game"
+msgstr "Puzzle-Anfänger"
+
+msgid "achievement_puzzle_master"
+msgstr "Puzzle-Meister"
+
+msgid "achievement_puzzle_perfect"
+msgstr "Puzzle-Perfektionist"
+
+msgid "action_retry"
+msgstr "Erneut versuchen"
+
+msgid "active_explanation"
+msgstr "Nur Ansicht - verschwindet bei Offline"
+
+msgid "active_peer_hint"
+msgstr "Nur Ansicht - tippen Sie auf +, um Ausleihen und Synchronisation zu aktivieren"
+
+msgid "add_collection_hint"
+msgstr "Sammlungsname eingeben..."
+
+msgid "add_connection_title"
+msgstr "Verbindung hinzufügen"
+
+msgid "admin_log_clear_filters"
+msgstr "Zurücksetzen"
+
+msgid "admin_log_clear_search"
+msgstr "Suche löschen"
+
+msgid "admin_log_empty_subtitle"
+msgstr "Änderungen werden hier angezeigt, sobald Sie die App verwenden"
+
+msgid "admin_log_empty_title"
+msgstr "Keine Vorgänge aufgezeichnet"
+
+msgid "admin_log_filter_entity"
+msgstr "Entität"
+
+msgid "admin_log_filter_operation"
+msgstr "Vorgang"
+
+msgid "admin_log_filter_status"
+msgstr "Status"
+
+msgid "admin_log_page_info"
+msgstr "Seite %d von %d"
+
+msgid "admin_log_search_hint"
+msgstr "Logs durchsuchen..."
+
+msgid "admin_log_stat_errors"
+msgstr "Fehler"
+
+msgid "admin_log_stat_pending"
+msgstr "Ausstehend"
+
+msgid "admin_log_stat_today"
+msgstr "Heute"
+
+msgid "admin_log_stat_total"
+msgstr "Gesamt"
+
+msgid "admin_operation_log_title"
+msgstr "Vorgangsprotokoll"
+
+msgid "auto_approve_loans_desc"
+msgstr "Ausleih-Anfragen von genehmigten Kontakten automatisch akzeptieren"
+
+msgid "auto_approve_loans_title"
+msgstr "Ausleihen automatisch genehmigen"
+
+msgid "back"
+msgstr "Zurück"
+
+msgid "back_to_library"
+msgstr "Zurück zur Bibliothek"
+
+msgid "browse_directory_btn"
+msgstr "Verzeichnis durchsuchen"
+
+msgid "catalog_add_to_library"
+msgstr "Zu meiner Bibliothek hinzufügen"
+
+msgid "catalog_added_success"
+msgstr "Buch zu Ihrer Bibliothek hinzugefügt"
+
+msgid "catalog_already_in_library"
+msgstr "Bereits in Ihrer Bibliothek"
+
+msgid "catalog_book_details"
+msgstr "Buchdetails"
+
+msgid "catalog_details_unavailable"
+msgstr "Details online nicht verfügbar"
+
+msgid "catalog_loading_details"
+msgstr "Details werden geladen..."
+
+msgid "clean_closed_requests"
+msgstr "Verlauf löschen"
+
+msgid "clean_closed_requests_confirm"
+msgstr "%d abgeschlossene Anfrage(n) löschen? Dies kann nicht rückgängig gemacht werden."
+
+msgid "clean_closed_requests_empty"
+msgstr "Keine abgeschlossenen Anfragen zum Löschen"
+
+msgid "clean_closed_requests_success"
+msgstr "%d abgeschlossene Anfrage(n) gelöscht"
+
+msgid "clean_returned_loans"
+msgstr "Verlauf löschen"
+
+msgid "clean_returned_loans_confirm"
+msgstr "%d zurückgegebene Ausleihe(n) löschen? Dies kann nicht rückgängig gemacht werden."
+
+msgid "clean_returned_loans_empty"
+msgstr "Keine zurückgegebenen Ausleihen zum Löschen"
+
+msgid "clean_returned_loans_success"
+msgstr "%d zurückgegebene Ausleihe(n) gelöscht"
+
+msgid "collection_group_books_count"
+msgstr "Bücher"
+
+msgid "collection_group_empty"
+msgstr "Keine Sammlungen vorhanden"
+
+msgid "collection_group_tap_hint"
+msgstr "Tippen, um Bücher dieser Sammlung anzuzeigen"
+
+msgid "collection_group_uncollected"
+msgstr "Ohne Sammlung"
+
+msgid "collection_owned_count"
+msgstr "{n} im Besitz"
+
+msgid "collection_tag"
+msgstr "Sammlung"
+
+msgid "collection_view_all"
+msgstr "Sammlung ansehen"
+
+msgid "connected_explanation"
+msgstr "Ausleihen, Synchronisation, offline verfügbar, bearbeitbar"
+
+msgid "connecting_via_relay"
+msgstr "Verbindung wird hergestellt..."
+
+msgid "connection_success_hint"
+msgstr "Sie können jetzt Ausleihen verwalten und Bücher synchronisieren"
+
+msgid "directory_accept_from_all"
+msgstr "Alle"
+
+msgid "directory_accept_from_manual"
+msgstr "Nur manuell"
+
+msgid "directory_accept_from_title"
+msgstr "Verbindungen annehmen von"
+
+msgid "directory_accept_from_verified"
+msgstr "Verifizierte"
+
+msgid "directory_active_follows"
+msgstr "Aktiv"
+
+msgid "directory_advanced_settings"
+msgstr "Erweiterte Einstellungen"
+
+msgid "directory_approve"
+msgstr "Genehmigen"
+
+msgid "directory_block"
+msgstr "Blockieren"
+
+msgid "directory_books"
+msgstr "Bücher"
+
+msgid "directory_browse_anyway"
+msgstr "Bibliotheken entdecken"
+
+msgid "directory_browse_anyway_desc"
+msgstr "Erkunden, ohne Ihre eigene zu teilen"
+
+msgid "directory_browse_button"
+msgstr "Bibliotheken entdecken"
+
+msgid "directory_browse_subtitle"
+msgstr "Andere BiblioGenius-Bibliotheken entdecken und folgen"
+
+msgid "directory_catalog_empty"
+msgstr "Diese Bibliothek hat noch keine Bücher geteilt."
+
+msgid "directory_catalog_isbn_count"
+msgstr "Geteilte ISBNs"
+
+msgid "directory_catalog_isbn_label"
+msgstr "ISBN"
+
+msgid "directory_catalog_not_following"
+msgstr "Folgen Sie dieser Bibliothek, um ihre geteilten Bücher zu sehen."
+
+msgid "directory_catalog_pending"
+msgstr "Ihre Folgeanfrage wartet auf Genehmigung. Sie können die geteilten Bücher sehen, sobald die Bibliothek sie akzeptiert hat."
+
+msgid "directory_catalog_title"
+msgstr "Geteilte Bücher"
+
+msgid "directory_connected"
+msgstr "Verbunden"
+
+msgid "directory_empty"
+msgstr "Noch keine Bibliotheken zu entdecken."
+
+msgid "directory_follow"
+msgstr "Folgen"
+
+msgid "directory_follow_error"
+msgstr "Diese Bibliothek kann nicht gefolgt werden. Bitte versuchen Sie es erneut."
+
+msgid "directory_following"
+msgstr "Gefolgt"
+
+msgid "directory_following_empty"
+msgstr "Sie folgen noch keinen Bibliotheken. Nutzen Sie den Tab Entdecken, um zu starten."
+
+msgid "directory_listed_desc"
+msgstr "Andere Bibliotheken können Sie entdecken und Ihnen folgen"
+
+msgid "directory_listed_title"
+msgstr "Meine Bibliothek online teilen"
+
+msgid "directory_no_results"
+msgstr "Keine Bibliotheken gefunden"
+
+msgid "directory_pending"
+msgstr "Ausstehend"
+
+msgid "directory_pending_outgoing"
+msgstr "Warte auf Genehmigung"
+
+msgid "directory_reject"
+msgstr "Ablehnen"
+
+msgid "directory_request"
+msgstr "Anfragen"
+
+msgid "directory_requests_empty"
+msgstr "Keine eingehenden Folgeanfragen."
+
+msgid "directory_requires_approval_desc"
+msgstr "Neue Follower müssen genehmigt werden, bevor sie auf Ihre geteilten Bücher zugreifen können"
+
+msgid "directory_requires_approval_short"
+msgstr "Genehmigung erforderlich"
+
+msgid "directory_requires_approval_title"
+msgstr "Genehmigung für Follower erforderlich"
+
+msgid "directory_search_hint"
+msgstr "Nach Name suchen..."
+
+msgid "directory_settings_title"
+msgstr "Online-Freigabe"
+
+msgid "directory_tab_explore"
+msgstr "Entdecken"
+
+msgid "directory_tab_following"
+msgstr "Gefolgt"
+
+msgid "directory_tab_requests"
+msgstr "Anfragen"
+
+msgid "directory_title"
+msgstr "Bibliotheken entdecken"
+
+msgid "directory_unfollow"
+msgstr "Nicht mehr folgen"
+
+msgid "directory_unfollow_confirm"
+msgstr "Sie haben dann keinen Zugriff mehr auf die geteilten Bücher dieser Bibliothek."
+
+msgid "directory_unfollow_title"
+msgstr "Bibliothek nicht mehr folgen?"
+
+msgid "e2ee_enabled"
+msgstr "Ende-zu-Ende-Verschlüsselung aktiviert"
+
+msgid "flash_customize_library_name"
+msgstr "Personalisieren Sie den Namen Ihrer Bibliothek:"
+
+msgid "flash_discover_presets"
+msgstr "Schnelleinrichtung - wählen Sie Ihr Profil:"
+
+msgid "flash_dismiss_tooltip"
+msgstr "Ausblenden"
+
+msgid "flash_library_name_hint"
+msgstr "Bibliotheksname"
+
+msgid "flash_peer_browse"
+msgstr "Durchsuchen"
+
+msgid "flash_peer_connected"
+msgstr "Gekoppelt mit"
+
+msgid "flash_peer_dialog_title"
+msgstr "Neue Verbindungen"
+
+msgid "flash_peer_dismiss_all"
+msgstr "Alle ausblenden"
+
+msgid "flash_peer_pending"
+msgstr "Verbindungsanfrage von"
+
+msgid "flash_peer_pending_hint"
+msgstr "Wartet auf Ihre Genehmigung"
+
+msgid "flash_peer_review"
+msgstr "Prüfen"
+
+msgid "flash_peer_see_more"
+msgstr "weitere Verbindungen"
+
+msgid "flash_peer_see_more_semantic"
+msgstr "Alle neuen Verbindungen anzeigen"
+
+msgid "games_hub_subtitle"
+msgstr "Spielen Sie mit Ihren Buchcovern"
+
+msgid "games_hub_title"
+msgstr "Spiele"
+
+msgid "games_module"
+msgstr "Spiele"
+
+msgid "games_module_desc"
+msgstr "Mini-Spiele basierend auf Ihrer Bibliothek aktivieren"
+
+msgid "games_section"
+msgstr "Spiele"
+
+msgid "group_by_collections_desc"
+msgstr "Bücher in der Bibliothek nach Sammlung gruppiert anzeigen"
+
+msgid "group_by_collections_title"
+msgstr "Nach Sammlung gruppieren"
+
+msgid "help_cta_play_memory"
+msgstr "Spielen"
+
+msgid "help_cta_play_puzzle"
+msgstr "Spielen"
+
+msgid "help_cta_profile"
+msgstr "Mein Profil ansehen"
+
+msgid "help_desc_memory_game"
+msgstr "Testen Sie Ihr Gedächtnis mit Ihren Buchcovern"
+
+msgid "help_desc_profile"
+msgstr "Sehen Sie Ihre Statistiken, Abzeichen, Ziele und Bestenliste"
+
+msgid "help_desc_sliding_puzzle"
+msgstr "Setzen Sie ein Buchcover zusammen, indem Sie die Kacheln verschieben"
+
+msgid "help_topic_memory_game"
+msgstr "Memory-Spiel"
+
+msgid "help_topic_profile"
+msgstr "Mein Profil"
+
+msgid "help_topic_sliding_puzzle"
+msgstr "Schiebepuzzle"
+
+msgid "hub_allow_borrowing"
+msgstr "Ausleihanfragen erlauben"
+
+msgid "hub_allow_borrowing_desc"
+msgstr "Erlauben Sie Ihren Followern, über den Hub Bücher zum Ausleihen anzufragen"
+
+msgid "hub_borrow_duplicate"
+msgstr "Sie haben bereits eine laufende Anfrage für dieses Buch"
+
+msgid "hub_borrow_no_follow"
+msgstr "Folgen Sie dieser Bibliothek zuerst, um eine Ausleihe anzufragen"
+
+msgid "hub_borrow_via_hub"
+msgstr "Über Hub"
+
+msgid "hub_borrowing_disabled"
+msgstr "Diese Bibliothek nimmt keine Ausleihanfragen an"
+
+msgid "hub_contact_encrypted_notice"
+msgstr "Verschlüsselt - nur für Ihre genehmigten Follower sichtbar"
+
+msgid "hub_contact_hint"
+msgstr "E-Mail, Telefon, Adresse..."
+
+msgid "hub_contact_info_title"
+msgstr "Kontakt"
+
+msgid "hub_contact_label"
+msgstr "Kontaktdaten (sichtbar für genehmigte Follower)"
+
+msgid "hub_disabled_discover"
+msgstr "Aktivieren Sie das öffentliche Verzeichnis in den Einstellungen, um andere Bibliotheken zu entdecken"
+
+msgid "hub_experimental_chip"
+msgstr "Experimentell"
+
+msgid "hub_experimental_desc"
+msgstr "Registrieren Sie Ihre Bibliothek im öffentlichen Verzeichnis und entdecken Sie andere Leser"
+
+msgid "hub_experimental_toggle"
+msgstr "Öffentliches Verzeichnis (Experimentell)"
+
+msgid "hub_only_detail_hint"
+msgstr "Verbinden Sie sich mit demselben Wi-Fi oder warten Sie, bis diese Bibliothek online ist, um alle Details zu sehen."
+
+msgid "hub_only_hint"
+msgstr "Diese Bibliothek ist offline. Es werden nur geteilte Bücher angezeigt."
+
+msgid "hub_website_label"
+msgstr "Webseite (optional)"
+
+msgid "invite_works_everywhere"
+msgstr "Dieser Link funktioniert in jedem Netzwerk: Wi-Fi, 4G oder 5G. Der Empfänger muss nicht in der Nähe sein."
+
+msgid "isbn_checksum_warning"
+msgstr "Diese ISBN ist möglicherweise ungültig (Prüfsummenfehler)"
+
+msgid "lib_connection_peer"
+msgstr "Gekoppelt"
+
+msgid "lib_empty_hint"
+msgstr "Nutzen Sie den Tab Entdecken, um Bibliotheken zu finden, oder verbinden Sie sich mit Bibliotheken in Ihrem Wi-Fi."
+
+msgid "lib_empty_title"
+msgstr "Noch keine verbundenen Bibliotheken"
+
+msgid "lib_filter_all"
+msgstr "Alle"
+
+msgid "lib_filter_discover"
+msgstr "Entdecken"
+
+msgid "lib_filter_following"
+msgstr "Gefolgt"
+
+msgid "lib_filter_nearby"
+msgstr "In der Nähe"
+
+msgid "lib_filter_peers"
+msgstr "Verbindungen"
+
+msgid "lib_follow_active"
+msgstr "Gefolgt"
+
+msgid "lib_follow_pending"
+msgstr "Ausstehend"
+
+msgid "lib_unfollow"
+msgstr "Nicht mehr folgen"
+
+msgid "loading_via_relay"
+msgstr "Wird geladen"
+
+msgid "local_network_hint"
+msgstr "Bibliotheken in Ihrem Wi-Fi erkannt"
+
+msgid "marked_as_owned"
+msgstr "Als Besitz markiert"
+
+msgid "marked_as_wanted"
+msgstr "Als Wunsch markiert"
+
+msgid "module_operation_log_desc"
+msgstr "Datenbank-Änderungsverlauf anzeigen"
+
+msgid "module_operation_log_viewer"
+msgstr "Vorgangsprotokoll"
+
+msgid "navigation"
+msgstr "Navigation"
+
+msgid "network_filter_all"
+msgstr "Alle"
+
+msgid "network_filter_borrowers"
+msgstr "Ausleiher"
+
+msgid "network_hub_requests_title"
+msgstr "Folgeanfragen"
+
+msgid "network_tab_discover"
+msgstr "Öffentliches Verzeichnis"
+
+msgid "network_tab_my_network"
+msgstr "Mein Netzwerk"
+
+msgid "no_borrowers_hint"
+msgstr "Fügen Sie Kontakte hinzu, die Bücher aus Ihrer Bibliothek ausleihen."
+
+msgid "no_borrowers_yet"
+msgstr "Noch keine Ausleiher"
+
+msgid "no_following_hint"
+msgstr "Durchsuchen Sie das Verzeichnis, um Bibliotheken zu finden und ihnen zu folgen."
+
+msgid "no_following_yet"
+msgstr "Noch keine gefolgten Bibliotheken"
+
+msgid "no_nearby_peers"
+msgstr "Keine Bibliotheken in der Nähe"
+
+msgid "no_nearby_peers_hint"
+msgstr "Stellen Sie sicher, dass Wi-Fi aktiviert ist und andere BiblioGenius-Nutzer im selben Netzwerk sind."
+
+msgid "page_not_found_message"
+msgstr "Die gesuchte Seite existiert nicht."
+
+msgid "page_not_found_title"
+msgstr "Seite nicht gefunden"
+
+msgid "pairing_button_pair"
+msgstr "Koppeln"
+
+msgid "pairing_cancel"
+msgstr "Abbrechen"
+
+msgid "pairing_code_expired"
+msgstr "Code abgelaufen"
+
+msgid "pairing_code_expires"
+msgstr "%s verbleibend"
+
+msgid "pairing_code_instruction"
+msgstr "Teilen Sie diesen Code mit dem anderen Gerät"
+
+msgid "pairing_code_title"
+msgstr "Kopplungscode"
+
+msgid "pairing_empty_subtitle"
+msgstr "Koppeln Sie ein weiteres Gerät, um Ihre Bibliothek zu synchronisieren"
+
+msgid "pairing_empty_title"
+msgstr "Keine verknüpften Geräte"
+
+msgid "pairing_enter_code"
+msgstr "Code eingeben"
+
+msgid "pairing_enter_instruction"
+msgstr "Geben Sie den 6-stelligen Code des anderen Geräts ein"
+
+msgid "pairing_enter_title"
+msgstr "Code eingeben"
+
+msgid "pairing_error"
+msgstr "Kopplung fehlgeschlagen"
+
+msgid "pairing_generate_code"
+msgstr "Code generieren"
+
+msgid "pairing_paired_on"
+msgstr "Gekoppelt am %s"
+
+msgid "pairing_remove_confirm"
+msgstr "Dieses Gerät entfernen?"
+
+msgid "pairing_remove_success"
+msgstr "Gerät entfernt"
+
+msgid "pairing_success"
+msgstr "Gerät erfolgreich gekoppelt"
+
+msgid "pairing_title"
+msgstr "Verknüpfte Geräte"
+
+msgid "peer_connection_info"
+msgstr "Verbindung"
+
+msgid "peer_custom_name_indicator"
+msgstr "Benutzerdefinierter Name"
+
+msgid "peer_details_title"
+msgstr "Bibliotheksdetails"
+
+msgid "peer_display_name_hint"
+msgstr "Geben Sie einen benutzerdefinierten Namen für diese Bibliothek ein"
+
+msgid "peer_display_name_label"
+msgstr "Anzeigename"
+
+msgid "peer_e2ee_active"
+msgstr "Aktiv - Kommunikation ist verschlüsselt"
+
+msgid "peer_e2ee_inactive"
+msgstr "Inaktiv - Schlüsselaustausch nicht abgeschlossen"
+
+msgid "peer_e2ee_status"
+msgstr "Ende-zu-Ende-Verschlüsselung"
+
+msgid "peer_edit_display_name"
+msgstr "Namen bearbeiten"
+
+msgid "peer_has_relay"
+msgstr "Über Relay erreichbar"
+
+msgid "peer_last_seen"
+msgstr "Zuletzt gesehen"
+
+msgid "peer_name_saved"
+msgstr "Name gespeichert"
+
+msgid "peer_node_id"
+msgstr "Knoten-ID"
+
+msgid "peer_short_id"
+msgstr "ID: %s"
+
+msgid "peer_status_online"
+msgstr "Online"
+
+msgid "peer_status_unreachable"
+msgstr "Nicht erreichbar"
+
+msgid "pending_connections_banner"
+msgstr "Sie haben {count} ausstehende Verbindungsanfrage(n)"
+
+msgid "pending_requests_section"
+msgstr "Ausstehende Anfragen"
+
+msgid "preset_bookseller_legend"
+msgstr "Ich verkaufe Bücher, beruflich oder als Hobby"
+
+msgid "preset_librarian_legend"
+msgstr "Ich verwalte eine Bibliothek oder eine grosse Sammlung"
+
+msgid "preset_reader_legend"
+msgstr "Ich liebe es zu lesen und möchte meine Bücher verwalten"
+
+msgid "profile_association"
+msgstr "Verein"
+
+msgid "profile_association_desc"
+msgstr "Verwalten Sie die Ressourcen eines Vereins oder einer Gemeinschaft."
+
+msgid "profile_avatar"
+msgstr "Profilbild"
+
+msgid "profile_educator"
+msgstr "Pädagoge"
+
+msgid "profile_educator_desc"
+msgstr "Verwalten Sie eine Klassen- oder Schulbibliothek."
+
+msgid "profile_family"
+msgstr "Familie"
+
+msgid "profile_family_desc"
+msgstr "Teilen Sie eine Familienbibliothek mit mehreren Lesern."
+
+msgid "profile_follower"
+msgstr "Follower"
+
+msgid "profile_followers"
+msgstr "Follower"
+
+msgid "profile_reader"
+msgstr "Leser"
+
+msgid "profile_reader_desc"
+msgstr "Verwalten Sie Ihre persönliche Bibliothek, Leselisten und Wunschlisten."
+
+msgid "profile_view"
+msgstr "Aufruf"
+
+msgid "profile_views"
+msgstr "Aufrufe"
+
+msgid "profile_views_followers"
+msgstr "von Followern"
+
+msgid "profile_views_peers"
+msgstr "von Verbindungen"
+
+msgid "progress"
+msgstr "Fortschritt"
+
+msgid "puzzle_congrats_0"
+msgstr "Gut gelöst!"
+
+msgid "puzzle_congrats_1"
+msgstr "Toll geschoben!"
+
+msgid "puzzle_congrats_2"
+msgstr "Geschafft!"
+
+msgid "puzzle_congrats_3"
+msgstr "Präzise Züge!"
+
+msgid "puzzle_congrats_4"
+msgstr "Puzzle fertig!"
+
+msgid "puzzle_leaderboard_empty_network"
+msgstr "Noch keine Ergebnisse aus der Nähe. Verbinden Sie sich mit Bibliotheken in der Nähe!"
+
+msgid "puzzle_leaderboard_refreshing"
+msgstr "Synchronisation mit Bibliotheken in der Nähe..."
+
+msgid "puzzle_leaderboard_title"
+msgstr "Bestenliste"
+
+msgid "puzzle_my_scores_tab"
+msgstr "Meine Ergebnisse"
+
+msgid "puzzle_network_tab"
+msgstr "Netzwerk"
+
+msgid "puzzle_new_personal_best"
+msgstr "Neuer persönlicher Rekord!"
+
+msgid "puzzle_rank_position"
+msgstr "#%s Ihrer besten Ergebnisse"
+
+msgid "refreshing_library"
+msgstr "Aktualisierung..."
+
+msgid "reject_connection"
+msgstr "Ablehnen"
+
+msgid "relay_connect"
+msgstr "Verbinden"
+
+msgid "relay_connected"
+msgstr "Verbunden"
+
+msgid "relay_disconnect"
+msgstr "Trennen"
+
+msgid "relay_disconnected"
+msgstr "Nicht verbunden"
+
+msgid "relay_hub_desc"
+msgstr "Mit einem Relay verbinden, um ausserhalb Ihres lokalen Netzwerks zu kommunizieren"
+
+msgid "relay_hub_title"
+msgstr "Relay-Hub"
+
+msgid "relay_url_label"
+msgstr "Hub-URL"
+
+msgid "remove_from_collection"
+msgstr "Aus Sammlung entfernen"
+
+msgid "review_connections"
+msgstr "Ansehen"
+
+msgid "settings_developer_tools"
+msgstr "Entwicklertools"
+
+msgid "settings_linked_devices"
+msgstr "Verknüpfte Geräte"
+
+msgid "settings_linked_devices_desc"
+msgstr "Gekoppelte Geräte für die Synchronisation verwalten"
+
+msgid "settings_mode_directory_desc"
+msgstr "Im Verzeichnis gelistet werden, damit andere Sie entdecken und Ihnen folgen können."
+
+msgid "settings_mode_directory_title"
+msgstr "Öffentliches Verzeichnis"
+
+msgid "settings_mode_invite_desc"
+msgstr "Funktioniert in jedem Netzwerk (Wi-Fi, 4G, 5G). Teilen Sie einen Link oder QR-Code privat."
+
+msgid "settings_mode_invite_title"
+msgstr "Einladungslink"
+
+msgid "settings_mode_wifi_desc"
+msgstr "Bibliotheken in der Nähe automatisch in Ihrem lokalen Wi-Fi erkennen."
+
+msgid "settings_mode_wifi_title"
+msgstr "Wi-Fi-Erkennung"
+
+msgid "settings_network_discovery"
+msgstr "Automatische Erkennung im Wi-Fi"
+
+msgid "settings_network_discovery_desc"
+msgstr "Macht Ihre Bibliothek für Geräte in der Nähe im selben Wi-Fi sichtbar"
+
+msgid "settings_network_enable_first"
+msgstr "Aktivieren Sie zuerst die Netzwerkfunktionen, um die Datenschutzoptionen zu konfigurieren."
+
+msgid "settings_network_extended"
+msgstr "Erweitertes Netzwerk"
+
+msgid "settings_network_local"
+msgstr "Lokales Netzwerk"
+
+msgid "settings_network_peers_detected"
+msgstr "Bibliotheken erkannt"
+
+msgid "settings_network_privacy"
+msgstr "Datenschutz und Cache"
+
+msgid "settings_network_title"
+msgstr "Netzwerk"
+
+msgid "settings_remote_reachable"
+msgstr "Aus der Ferne erreichbar"
+
+msgid "settings_remote_reachable_desc"
+msgstr "Ihre eingeladenen Kontakte können Sie in jedem Netzwerk erreichen"
+
+msgid "settings_remote_reachable_details"
+msgstr "Technische Details"
+
+msgid "settings_sharing_modes_title"
+msgstr "So funktioniert das Teilen"
+
+msgid "setup_profile_coming_soon"
+msgstr "Demnächst"
+
+msgid "setup_profile_step_desc"
+msgstr "Welcher Lesertyp sind Sie?"
+
+msgid "setup_profile_step_title"
+msgstr "Ihr Profil"
+
+msgid "show_code_explanation"
+msgstr "Wenn jemand diesen Code scannt, kann er sich mit Ihrer Bibliothek für Ausleihen und Synchronisation verbinden."
+
+msgid "show_code_step_1"
+msgstr "Zeigen Sie diesen Code einem Freund"
+
+msgid "show_code_step_2"
+msgstr "Er tippt auf + und dann auf \"
+
+msgid "show_code_step_3"
+msgstr "Beide erhalten Zugang zu Ausleihen und Synchronisation"
+
+msgid "show_view_count"
+msgstr "Bibliotheksaufrufe anzeigen"
+
+msgid "show_view_count_desc"
+msgstr "Aufrufzähler in Ihrem Profil anzeigen"
+
+msgid "sliding_puzzle_change_difficulty"
+msgstr "Schwierigkeit ändern"
+
+msgid "sliding_puzzle_choose_difficulty"
+msgstr "Wählen Sie eine Schwierigkeit"
+
+msgid "sliding_puzzle_congratulations"
+msgstr "Herzlichen Glückwunsch!"
+
+msgid "sliding_puzzle_dashboard_subtitle"
+msgstr "Setzen Sie Ihre Cover zusammen!"
+
+msgid "sliding_puzzle_difficulty_label"
+msgstr "Schwierigkeit"
+
+msgid "sliding_puzzle_easy"
+msgstr "Leicht"
+
+msgid "sliding_puzzle_hard"
+msgstr "Schwer"
+
+msgid "sliding_puzzle_intro"
+msgstr "Verschieben Sie die Kacheln, um ein Buchcover zusammenzusetzen!"
+
+msgid "sliding_puzzle_medium"
+msgstr "Mittel"
+
+msgid "sliding_puzzle_module"
+msgstr "Schiebepuzzle"
+
+msgid "sliding_puzzle_module_desc"
+msgstr "Verschieben Sie Kacheln, um ein Buchcover zusammenzusetzen"
+
+msgid "sliding_puzzle_moves"
+msgstr "Züge"
+
+msgid "sliding_puzzle_no_scores_yet"
+msgstr "Noch keine Ergebnisse. Spielen Sie eine Runde!"
+
+msgid "sliding_puzzle_not_enough_books"
+msgstr "Sie benötigen mindestens 1 Buch mit Cover zum Spielen. Fügen Sie Bücher hinzu!"
+
+msgid "sliding_puzzle_par"
+msgstr "Par"
+
+msgid "sliding_puzzle_play"
+msgstr "Spielen"
+
+msgid "sliding_puzzle_play_again"
+msgstr "Nochmal spielen"
+
+msgid "sliding_puzzle_reference"
+msgstr "Referenz"
+
+msgid "sliding_puzzle_score"
+msgstr "Punktzahl"
+
+msgid "sliding_puzzle_scores_title"
+msgstr "Bestenliste"
+
+msgid "sliding_puzzle_time"
+msgstr "Zeit"
+
+msgid "sliding_puzzle_title"
+msgstr "Schiebepuzzle"
+
+msgid "stat_a11y_monthly_progress_chart"
+msgstr "Monatliches Lesefortschrittsdiagramm"
+
+msgid "stat_a11y_publication_timeline"
+msgstr "Zeitstrahl der Veröffentlichungen"
+
+msgid "stat_a11y_reading_status_chart"
+msgstr "Verteilung nach Lesestatus"
+
+msgid "stat_a11y_star_rating"
+msgstr "Durchschnittliche Bewertung: %1 von 5"
+
+msgid "stat_a11y_top_authors_chart"
+msgstr "Diagramm der meistgelesenen Autoren"
+
+msgid "stat_a11y_view_book"
+msgstr "Buch ansehen: %1"
+
+msgid "stat_a11y_yearly_goal_progress"
+msgstr "Fortschritt des Jahresleseziels"
+
+msgid "stat_chart_books_count"
+msgstr "Bücher"
+
+msgid "stat_chart_stars"
+msgstr "Sterne"
+
+msgid "stat_operation_log_title"
+msgstr "Synchronisationsaktivität"
+
+msgid "stat_oplog_entity_types"
+msgstr "Verfolgte Entitätstypen"
+
+msgid "stat_oplog_health_error"
+msgstr "%1 fehlgeschlagene Vorgänge"
+
+msgid "stat_oplog_health_ok"
+msgstr "Alle Vorgänge abgeschlossen"
+
+msgid "stat_oplog_health_warning"
+msgstr "%1 noch nicht synchronisierte Vorgänge"
+
+msgid "stat_oplog_pending"
+msgstr "Nicht synchronisiert"
+
+msgid "stat_oplog_view_details"
+msgstr "Vorgangsprotokoll anzeigen"
+
+msgid "stat_unknown_contact"
+msgstr "Unbekannt"
+
+msgid "sync_pending_review_action"
+msgstr "Prüfen"
+
+msgid "sync_pending_review_count"
+msgstr "%d zur Überprüfung ausstehend"
+
+msgid "sync_result_message"
+msgstr "%d gesendet, %d Vorgänge empfangen"
+
+msgid "sync_review_approve"
+msgstr "Genehmigen"
+
+msgid "sync_review_approve_all"
+msgstr "Alle genehmigen"
+
+msgid "sync_review_approved"
+msgstr "%d Vorgänge genehmigt"
+
+msgid "sync_review_banner"
+msgstr "%d Vorgänge empfangen. Bitte vor dem Anwenden überprüfen."
+
+msgid "sync_review_empty_subtitle"
+msgstr "Keine Vorgänge zur Überprüfung"
+
+msgid "sync_review_empty_title"
+msgstr "Alles in Ordnung"
+
+msgid "sync_review_from"
+msgstr "Von:"
+
+msgid "sync_review_reject"
+msgstr "Ablehnen"
+
+msgid "sync_review_reject_all"
+msgstr "Alle ablehnen"
+
+msgid "sync_review_rejected"
+msgstr "%d Vorgänge abgelehnt"
+
+msgid "sync_review_title"
+msgstr "Synchronisationsprüfung"
+
+msgid "sync_safety_subtitle"
+msgstr "Änderungen vor dem Anwenden überprüfen"
+
+msgid "sync_safety_title"
+msgstr "Synchronisationssicherheit"
+
+msgid "sync_trigger_button"
+msgstr "Synchronisieren"
+
+msgid "syncing_via_relay"
+msgstr "Synchronisation läuft"
+
+msgid "tab_libraries"
+msgstr "Bibliotheken"
+
+msgid "toggle_view"
+msgstr "Ansicht wechseln"
+
+msgid "tooltip_approve_op"
+msgstr "Diesen Vorgang genehmigen"
+
+msgid "tooltip_borrow_book"
+msgstr "Dieses Buch ausleihen"
+
+msgid "tooltip_cancel_pairing"
+msgstr "Kopplung abbrechen"
+
+msgid "tooltip_collapse_details"
+msgstr "Details ausblenden"
+
+msgid "tooltip_edit_avatar"
+msgstr "Profilbild bearbeiten"
+
+msgid "tooltip_edit_contact"
+msgstr "Kontakt bearbeiten"
+
+msgid "tooltip_enter_pairing"
+msgstr "Kopplungscode eingeben"
+
+msgid "tooltip_expand_details"
+msgstr "Details anzeigen"
+
+msgid "tooltip_filter_entity_type"
+msgstr "Nach Entitätstyp filtern"
+
+msgid "tooltip_filter_operation"
+msgstr "Nach Vorgang filtern"
+
+msgid "tooltip_filter_status"
+msgstr "Nach Status filtern"
+
+msgid "tooltip_generate_pairing"
+msgstr "Kopplungscode generieren"
+
+msgid "tooltip_give_back"
+msgstr "Dieses Buch zurückgeben"
+
+msgid "tooltip_lend_book"
+msgstr "Dieses Buch verleihen"
+
+msgid "tooltip_next_page"
+msgstr "Nächste Seite"
+
+msgid "tooltip_open_menu"
+msgstr "Menü öffnen"
+
+msgid "tooltip_prev_page"
+msgstr "Vorherige Seite"
+
+msgid "tooltip_reject_op"
+msgstr "Diesen Vorgang ablehnen"
+
+msgid "tooltip_remove_device"
+msgstr "Gerät entfernen"
+
+msgid "tooltip_return_book"
+msgstr "Dieses Buch zurückgeben"
+
+msgid "tooltip_search_isbn"
+msgstr "Nach ISBN suchen"
+
+msgid "tooltip_sell_book"
+msgstr "Dieses Buch verkaufen"
+
+msgid "tooltip_sync_device"
+msgstr "Mit diesem Gerät synchronisieren"
+
+msgid "tooltip_toggle_password"
+msgstr "Passwort ein-/ausblenden"
+
+msgid "view_mode_grouped_collections"
+msgstr "Nach Sammlung gruppieren"
+
+msgid "confirm"
+msgstr "Bestätigen"

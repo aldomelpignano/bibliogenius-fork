@@ -690,7 +690,7 @@ class _EditBookScreenState extends State<EditBookScreen> {
                     ),
                   )
                 : ElevatedButton.icon(
-                    onPressed: _saveBook,
+                    onPressed: _isFetchingDetails ? null : _saveBook,
                     icon: const Icon(Icons.check, size: 18),
                     label: Text(
                       TranslationService.translate(context, 'save_changes') ??

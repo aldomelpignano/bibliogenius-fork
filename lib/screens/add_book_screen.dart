@@ -551,13 +551,18 @@ class _AddBookScreenState extends State<AddBookScreen> {
                 : isMobile
                 // Mobile: shorter button with just "Enregistrer"
                 ? TextButton(
-                    onPressed: _saveBook,
+                    onPressed: (_isAutocompleteFetching || _isFetchingDetails)
+                        ? null
+                        : _saveBook,
                     key: const Key('saveBookButton'),
                     style: TextButton.styleFrom(
                       backgroundColor: Colors.white.withValues(alpha: 0.2),
                       foregroundColor: Theme.of(
                         context,
                       ).appBarTheme.foregroundColor,
+                      disabledForegroundColor: Theme.of(
+                        context,
+                      ).appBarTheme.foregroundColor?.withValues(alpha: 0.4),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 8,
@@ -573,7 +578,9 @@ class _AddBookScreenState extends State<AddBookScreen> {
                   )
                 // Desktop: full button
                 : ElevatedButton(
-                    onPressed: _saveBook,
+                    onPressed: (_isAutocompleteFetching || _isFetchingDetails)
+                        ? null
+                        : _saveBook,
                     key: const Key('saveBookButton'),
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.zero,

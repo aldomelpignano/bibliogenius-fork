@@ -3,6 +3,7 @@
 // Used on native platforms (iOS, Android, macOS, Windows, Linux)
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart' show Int64List;
 import '../models/book.dart';
 import '../models/collection.dart';
 import '../models/collection_book.dart';
@@ -1043,13 +1044,18 @@ class FfiService {
     }
   }
 
-  /// List libraries in the public directory (paginated).
+  /// List libraries in the public directory (paginated, with optional search).
   Future<List<frb.FrbHubProfile>> hubDirectoryList({
     required int limit,
     required int offset,
+    String? search,
   }) async {
     try {
-      return await frb.hubDirectoryList(limit: limit, offset: offset);
+      return await frb.hubDirectoryList(
+        limit: limit,
+        offset: offset,
+        search: search,
+      );
     } catch (e) {
       debugPrint('FFI hubDirectoryList error: $e');
       return [];
@@ -1109,14 +1115,17 @@ class FfiService {
   }
 
   /// Resolve a follow request: resolution is "approve", "reject", or "block".
+  /// When approving, [encryptedContact] is an optional sealed blob.
   Future<frb.FrbHubFollow?> hubDirectoryResolveFollow(
     int followId,
-    String resolution,
-  ) async {
+    String resolution, {
+    String? encryptedContact,
+  }) async {
     try {
       return await frb.hubDirectoryResolveFollow(
         followId: followId,
         resolution: resolution,
+        encryptedContact: encryptedContact,
       );
     } catch (e) {
       debugPrint('FFI hubDirectoryResolveFollow error: $e');
@@ -1141,6 +1150,88 @@ class FfiService {
     } catch (e) {
       debugPrint('FFI hubDirectoryListFollowers error: $e');
       return [];
+    }
+  }
+
+  // ============ Hub Borrow Requests (ADR-018) ============
+
+  /// Create a hub-mediated borrow request for a book from a followed library.
+  Future<frb.FrbHubBorrowRequest> hubDirectoryCreateBorrowRequest(
+    String lenderNodeId,
+    String isbn,
+    String bookTitle,
+  ) async {
+    return await frb.hubDirectoryCreateBorrowRequest(
+      lenderNodeId: lenderNodeId,
+      isbn: isbn,
+      bookTitle: bookTitle,
+    );
+  }
+
+  /// Fetch incoming borrow requests (pending) for the local library as lender.
+  Future<List<frb.FrbHubBorrowRequest>> hubDirectoryIncomingBorrowRequests() async {
+    try {
+      return await frb.hubDirectoryIncomingBorrowRequests();
+    } catch (e) {
+      debugPrint('FFI hubDirectoryIncomingBorrowRequests error: $e');
+      return [];
+    }
+  }
+
+  /// Fetch outgoing borrow requests sent by the local library as requester.
+  Future<List<frb.FrbHubBorrowRequest>> hubDirectoryOutgoingBorrowRequests() async {
+    try {
+      return await frb.hubDirectoryOutgoingBorrowRequests();
+    } catch (e) {
+      debugPrint('FFI hubDirectoryOutgoingBorrowRequests error: $e');
+      return [];
+    }
+  }
+
+  /// Resolve a borrow request: resolution is "accept" or "reject".
+  Future<frb.FrbHubBorrowRequest> hubDirectoryResolveBorrowRequest(
+    int requestId,
+    String resolution,
+  ) async {
+    return await frb.hubDirectoryResolveBorrowRequest(
+      requestId: requestId,
+      resolution: resolution,
+    );
+  }
+
+  // ============ E2EE Sealed Blob ============
+
+  /// Encrypt plaintext for a recipient identified by their X25519 public key (hex).
+  Future<String> sealBlob(String recipientX25519Hex, String plaintext) async {
+    return await frb.sealBlob(
+      recipientX25519Hex: recipientX25519Hex,
+      plaintext: plaintext,
+    );
+  }
+
+  /// Decrypt a sealed blob using the local node identity's X25519 secret key.
+  Future<String> openBlob(String sealedBase64) async {
+    return await frb.openBlob(sealedBase64: sealedBase64);
+  }
+
+  /// Batch-update encrypted contact blobs for active followers.
+  Future<int> hubDirectorySyncContacts(
+    List<int> followIds,
+    List<String> encryptedContacts,
+  ) async {
+    return await frb.hubDirectorySyncContacts(
+      followIds: Int64List.fromList(followIds),
+      encryptedContacts: encryptedContacts,
+    );
+  }
+
+  /// Returns the local X25519 public key as hex string, or null if no identity.
+  Future<String?> getLocalX25519PublicKey() async {
+    try {
+      return await frb.getLocalX25519PublicKey();
+    } catch (e) {
+      debugPrint('FFI getLocalX25519PublicKey error: $e');
+      return null;
     }
   }
 

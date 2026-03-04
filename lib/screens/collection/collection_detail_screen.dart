@@ -346,15 +346,12 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
 
           return Column(
             children: [
-              // 🎨 Immersive Hero Banner
+              // Header Banner
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF6BB0A9),
-                      Color(0xFF5C8C9F),
-                    ], // Matches GenieAppBar (Teal/Blue-Grey)
+                    colors: [Color(0xFF6BB0A9), Color(0xFF5C8C9F)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -368,76 +365,97 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
                 ),
                 padding: EdgeInsets.only(
                   top: MediaQuery.of(context).padding.top + kToolbarHeight + 8,
-                  bottom: 32,
+                  bottom: 16,
                   left: 16,
                   right: 16,
                 ),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(
-                      alpha: 0.1,
-                    ), // Glassy background
-                    borderRadius: BorderRadius.circular(24),
+                    color: Colors.white.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: Colors.white.withValues(alpha: 0.15),
                     ),
                   ),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Description
                       if (widget.collection.description != null &&
                           widget.collection.description!.isNotEmpty)
-                        Text(
-                          widget.collection.description!,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.95),
-                                height: 1.5,
-                                fontSize: 16,
-                              ),
-                          textAlign: TextAlign.center,
-                        ),
-
-                      const SizedBox(height: 24),
-
-                      // ✨ Stats Row
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 24,
-                        runSpacing: 16,
-                        children: [
-                          _buildStatCard(
-                            context,
-                            totalCount.toString(),
-                            TranslationService.translate(context, 'books'),
-                            Icons.library_books,
-                            Colors.white,
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Text(
+                            widget.collection.description!,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.95),
+                                  height: 1.4,
+                                ),
+                            textAlign: TextAlign.center,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          if (totalCount > 0) ...[
-                            _buildStatCard(
-                              context,
-                              ownedCount.toString(),
-                              TranslationService.translate(
+                        ),
+                      IntrinsicHeight(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _buildStatCard(
                                 context,
-                                'status_owned',
+                                totalCount.toString(),
+                                TranslationService.translate(
+                                  context,
+                                  'books',
+                                ),
+                                Icons.library_books,
+                                Colors.white,
                               ),
-                              Icons.check_circle,
-                              Colors.greenAccent,
                             ),
-                            _buildStatCard(
-                              context,
-                              wantedCount.toString(),
-                              TranslationService.translate(
-                                context,
-                                'status_wanted',
+                            if (totalCount > 0) ...[
+                              VerticalDivider(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                width: 1,
+                                thickness: 1,
                               ),
-                              Icons.bookmark_border,
-                              Colors.orangeAccent,
-                            ),
+                              Expanded(
+                                child: _buildStatCard(
+                                  context,
+                                  ownedCount.toString(),
+                                  TranslationService.translate(
+                                    context,
+                                    'status_owned',
+                                  ),
+                                  Icons.check_circle,
+                                  Colors.greenAccent,
+                                ),
+                              ),
+                              VerticalDivider(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                width: 1,
+                                thickness: 1,
+                              ),
+                              Expanded(
+                                child: _buildStatCard(
+                                  context,
+                                  wantedCount.toString(),
+                                  TranslationService.translate(
+                                    context,
+                                    'status_wanted',
+                                  ),
+                                  Icons.bookmark_border,
+                                  Colors.orangeAccent,
+                                ),
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ],
                   ),
@@ -815,31 +833,24 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-            border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
-          ),
-          child: Icon(icon, color: color, size: 28),
-        ),
-        const SizedBox(height: 8),
+        Icon(icon, color: color, size: 18),
+        const SizedBox(height: 4),
         Text(
           value,
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w800,
-            fontSize: 22,
+            fontSize: 18,
           ),
         ),
         Text(
           label,
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.7),
-            fontSize: 13,
+            fontSize: 11,
             fontWeight: FontWeight.w500,
           ),
+          textAlign: TextAlign.center,
         ),
       ],
     );

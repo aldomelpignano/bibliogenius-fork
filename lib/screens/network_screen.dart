@@ -51,12 +51,20 @@ class _NetworkScreenState extends State<NetworkScreen>
       vsync: this,
       initialIndex: widget.initialIndex.clamp(0, 1),
     );
-    _mainTabController.addListener(() => setState(() {}));
+    _mainTabController.addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    setState(() {});
+    // Reload "Mon réseau" data when switching back to tab 0
+    if (_mainTabController.index == 0 && !_mainTabController.indexIsChanging) {
+      _myNetworkKey.currentState?.reloadMembers();
+    }
   }
 
   @override
   void dispose() {
-    _mainTabController.removeListener(() => setState(() {}));
+    _mainTabController.removeListener(_onTabChanged);
     _mainTabController.dispose();
     super.dispose();
   }
@@ -279,6 +287,9 @@ class _MyNetworkViewState extends State<_MyNetworkView> {
   // Cached identifiers from saved peers, used to filter mDNS duplicates
   Set<String> _savedUuids = {};
   Set<String> _savedHosts = {};
+  // Peer online status: nodeId -> true (online) / false (unreachable)
+  // null (absent) = not yet checked
+  final Map<String, bool> _peerOnlineStatus = {};
 
   @override
   void initState() {
@@ -378,11 +389,15 @@ class _MyNetworkViewState extends State<_MyNetworkView> {
         Provider.of<HubDirectoryProvider>(context, listen: false);
     bool changed = false;
     final updated = _relations.map((r) {
-      if (r.isFollowing && r.peer == null) {
-        final hubName = dirProvider.displayNameFor(r.nodeId);
-        if (hubName != null && r.name != hubName) {
-          changed = true;
-          return r.withDisplayName(hubName);
+      if (r.isFollowing) {
+        final hasUserCustomName = r.peer?.customDisplayName != null &&
+            r.peer!.customDisplayName!.isNotEmpty;
+        if (!hasUserCustomName) {
+          final hubName = dirProvider.displayNameFor(r.nodeId);
+          if (hubName != null && r.name != hubName) {
+            changed = true;
+            return r.withDisplayName(hubName);
+          }
         }
       }
       return r;
@@ -422,10 +437,20 @@ class _MyNetworkViewState extends State<_MyNetworkView> {
         debugPrint('Error loading peers: $e');
       }
 
-      // Hub calls update provider state internally - fire and forget
-      dirProvider.loadFollowing().catchError(
-        (e) => debugPrint('Error loading follows: $e'),
-      );
+      // Hub: load config, ensure keys published, load follows
+      try {
+        await dirProvider.loadConfig();
+        if (dirProvider.isRegistered) {
+          final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+          final name = themeProvider.libraryName.isNotEmpty
+              ? themeProvider.libraryName
+              : 'My Library';
+          dirProvider.ensureKeysPublished(name);
+        }
+      } catch (e) { debugPrint('Error loading hub config: $e'); }
+      try {
+        await dirProvider.loadFollowing();
+      } catch (e) { debugPrint('Error loading follows: $e'); }
       dirProvider.loadPendingRequests().catchError(
         (e) => debugPrint('Error loading pending requests: $e'),
       );
@@ -455,7 +480,9 @@ class _MyNetworkViewState extends State<_MyNetworkView> {
         final existing = map[nodeId];
         if (existing != null) {
           var merged = existing.withFollow(follow);
-          if (hubName != null && existing.peer?.name == null) {
+          final hasUserCustomName = existing.peer?.customDisplayName != null &&
+              existing.peer!.customDisplayName!.isNotEmpty;
+          if (hubName != null && !hasUserCustomName) {
             merged = merged.withDisplayName(hubName);
           }
           map[nodeId] = merged;
@@ -502,6 +529,8 @@ class _MyNetworkViewState extends State<_MyNetworkView> {
           _localPeers = localPeers;
           _isLoading = false;
         });
+        // Check peer connectivity (fire-and-forget, non-blocking)
+        _checkPeersConnectivity(relations);
         // Reshow banner if 0 connections
         if (relations.isEmpty && !_bannerVisible) {
           _checkBannerVisibility();
@@ -510,6 +539,22 @@ class _MyNetworkViewState extends State<_MyNetworkView> {
     } catch (e) {
       debugPrint('Error loading network: $e');
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// Check connectivity for all peers with a URL, in parallel.
+  /// Fire-and-forget: updates _peerOnlineStatus as results come in.
+  void _checkPeersConnectivity(List<LibraryRelation> relations) {
+    final api = Provider.of<ApiService>(context, listen: false);
+    for (final r in relations) {
+      final url = r.peer?.url;
+      if (url == null || url.isEmpty) continue;
+      // Relay-only peers have no direct URL to check
+      if (url.startsWith('relay://')) continue;
+      api.checkPeerConnectivity(url).then((online) {
+        if (!mounted) return;
+        setState(() => _peerOnlineStatus[r.nodeId] = online);
+      });
     }
   }
 
@@ -590,8 +635,9 @@ class _MyNetworkViewState extends State<_MyNetworkView> {
             count: pendingProvider.pendingCount,
             onAction: pendingProvider.refresh,
           ),
-        // Hub follow requests
-        if (hubDirProvider.pendingRequests.isNotEmpty)
+        // Hub follow requests (only when hub directory is enabled)
+        if (hubDirProvider.isHubEnabled &&
+            hubDirProvider.pendingRequests.isNotEmpty)
           _HubRequestsSection(
             requests: hubDirProvider.pendingRequests,
             provider: hubDirProvider,
@@ -685,6 +731,7 @@ class _MyNetworkViewState extends State<_MyNetworkView> {
                               (r) => _LibraryRelationCard(
                                 relation: r,
                                 onRefresh: _syncAndReload,
+                                isOnline: _peerOnlineStatus[r.nodeId],
                               ),
                             ),
                             // Borrowers
@@ -1462,107 +1509,6 @@ class _PendingBanner extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Shared banner template - used by directory + invite banners
-// ---------------------------------------------------------------------------
-
-class _ActionBanner extends StatelessWidget {
-  final VoidCallback onTap;
-  final IconData icon;
-  final String titleKey;
-  final String subtitleKey;
-  final LinearGradient iconGradient;
-  final Color bgLight;
-  final Color bgDark;
-  final Color borderLight;
-  final Color borderDark;
-  final Color titleLight;
-  final Color titleDark;
-  final Color subtitleLight;
-  final Color subtitleDark;
-  final IconData trailingIcon;
-
-  const _ActionBanner({
-    required this.onTap,
-    required this.icon,
-    required this.titleKey,
-    required this.subtitleKey,
-    required this.iconGradient,
-    required this.bgLight,
-    required this.bgDark,
-    required this.borderLight,
-    required this.borderDark,
-    required this.titleLight,
-    required this.titleDark,
-    required this.subtitleLight,
-    required this.subtitleDark,
-    this.trailingIcon = Icons.arrow_forward_ios,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? bgDark : bgLight;
-    final border = isDark ? borderDark : borderLight;
-    final titleColor = isDark ? titleDark : titleLight;
-    final subtitleColor = isDark ? subtitleDark : subtitleLight;
-
-    return Semantics(
-      button: true,
-      label: TranslationService.translate(context, titleKey),
-      child: ScaleOnTap(
-        onTap: onTap,
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(AppDesign.radiusMedium),
-            border: Border.all(color: border),
-            boxShadow: AppDesign.subtleShadow,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  gradient: iconGradient,
-                  borderRadius: BorderRadius.circular(AppDesign.radiusSmall),
-                  boxShadow: AppDesign.glowShadow(iconGradient.colors.first),
-                ),
-                child: Icon(icon, color: Colors.white, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      TranslationService.translate(context, titleKey),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: titleColor,
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      TranslationService.translate(context, subtitleKey),
-                      style: TextStyle(fontSize: 11, color: subtitleColor),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(trailingIcon, size: 13, color: subtitleColor),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Invite banner (teal)
 // ---------------------------------------------------------------------------
 
@@ -1571,22 +1517,84 @@ class _InviteBanner extends StatelessWidget {
   const _InviteBanner({required this.onTap});
 
   @override
-  Widget build(BuildContext context) => _ActionBanner(
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xFF0D2020) : const Color(0xFFE6F4F2);
+    final border = isDark ? const Color(0xFF1B4D47) : const Color(0xFFB2D8D4);
+    final titleColor = isDark ? const Color(0xFF80CBC4) : const Color(0xFF1A4E48);
+    final subtitleColor = isDark ? const Color(0xFF4DB6AC) : const Color(0xFF2E7D72);
+
+    return Semantics(
+      button: true,
+      label: TranslationService.translate(context, 'invite_card_title'),
+      child: ScaleOnTap(
         onTap: onTap,
-        icon: Icons.person_add,
-        titleKey: 'invite_card_title',
-        subtitleKey: 'invite_card_subtitle',
-        iconGradient: AppDesign.refinedSuccessGradient,
-        bgLight: const Color(0xFFE6F4F2),
-        bgDark: const Color(0xFF0D2020),
-        borderLight: const Color(0xFFB2D8D4),
-        borderDark: const Color(0xFF1B4D47),
-        titleLight: const Color(0xFF1A4E48),
-        titleDark: const Color(0xFF80CBC4),
-        subtitleLight: const Color(0xFF2E7D72),
-        subtitleDark: const Color(0xFF4DB6AC),
-        trailingIcon: Icons.share,
-      );
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(AppDesign.radiusMedium),
+            border: Border.all(color: border),
+            boxShadow: AppDesign.subtleShadow,
+          ),
+          child: Row(
+            children: [
+              // Left accent bar
+              Container(
+                width: 4,
+                height: 60,
+                decoration: BoxDecoration(
+                  gradient: AppDesign.refinedSuccessGradient,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(AppDesign.radiusMedium),
+                    bottomLeft: Radius.circular(AppDesign.radiusMedium),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Icon
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  gradient: AppDesign.refinedSuccessGradient,
+                  borderRadius: BorderRadius.circular(AppDesign.radiusSmall),
+                  boxShadow: AppDesign.glowShadow(
+                    AppDesign.refinedSuccessGradient.colors.first,
+                  ),
+                ),
+                child: const Icon(Icons.person_add, color: Colors.white, size: 22),
+              ),
+              const SizedBox(width: 12),
+              // Text
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      TranslationService.translate(context, 'invite_card_title'),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: titleColor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      TranslationService.translate(context, 'invite_card_subtitle'),
+                      style: TextStyle(fontSize: 12, color: subtitleColor),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.share, size: 16, color: subtitleColor),
+              const SizedBox(width: 14),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1724,8 +1732,16 @@ class _IncomingRequestTile extends StatelessWidget {
                   Icons.check_circle_outline,
                   color: Colors.green,
                 ),
-                onPressed: () =>
-                    provider.resolveFollow(follow.id, 'approve'),
+                onPressed: () async {
+                  // Seal contact info for the follower if available
+                  String? blob;
+                  final key = follow.followerX25519PublicKey;
+                  if (key != null && key.isNotEmpty) {
+                    blob = await provider.sealContactFor(key);
+                  }
+                  await provider.resolveFollow(
+                    follow.id, 'approve', encryptedContact: blob);
+                },
               ),
               IconButton(
                 tooltip: TranslationService.translate(
@@ -1758,90 +1774,186 @@ class _IncomingRequestTile extends StatelessWidget {
 // Discover tab - hub directory
 // ---------------------------------------------------------------------------
 
-/// Placeholder for the "Discover" tab. Will be populated in Phase 4 with
-/// the hub directory listing absorbed from DirectoryScreen.
-class _DiscoverView extends StatelessWidget {
+/// Public directory tab with search and infinite scroll.
+class _DiscoverView extends StatefulWidget {
   const _DiscoverView();
 
   @override
+  State<_DiscoverView> createState() => _DiscoverViewState();
+}
+
+class _DiscoverViewState extends State<_DiscoverView> {
+  final _searchController = TextEditingController();
+  Timer? _searchDebounce;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchDebounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () {
+      final provider = context.read<HubDirectoryProvider>();
+      provider.loadDirectory(search: query);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Delegate to the existing DirectoryScreen explore logic
     return Consumer<HubDirectoryProvider>(
       builder: (context, provider, _) {
+        // Hub directory must be enabled via Settings
+        if (!provider.isHubEnabled) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.public_off, size: 48, color: Colors.grey),
+                  const SizedBox(height: 12),
+                  Text(
+                    TranslationService.translate(
+                        context, 'hub_disabled_discover'),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
         // Trigger initial load
-        if (provider.profiles.isEmpty && !provider.listLoading) {
+        if (provider.profiles.isEmpty &&
+            !provider.listLoading &&
+            provider.searchQuery == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             provider.loadDirectory();
           });
         }
 
-        if (provider.listLoading && provider.profiles.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (provider.listError != null && provider.profiles.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(provider.listError!),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => provider.loadDirectory(),
-                  child: Text(
-                    TranslationService.translate(context, 'action_retry'),
+        return Column(
+          children: [
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+              child: TextField(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                decoration: InputDecoration(
+                  hintText: TranslationService.translate(
+                      context, 'directory_search_hint'),
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          tooltip: TranslationService.translate(
+                              context, 'action_clear'),
+                          onPressed: () {
+                            _searchController.clear();
+                            provider.loadDirectory();
+                          },
+                        )
+                      : null,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-              ],
+              ),
             ),
-          );
-        }
-
-        if (provider.profiles.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.public_off, size: 48, color: Colors.grey),
-                const SizedBox(height: 12),
-                Text(
-                  TranslationService.translate(context, 'directory_empty'),
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-              ],
-            ),
-          );
-        }
-
-        return RefreshIndicator(
-          onRefresh: provider.loadDirectory,
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) {
-              if (notification is ScrollUpdateNotification &&
-                  notification.metrics.pixels >=
-                      notification.metrics.maxScrollExtent - 200) {
-                provider.loadMoreDirectory();
-              }
-              return false;
-            },
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              itemCount:
-                  provider.profiles.length + (provider.hasMore ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == provider.profiles.length) {
-                  return const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-                final profile = provider.profiles[index];
-                return _DiscoverCard(profile: profile);
-              },
-            ),
-          ),
+            // Results
+            Expanded(child: _buildResults(provider)),
+          ],
         );
       },
+    );
+  }
+
+  Widget _buildResults(HubDirectoryProvider provider) {
+    if (provider.listLoading && provider.profiles.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (provider.listError != null && provider.profiles.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(provider.listError!),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => provider.loadDirectory(
+                  search: _searchController.text),
+              child: Text(
+                TranslationService.translate(context, 'action_retry'),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (provider.profiles.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              provider.searchQuery != null
+                  ? Icons.search_off
+                  : Icons.public_off,
+              size: 48,
+              color: Colors.grey,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              provider.searchQuery != null
+                  ? TranslationService.translate(
+                      context, 'directory_no_results')
+                  : TranslationService.translate(
+                      context, 'directory_empty'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () =>
+          provider.loadDirectory(search: _searchController.text),
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (notification is ScrollUpdateNotification &&
+              notification.metrics.pixels >=
+                  notification.metrics.maxScrollExtent - 200) {
+            provider.loadMoreDirectory();
+          }
+          return false;
+        },
+        child: ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount:
+              provider.profiles.length + (provider.hasMore ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (index == provider.profiles.length) {
+              return const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            final profile = provider.profiles[index];
+            return _DiscoverCard(profile: profile);
+          },
+        ),
+      ),
     );
   }
 }
@@ -1852,51 +1964,195 @@ class _DiscoverCard extends StatelessWidget {
 
   const _DiscoverCard({required this.profile});
 
+  bool _isOwnLibrary(HubDirectoryProvider provider) =>
+      provider.config?.nodeId == profile.nodeId;
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<HubDirectoryProvider>();
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final name = profile.displayName;
     final bookCount = profile.bookCount;
+    final isOwn = _isOwnLibrary(provider);
 
     return Semantics(
       button: true,
-      label: '$name, $bookCount ${TranslationService.translate(context, 'directory_books')}',
-      child: Card(
-        surfaceTintColor: Colors.transparent,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        child: ListTile(
-          leading: CircleAvatar(
-            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-            child: Text(
-              name.isNotEmpty ? name[0].toUpperCase() : '?',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+      label: '$name, $bookCount ${TranslationService.translate(context, 'directory_books')}'
+          '${isOwn ? ', ${TranslationService.translate(context, 'directory_your_library')}' : ''}',
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+        decoration: BoxDecoration(
+          color: isDark
+              ? cs.surfaceContainerHighest.withValues(alpha: 0.5)
+              : cs.surface,
+          borderRadius: BorderRadius.circular(AppDesign.radiusMedium),
+          border: Border.all(
+            color: isOwn
+                ? cs.tertiary.withValues(alpha: 0.3)
+                : cs.outlineVariant.withValues(alpha: 0.4),
           ),
-          title: Text(
-            name,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          subtitle: Text(
-            '$bookCount ${TranslationService.translate(context, 'directory_books')}',
-          ),
-          trailing: _buildFollowAction(context, provider),
+          boxShadow: AppDesign.subtleShadow,
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppDesign.radiusMedium),
           onTap: () => context.push(
             '/directory/${Uri.encodeComponent(profile.nodeId)}',
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top row: avatar + name + badge + action
+                Row(
+                  children: [
+                    // Gradient avatar
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: isOwn
+                            ? LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  cs.tertiary,
+                                  cs.tertiary.withValues(alpha: 0.7),
+                                ],
+                              )
+                            : AppDesign.refinedSuccessGradient,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          name.isNotEmpty ? name[0].toUpperCase() : '?',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Name + badges
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (isOwn) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: cs.tertiary.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    TranslationService.translate(
+                                        context, 'directory_your_library'),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: cs.tertiary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          // Meta row: book count + location
+                          Row(
+                            children: [
+                              Icon(Icons.auto_stories,
+                                  size: 14, color: cs.onSurfaceVariant),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$bookCount',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: cs.onSurfaceVariant,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              if (profile.locationCountry != null &&
+                                  profile.locationCountry!.isNotEmpty) ...[
+                                const SizedBox(width: 12),
+                                Icon(Icons.location_on_outlined,
+                                    size: 14, color: cs.onSurfaceVariant),
+                                const SizedBox(width: 2),
+                                Text(
+                                  profile.locationCountry!,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                              if (profile.requiresApproval) ...[
+                                const SizedBox(width: 12),
+                                Icon(Icons.verified_user_outlined,
+                                    size: 14, color: cs.onSurfaceVariant),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Follow action or chevron
+                    if (!isOwn) ...[
+                      const SizedBox(width: 8),
+                      _buildFollowAction(context, provider, cs, isDark),
+                    ] else ...[
+                      Icon(Icons.chevron_right,
+                          size: 20, color: cs.onSurfaceVariant),
+                    ],
+                  ],
+                ),
+                // Description
+                if (profile.description != null &&
+                    profile.description!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    profile.description!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget? _buildFollowAction(
+  Widget _buildFollowAction(
     BuildContext context,
     HubDirectoryProvider provider,
+    ColorScheme cs,
+    bool isDark,
   ) {
     final status = provider.followStatusFor(profile.nodeId);
-    if (status == 'self') return null;
 
     if (provider.isBusy(profile.nodeId)) {
       return const SizedBox(
@@ -1906,27 +2162,70 @@ class _DiscoverCard extends StatelessWidget {
       );
     }
 
+    // Already following: outlined chip style
     if (status == 'active') {
-      return TextButton(
-        onPressed: null,
-        child: Text(
-          TranslationService.translate(context, 'directory_following'),
-        ),
-      );
-    }
-    if (status == 'pending') {
-      return TextButton(
-        onPressed: null,
-        child: Text(
-          TranslationService.translate(context, 'directory_pending'),
-        ),
+      return _FollowChip(
+        label: TranslationService.translate(context, 'directory_following'),
+        filled: true,
+        color: cs.primary,
+        isDark: isDark,
+        onPressed: () async {
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: Text(
+                TranslationService.translate(ctx, 'directory_unfollow_title'),
+              ),
+              content: Text(
+                TranslationService.translate(
+                  ctx, 'directory_unfollow_confirm',
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(
+                    TranslationService.translate(ctx, 'cancel'),
+                  ),
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: Text(
+                    TranslationService.translate(
+                      ctx, 'directory_unfollow',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+          if (confirm == true) {
+            await provider.unfollow(profile.nodeId);
+          }
+        },
       );
     }
 
+    // Pending: muted chip
+    if (status == 'pending') {
+      return _FollowChip(
+        label: TranslationService.translate(context, 'directory_pending'),
+        filled: false,
+        color: cs.onSurfaceVariant,
+        isDark: isDark,
+      );
+    }
+
+    // Not following: prominent action chip
     final label = profile.requiresApproval
         ? TranslationService.translate(context, 'directory_request')
         : TranslationService.translate(context, 'directory_follow');
-    return TextButton(
+    return _FollowChip(
+      label: label,
+      filled: true,
+      color: const Color(0xFF3A7186),
+      isDark: isDark,
       onPressed: () async {
         await provider.follow(profile.nodeId);
         if (context.mounted && provider.actionError != null) {
@@ -1941,7 +2240,56 @@ class _DiscoverCard extends StatelessWidget {
           );
         }
       },
-      child: Text(label),
+    );
+  }
+}
+
+/// Styled chip button for follow actions in the directory.
+class _FollowChip extends StatelessWidget {
+  final String label;
+  final bool filled;
+  final Color color;
+  final bool isDark;
+  final VoidCallback? onPressed;
+
+  const _FollowChip({
+    required this.label,
+    required this.filled,
+    required this.color,
+    required this.isDark,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onPressed,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          decoration: BoxDecoration(
+            color: filled
+                ? color.withValues(alpha: isDark ? 0.25 : 0.1)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: color.withValues(alpha: filled ? 0.4 : 0.25),
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: filled
+                  ? (isDark ? color.withValues(alpha: 0.9) : color)
+                  : color.withValues(alpha: 0.6),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1953,10 +2301,13 @@ class _DiscoverCard extends StatelessWidget {
 class _LibraryRelationCard extends StatelessWidget {
   final LibraryRelation relation;
   final VoidCallback onRefresh;
+  /// null = still checking, true = online, false = unreachable
+  final bool? isOnline;
 
   const _LibraryRelationCard({
     required this.relation,
     required this.onRefresh,
+    this.isOnline,
   });
 
   @override
@@ -2042,6 +2393,24 @@ class _LibraryRelationCard extends StatelessWidget {
                                 icon: relation.followPending
                                     ? Icons.pending
                                     : Icons.bookmark,
+                              ),
+                            if (isOnline == true)
+                              _chip(
+                                context,
+                                label: TranslationService.translate(
+                                  context, 'peer_status_online',
+                                ),
+                                color: Colors.green,
+                                icon: Icons.circle,
+                              ),
+                            if (isOnline == false)
+                              _chip(
+                                context,
+                                label: TranslationService.translate(
+                                  context, 'peer_status_unreachable',
+                                ),
+                                color: Colors.grey,
+                                icon: Icons.circle,
                               ),
                           ],
                         ),
