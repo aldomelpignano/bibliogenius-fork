@@ -6767,7 +6767,7 @@ msgid "show_code_step_1"
 msgstr "Zeigen Sie diesen Code einem Freund"
 
 msgid "show_code_step_2"
-msgstr "Er tippt auf + und dann auf \"
+msgstr "Er scannt ihn mit der Kamera oder aus der App"
 
 msgid "show_code_step_3"
 msgstr "Beide erhalten Zugang zu Ausleihen und Synchronisation"

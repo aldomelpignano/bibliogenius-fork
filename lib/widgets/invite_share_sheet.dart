@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
@@ -38,7 +37,6 @@ class InviteShareSheet extends StatefulWidget {
 }
 
 class _InviteShareSheetState extends State<InviteShareSheet> {
-  String? _qrData;
   String? _libraryName;
   String? _inviteLink;
   bool _isLoading = true;
@@ -96,14 +94,11 @@ class _InviteShareSheetState extends State<InviteShareSheet> {
         relayWriteToken: relayWriteToken,
       );
 
-      final jsonStr = jsonEncode(payload);
-
       // Try to create a short invite link via the hub
       final link = await createInviteLink(payload, hubBaseUrl: ApiService.hubUrl);
 
       if (mounted) {
         setState(() {
-          _qrData = jsonStr;
           _libraryName = libraryName;
           _inviteLink = link;
           _isLoading = false;
@@ -179,7 +174,7 @@ class _InviteShareSheetState extends State<InviteShareSheet> {
                 padding: EdgeInsets.all(32),
                 child: Center(child: CircularProgressIndicator()),
               )
-            else if (_qrData == null)
+            else if (_inviteLink == null)
               _buildErrorState(theme)
             else
               _buildContent(theme),
@@ -242,7 +237,7 @@ class _InviteShareSheetState extends State<InviteShareSheet> {
                 width: 120,
                 height: 120,
                 child: QrImageView(
-                  data: _qrData!,
+                  data: _inviteLink!,
                   version: QrVersions.auto,
                   size: 120,
                 ),

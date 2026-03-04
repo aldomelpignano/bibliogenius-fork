@@ -101,11 +101,9 @@ class _PeerDetailScreenState extends State<PeerDetailScreen> {
     if (peer != null) {
       await api.updatePeerDisplayName(peer.id, newName);
     }
-    // Persist custom name for hub follows (covers follow-only and peer+follow)
-    if (_relation.isFollowing) {
-      final dirProvider = context.read<HubDirectoryProvider>();
-      await dirProvider.setFollowDisplayName(_relation.nodeId, newName);
-    }
+    // Always persist custom name in SharedPreferences (works for all relation types)
+    final dirProvider = context.read<HubDirectoryProvider>();
+    await dirProvider.setFollowDisplayName(_relation.nodeId, newName);
 
     if (!mounted) return;
     setState(() {

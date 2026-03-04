@@ -1267,7 +1267,7 @@ class _ShareContactViewState extends State<ShareContactView> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (_qrData != null) ...[
+        if (_inviteLink != null) ...[
           // Info banner
           Container(
             padding: const EdgeInsets.all(12),
@@ -1302,7 +1302,7 @@ class _ShareContactViewState extends State<ShareContactView> {
             height: 200,
             child: QrImageView(
               key: const Key('myQrCode'),
-              data: _qrData!,
+              data: _inviteLink!,
               version: QrVersions.auto,
               size: 200.0,
             ),

@@ -5323,9 +5323,9 @@ msgstr "Quand quelqu'un scanne ce code, il peut se connecter à votre bibliothè
 msgid "show_code_step_1"
 msgstr "Montrez ce code à un ami"
 
-#. They tap + then "Scan QR Code" in their app
+#. They scan it with their camera or from the app
 msgid "show_code_step_2"
-msgstr "Il appuie sur + puis \"Scanner le QR Code\" dans son appli"
+msgstr "Il le scanne avec son appareil photo ou depuis l'appli"
 
 #. You both get access to loans and sync
 msgid "show_code_step_3"

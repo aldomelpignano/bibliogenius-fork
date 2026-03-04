@@ -6767,7 +6767,7 @@ msgid "show_code_step_1"
 msgstr "Muestra este codigo a un amigo"
 
 msgid "show_code_step_2"
-msgstr "Toca + y luego \"
+msgstr "Lo escanea con su camara o desde la app"
 
 msgid "show_code_step_3"
 msgstr "Ambos obtienen acceso a prestamos y sincronizacion"
